@@ -281,13 +281,18 @@ static void update_dashboard_from_data() {
   dashboard_data.dc_temperature = (main_data.dc_temperature_raw - 1000) * 0.1f;
   dashboard_data.ac_temperature = (main_data.ac_temperature_raw - 1000) * 0.1f;
   
+  /// =============================================
+  // SMARTLOAD - Registre 195 (0x00C3)
   // =============================================
-  // SMARTLOAD - Détection par tension GEN
-  // =============================================
-  #define SMARTLOAD_ON_VOLTAGE_RAW 1000  // 100.0V
-  
-  // SmartLoad ON si la tension GEN est > 10000
-  dashboard_data.smartload_on = (main_data.gen_voltage_raw > SMARTLOAD_ON_VOLTAGE_RAW);
+  // ON si le bit 0 (0x01) est activé -> relais actionné
+  dashboard_data.smartload_on = (main_data.smartload_status_raw & 0x01) == 0x01;
+
+  // Debug
+  DBG.printf("SmartLoad: raw=%d (0x%02X) - Bit0=%d -> %s\n",
+           main_data.smartload_status_raw,
+           main_data.smartload_status_raw,
+           main_data.smartload_status_raw & 0x01,
+           dashboard_data.smartload_on ? "ON" : "OFF");
   
   // =============================================
   // ON GRID / OFF GRID - Registre 194
