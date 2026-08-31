@@ -59,7 +59,6 @@ Installation
 bash
 
 
-
     Ouvrez le fichier DEYE_LVGL_UI_2x2.ino dans Arduino IDE
 
     Installez les bibliothèques nécessaires :
@@ -75,37 +74,42 @@ bash
     Compilez et téléversez sur votre ESP32-S3
 
 📁 Structure du projet
-text
 
-DEYE_LVGL_UI_2x2/
-├── DEYE_LVGL_UI_2x2.ino    # Point d'entrée principal
-├── config.h                 # Configuration matérielle
-├── app_data.h               # Structure des données
-├── settings.h               # Gestion des préférences
-├── wifi_manager.h           # Gestion WiFi
-├── ntp_manager.h            # Gestion NTP
-├── touch_gt911.h            # Driver tactile GT911
-├── deye_solarman.h          # Protocole Solarman V5
-├── ui_main.h                # Interface principale
-└── ui_settings.h            # Interface de configuration
+
+    DEYE_LVGL_UI_2x2/
+    ├── DEYE_LVGL_UI_2x2.ino    # Point d'entrée principal
+    ├── config.h                 # Configuration matérielle
+    ├── app_data.h               # Structure des données
+    ├── settings.h               # Gestion des préférences
+    ├── wifi_manager.h           # Gestion WiFi
+    ├── ntp_manager.h            # Gestion NTP
+    ├── touch_gt911.h            # Driver tactile GT911
+    ├── deye_solarman.h          # Protocole Solarman V5
+    ├── ui_main.h                # Interface principale
+    └── ui_settings.h            # Interface de configuration
 
 🔧 Configuration matérielle
-Connexions principales
-Composant	Pins ESP32-S3
-RGB Panel	18, 17, 16, 21, 11, 12, 13, 14, 0, 8, 20, 3, 46, 9, 10, 4, 5, 6, 7, 15
-GT911 SDA	19
-GT911 SCL	45
-Backlight	38
-SPI (optionnel)	39, 48, 47
-📊 Données affichées
+
+    Connexions principales
+    Composant	Pins ESP32-S3
+    RGB Panel	18, 17, 16, 21, 11, 12, 13, 14, 0, 8, 20, 3, 46, 9, 10, 4, 5, 6, 7, 15
+    GT911 SDA	19
+    GT911 SCL	45
+    Backlight	38
+    SPI (optionnel)	39, 48, 47
+    
+ 📊 Données affichées
+ 
 Page principale
-Bloc	Informations
-Header	Heure, Date, WiFi, LED Deye
-PV Production	PV1/PV2/PV3 (W), Production journalière (kWh)
-Batterie	SOC (%), Tension (V), Puissance (W), Température
-Consommation	LOAD (W), UPS (W)
-Réseau	Puissance (W), ON GRID / OFF GRID
-Footer	SmartLoad, Températures DC/AC/BAT
+
+    Bloc	Informations
+    Header	Heure, Date, WiFi, LED Deye
+    PV Production	PV1/PV2/PV3 (W), Production journalière (kWh)
+    Batterie	SOC (%), Tension (V), Puissance (W), Température
+    Consommation	LOAD (W), UPS (W)
+    Réseau	Puissance (W), ON GRID / OFF GRID
+    Footer	SmartLoad, Températures DC/AC/BAT
+    
 Page de configuration
 
     WiFi : Scan des réseaux, mot de passe
