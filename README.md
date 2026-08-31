@@ -1,12 +1,12 @@
 DEYE LVGL Monitor - Interface tactile pour onduleur Deye
 
-https://img.shields.io/badge/platform-ESP32--S3-blue
-https://img.shields.io/badge/LVGL-8.4.0-orange
-https://img.shields.io/badge/license-MIT-green
-
 Interface de monitoring tactile pour onduleurs Deye hybrides (SG02LP1) avec affichage des données en temps réel sur écran 480x480. Projet basé sur ESP32-S3 avec LVGL et protocole Solarman V5.
 
-https://docs/dashboard.png
+
+![description](https://scontent-mrs2-3.xx.fbcdn.net/v/t39.30808-6/787774004_10244263414825568_21031540319158681_n.jpg?stp=cp6_dst-jpegr_tt6&cstp=mx1536x2048&ctp=s1536x2048&_nc_cat=111&ccb=1-7&_nc_sid=aa7b47&_nc_ohc=O0fEF2BUgOIQ7kNvwFYj8iR&_nc_oc=AdqxQYhOP8xdwTCConFnogwdP8-bRgxQs5w1o_TNjag27aXewLYG02TBg73b8Zrl9GtQbXdmjWQLLFiWDN-makb9&_nc_zt=23&se=-1&_nc_ht=scontent-mrs2-3.xx&_nc_gid=we3ED0x4J6xulABRKObC-g&_nc_ss=7b2a8&oh=00_AQI_rKpdcrD6VzZPPw15_ybtAguTjueqmK3RCNRiOe8wTg&oe=6A9AFAE5)
+
+
+
 ✨ Fonctionnalités
 
     📊 Affichage en temps réel des données de l'onduleur
