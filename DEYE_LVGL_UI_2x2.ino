@@ -45,19 +45,6 @@ Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
 #include "ui_main.h"
 #include "ui_settings.h"
 
-extern void ui_show_dashboard(lv_event_t *e);
-extern void ui_show_settings(lv_event_t *e);
-
-void ui_show_dashboard(lv_event_t *e) {
-    (void)e;
-    lv_scr_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
-}
-
-void ui_show_settings(lv_event_t *e) {
-    (void)e;
-    lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
-}
-
 static lv_color_t *draw_buf = nullptr;
 static lv_disp_draw_buf_t lv_draw_buf;
 static lv_disp_drv_t lv_disp_drv;
@@ -82,6 +69,30 @@ void lvgl_flush_cb(
   lv_disp_flush_ready(disp);
 }
 
+// =============================================
+// FONCTIONS DE NAVIGATION (DOIVENT ÊTRE ICI)
+// =============================================
+void ui_show_dashboard(lv_event_t *e) {
+  (void)e;
+  DBG.println("=== RETOUR DASHBOARD ===");
+  deye_solarman_set_ui_active(false);
+  lv_scr_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
+}
+
+void ui_show_settings(lv_event_t *e) {
+  (void)e;
+  DBG.println("=== BOUTON CFG CLIQUE ===");
+  if (screen_settings == nullptr) {
+    DBG.println("ERREUR: screen_settings est NULL");
+    return;
+  }
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
+}
+
+// =============================================
+// SETUP
+// =============================================
 void setup() {
   DBG.begin(115200);
   delay(300);
@@ -98,8 +109,7 @@ void setup() {
     while (true) delay(1000);
   }
 
-  gfx->setRotation(1);  // 0=0°, 1=90° horaire, 2=180°, 3=270°
-
+  gfx->setRotation(1);
   gfx->fillScreen(0x0000);
   touch_gt911_begin();
 
@@ -136,25 +146,34 @@ void setup() {
 
   ui_main_create();
   ui_settings_create();
-  lv_scr_load(screen_main);
+  
+  if (screen_main != nullptr) {
+    lv_scr_load(screen_main);
+    DBG.println("Ecran principal charge");
+  }
 
   wifi_manager_begin();
   ntp_manager_begin();
   deye_solarman_begin();
 
-  DBG.println("Interface LVGL prete - donnees simulees");
+  DBG.println("Interface LVGL prete");
 }
 
+// =============================================
+// LOOP - ULTRA SIMPLIFIÉE
+// =============================================
 void loop() {
   static uint32_t last_display_update = 0;
-
+  
+  // LVGL Timer Handler - PRIORITAIRE
   lv_timer_handler();
-  deye_solarman_process();
-
-  if (millis() - last_display_update >= 1000) {
-    last_display_update = millis();
+  
+  // Mise à jour de l'affichage - toutes les 500ms
+  uint32_t now = millis();
+  if (now - last_display_update >= 500) {
+    last_display_update = now;
     ui_main_update();
   }
 
-  delay(5);
+  delay(1);
 }
