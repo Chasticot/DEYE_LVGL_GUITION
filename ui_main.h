@@ -13,8 +13,8 @@
 // ==================== VARIABLES STATIQUES ====================
 static lv_obj_t *screen_main = nullptr;
 
-static lv_obj_t *label_date = nullptr;      // Date en haut à gauche
-static lv_obj_t *label_time = nullptr;      // Heure centrée
+static lv_obj_t *label_date = nullptr;
+static lv_obj_t *label_time = nullptr;
 static lv_obj_t *label_wifi = nullptr;
 
 static lv_obj_t *label_pv_total = nullptr;
@@ -98,20 +98,6 @@ static lv_obj_t *ui_main_make_card(
   lv_obj_t *card = lv_obj_create(parent);
   ui_main_style_card(card, x, y, width, height);
   return card;
-}
-
-static void ui_main_create_title(
-  lv_obj_t *parent,
-  const char *text,
-  lv_color_t color
-) {
-  lv_obj_t *label = lv_label_create(parent);
-  lv_label_set_text(label, text);
-  lv_obj_set_width(label, lv_obj_get_width(parent) - 16);
-  lv_obj_set_style_text_font(label, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_color(label, color, LV_PART_MAIN);
-  lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-  lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 4);
 }
 
 // ==================== CRÉATION DE L'INTERFACE ====================
@@ -214,7 +200,16 @@ static void ui_main_create() {
   // ======================================================
   lv_obj_t *pv_card = ui_main_make_card(screen_main, 10, 110, 225, 150);
 
-  ui_main_create_title(pv_card, "PRODUCTION PV", lv_color_hex(0x00FF88));
+  // TITRE PV
+  lv_obj_t *pv_title = ui_main_label(
+    pv_card,
+    "PRODUCTION PV",
+    205,
+    &lv_font_montserrat_16,
+    lv_color_hex(0x00FF88),
+    LV_TEXT_ALIGN_CENTER
+  );
+  lv_obj_align(pv_title, LV_ALIGN_TOP_MID, 0, 4);
 
   label_pv_total = ui_main_label(
     pv_card,
@@ -251,7 +246,16 @@ static void ui_main_create() {
   // ======================================================
   lv_obj_t *bat_card = ui_main_make_card(screen_main, 245, 110, 225, 150);
 
-  ui_main_create_title(bat_card, "BATTERIE", lv_color_hex(0x00E5FF));
+  // TITRE BATTERIE
+  lv_obj_t *bat_title = ui_main_label(
+    bat_card,
+    "BATTERIE",
+    205,
+    &lv_font_montserrat_16,
+    lv_color_hex(0x00E5FF),
+    LV_TEXT_ALIGN_CENTER
+  );
+  lv_obj_align(bat_title, LV_ALIGN_TOP_MID, 0, 4);
 
   arc_soc = lv_arc_create(bat_card);
   lv_obj_remove_style(arc_soc, nullptr, LV_PART_KNOB);
@@ -314,7 +318,16 @@ static void ui_main_create() {
   // ======================================================
   lv_obj_t *load_card = ui_main_make_card(screen_main, 10, 270, 225, 150);
 
-  ui_main_create_title(load_card, "CONSOMMATION", lv_color_hex(0xFACC15));
+  // TITRE CONSOMMATION
+  lv_obj_t *load_title = ui_main_label(
+    load_card,
+    "CONSOMMATION",
+    205,
+    &lv_font_montserrat_16,
+    lv_color_hex(0xFACC15),
+    LV_TEXT_ALIGN_CENTER
+  );
+  lv_obj_align(load_title, LV_ALIGN_TOP_MID, 0, 4);
 
   label_load = ui_main_label(
     load_card,
