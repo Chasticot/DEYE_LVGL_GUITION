@@ -6,37 +6,58 @@
 #include "app_data.h"
 #include "settings.h"
 
-// ==================== CONSTANTES ====================
+// ==================== CONSTANTES (comme Jeedom) ====================
 #define DEYE_PORT 8899
 #define DEYE_MODBUS_SLAVE_ID 1
 
-#define MODBUS_READ_MS 5000
-#define TCP_CONNECT_TIMEOUT_MS 3000
-#define RESPONSE_WINDOW_MS 1800
-#define FRAME_TIMEOUT_MS 700
+#define MODBUS_READ_MS 15000
+#define TCP_CONNECT_TIMEOUT_MS 15000
+#define RESPONSE_WINDOW_MS 15000
+#define FRAME_TIMEOUT_MS 5000
 
-// ==================== PLAYES DE LECTURE ====================
-#define MAIN_FIRST_REG 150
-#define MAIN_REG_COUNT 46
+// ==================== PLAYES DE LECTURE (comme Jeedom) ====================
+#define BLOCK1_START 3
+#define BLOCK1_COUNT 110   // 3 à 112
+
+#define BLOCK2_START 150
+#define BLOCK2_COUNT 100   // 150 à 249
+
+#define BLOCK3_START 250
+#define BLOCK3_COUNT 30    // 250 à 279
 
 // ==================== STRUCTURES ====================
 struct MainData {
+  // PV (registres 186, 187, 188)
   uint16_t pv1_power;
   uint16_t pv2_power;
   uint16_t pv3_power;
+  
+  // Batterie (registres 182, 183, 184, 190)
+  int16_t bat_temperature_raw;
   uint16_t bat_voltage_raw;
   uint16_t bat_soc;
   int16_t bat_power;
-  int16_t bat_temperature_raw;
+  
+  // Réseau (registres 169, 172, 175, 150)
   int16_t grid_power;
   int16_t load_power;
   int16_t ups_load_power;
   uint16_t ups_load_voltage_raw;
   uint16_t gen_voltage_raw;
+  
+  // Statuts (registres 194, 195)
   uint16_t grid_status_raw;
   uint16_t smartload_status_raw;
+  
+  // Températures (registres 90, 91)
   int16_t dc_temperature_raw;
   int16_t ac_temperature_raw;
+  
+  // Données journalières (registres 76, 77, 84, 108)
+  uint16_t daily_grid_buy;
+  uint16_t daily_grid_sell;
+  uint16_t daily_load;
+  uint16_t daily_solar;
 };
 
 // ==================== VARIABLES ====================
@@ -47,6 +68,16 @@ bool deye_on_grid_state = true;
 static WiFiClient deye_client;
 static uint32_t last_modbus_read = 0;
 static uint8_t request_sequence = 0;
+
+// Données journalières pour l'interface
+static uint16_t daily_solar = 0;
+static bool daily_solar_valid = false;
+static uint16_t daily_load = 0;
+static bool daily_load_valid = false;
+static uint16_t daily_grid_buy = 0;
+static bool daily_grid_buy_valid = false;
+static uint16_t daily_grid_sell = 0;
+static bool daily_grid_sell_valid = false;
 
 static uint16_t pv_daily_yield = 0;
 static bool pv_daily_yield_valid = false;
@@ -166,6 +197,7 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
 
   if (deye_client.connected()) {
     deye_client.stop();
+    delay(100);
   }
 
   if (!deye_client.connect(cfg_deye_host.c_str(), DEYE_PORT, TCP_CONNECT_TIMEOUT_MS)) {
@@ -179,7 +211,7 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
 
   while ((int32_t)(deadline - millis()) > 0) {
     if (!deye_client.available()) {
-      delay(2);
+      delay(5);
       continue;
     }
 
@@ -197,64 +229,114 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
   return found;
 }
 
-// ==================== DÉCODAGE ====================
-static bool decode_main_block(const uint8_t *rtu) {
-  MainData next;
+// ==================== DÉCODAGE BLOC 1 (3-112) ====================
+static bool decode_block1(const uint8_t *rtu) {
+  int offset = BLOCK1_START; // 3
   
-  next.gen_voltage_raw = modbus_get_u16_be(rtu, 0);
-  next.ups_load_voltage_raw = modbus_get_u16_be(rtu, 0);
-  next.grid_power = (int16_t)modbus_get_u16_be(rtu, 19);
-  next.load_power = (int16_t)modbus_get_u16_be(rtu, 22);
-  next.ups_load_power = (int16_t)modbus_get_u16_be(rtu, 25);
-  next.bat_temperature_raw = (int16_t)modbus_get_u16_be(rtu, 32);
-  next.bat_voltage_raw = modbus_get_u16_be(rtu, 33);
-  next.bat_soc = modbus_get_u16_be(rtu, 34);
-  next.pv1_power = modbus_get_u16_be(rtu, 36);
-  next.pv2_power = modbus_get_u16_be(rtu, 37);
-  next.pv3_power = modbus_get_u16_be(rtu, 38);
-  next.bat_power = (int16_t)modbus_get_u16_be(rtu, 40);
-  next.grid_status_raw = modbus_get_u16_be(rtu, 44);
-  next.smartload_status_raw = modbus_get_u16_be(rtu, 45);
+  // daily_grid_buy (registre 76)
+  daily_grid_buy = modbus_get_u16_be(rtu, 76 - offset);
+  daily_grid_buy_valid = true;
+  DBG.printf("Grid Buy: %.1f kWh\n", daily_grid_buy * 0.1f);
   
-  main_data = next;
+  // daily_grid_sell (registre 77)
+  daily_grid_sell = modbus_get_u16_be(rtu, 77 - offset);
+  daily_grid_sell_valid = true;
+  DBG.printf("Grid Sell: %.1f kWh\n", daily_grid_sell * 0.1f);
+  
+  // daily_load (registre 84)
+  daily_load = modbus_get_u16_be(rtu, 84 - offset);
+  daily_load_valid = true;
+  DBG.printf("Daily Load: %.1f kWh\n", daily_load * 0.1f);
+  
+  // dc_temp (registre 90)
+  uint16_t dc_raw = modbus_get_u16_be(rtu, 90 - offset);
+  if (dc_raw != 0 && dc_raw != 1000) {
+    main_data.dc_temperature_raw = (int16_t)dc_raw;
+    DBG.printf("DC Temp: %.1f°C\n", (main_data.dc_temperature_raw - 1000) * 0.1f);
+  }
+  
+  // ac_temp (registre 91)
+  uint16_t ac_raw = modbus_get_u16_be(rtu, 91 - offset);
+  if (ac_raw != 0 && ac_raw != 1000) {
+    main_data.ac_temperature_raw = (int16_t)ac_raw;
+    DBG.printf("AC Temp: %.1f°C\n", (main_data.ac_temperature_raw - 1000) * 0.1f);
+  }
+  
+  // daily_solar (registre 108)
+  daily_solar = modbus_get_u16_be(rtu, 108 - offset);
+  daily_solar_valid = true;
+  pv_daily_yield = daily_solar;
+  pv_daily_yield_valid = true;
+  DBG.printf("Daily Solar: %.1f kWh\n", daily_solar * 0.1f);
+  
+  return true;
+}
+
+// ==================== DÉCODAGE BLOC 2 (150-249) ====================
+static bool decode_block2(const uint8_t *rtu) {
+  int offset = BLOCK2_START; // 150
+  
+  // Gen Voltage / UPS Voltage (registre 150)
+  main_data.gen_voltage_raw = modbus_get_u16_be(rtu, 150 - offset);
+  main_data.ups_load_voltage_raw = modbus_get_u16_be(rtu, 150 - offset);
+  
+  // Grid Power (registre 169)
+  main_data.grid_power = (int16_t)modbus_get_u16_be(rtu, 169 - offset);
+  
+  // Load Power (registre 172)
+  main_data.load_power = (int16_t)modbus_get_u16_be(rtu, 172 - offset);
+  
+  // UPS Load Power (registre 175)
+  main_data.ups_load_power = (int16_t)modbus_get_u16_be(rtu, 175 - offset);
+  
+  // Battery Temperature (registre 182)
+  main_data.bat_temperature_raw = (int16_t)modbus_get_u16_be(rtu, 182 - offset);
+  
+  // Battery Voltage (registre 183)
+  main_data.bat_voltage_raw = modbus_get_u16_be(rtu, 183 - offset);
+  
+  // Battery SOC (registre 184)
+  main_data.bat_soc = modbus_get_u16_be(rtu, 184 - offset);
+  
+  // PV1 (registre 186)
+  main_data.pv1_power = modbus_get_u16_be(rtu, 186 - offset);
+  
+  // PV2 (registre 187)
+  main_data.pv2_power = modbus_get_u16_be(rtu, 187 - offset);
+  
+  // PV3 (registre 188)
+  main_data.pv3_power = modbus_get_u16_be(rtu, 188 - offset);
+  
+  // Battery Power (registre 190)
+  main_data.bat_power = (int16_t)modbus_get_u16_be(rtu, 190 - offset);
+  
+  // Grid Status (registre 194)
+  main_data.grid_status_raw = modbus_get_u16_be(rtu, 194 - offset);
+  
+  // SmartLoad (registre 195)
+  main_data.smartload_status_raw = modbus_get_u16_be(rtu, 195 - offset);
+  
   main_data_valid = true;
   
-  DBG.printf("PV1=%dW PV2=%dW SOC=%d%% Grid=%dW Load=%dW GridStatus=%d SmartLoad=%d\n",
-             main_data.pv1_power, main_data.pv2_power,
+  DBG.printf("BLOC2: PV1=%dW PV2=%dW PV3=%dW SOC=%d%% Grid=%dW Load=%dW GridStatus=%d SmartLoad=%d\n",
+             main_data.pv1_power, main_data.pv2_power, main_data.pv3_power,
              main_data.bat_soc, main_data.grid_power, main_data.load_power,
              main_data.grid_status_raw, main_data.smartload_status_raw);
   
   return true;
 }
 
-// ==================== LECTURE TEMPÉRATURES (INDIVIDUELLE) ====================
-static void solarman_read_temperatures() {
-    uint8_t temp_rtu[5 + 1 * 2];
-    
-    // 1. DC Temp (registre 90) - lecture individuelle
-    if (solarman_read_block(90, 1, temp_rtu)) {
-        main_data.dc_temperature_raw = (int16_t)modbus_get_u16_be(temp_rtu, 0);
-        DBG.printf("DC Temp: %.1f°C\n", (main_data.dc_temperature_raw - 1000) * 0.1f);
-    } else {
-        DBG.println("DC Temp: echec");
-    }
-    
-    delay(100);
-    
-    // 2. AC Temp (registre 91) - lecture individuelle
-    if (solarman_read_block(91, 1, temp_rtu)) {
-        main_data.ac_temperature_raw = (int16_t)modbus_get_u16_be(temp_rtu, 0);
-        DBG.printf("AC Temp: %.1f°C\n", (main_data.ac_temperature_raw - 1000) * 0.1f);
-    } else {
-        DBG.println("AC Temp: echec");
-    }
+// ==================== DÉCODAGE BLOC 3 (250-279) ====================
+static bool decode_block3(const uint8_t *rtu) {
+  // Plages horaires - pour l'instant on ne fait rien
+  DBG.println("BLOC3 (250-279): OK");
+  return true;
 }
 
 // ==================== MISE À JOUR DASHBOARD ====================
-// ==================== MISE À JOUR DASHBOARD ====================
 static void update_dashboard_from_data() {
   if (!main_data_valid) {
-    dashboard_data.valid = false;
+    // Garder les dernières valeurs
     return;
   }
 
@@ -281,39 +363,34 @@ static void update_dashboard_from_data() {
   dashboard_data.dc_temperature = (main_data.dc_temperature_raw - 1000) * 0.1f;
   dashboard_data.ac_temperature = (main_data.ac_temperature_raw - 1000) * 0.1f;
   
-  /// =============================================
-  // SMARTLOAD - Registre 195 (0x00C3)
-  // =============================================
-  // ON si le bit 0 (0x01) est activé -> relais actionné
+  // SmartLoad - valeur brute (comme Jeedom)
+  // 0 = OFF, 16 ou 17 = ON selon le bit 0
   dashboard_data.smartload_on = (main_data.smartload_status_raw & 0x01) == 0x01;
-
-  // Debug
-  DBG.printf("SmartLoad: raw=%d (0x%02X) - Bit0=%d -> %s\n",
-           main_data.smartload_status_raw,
-           main_data.smartload_status_raw,
-           main_data.smartload_status_raw & 0x01,
-           dashboard_data.smartload_on ? "ON" : "OFF");
   
-  // =============================================
-  // ON GRID / OFF GRID - Registre 194
-  // =============================================
+  // ON GRID / OFF GRID
   deye_on_grid_state = (main_data.grid_status_raw == 1);
   
-  DBG.printf("Grid=%dW Load=%dW GridStatus=%d (%s) SmartLoad=%s (GEN=%d)\n",
+  // PV Daily
+  if (daily_solar_valid) {
+    pv_daily_yield = daily_solar;
+    pv_daily_yield_valid = true;
+  }
+  
+  DBG.printf("Grid=%dW Load=%dW GridStatus=%d (%s) SmartLoad=%s DailySolar=%.1fkWh\n",
              dashboard_data.grid_power,
              dashboard_data.load_power,
              main_data.grid_status_raw,
              deye_on_grid_state ? "ON GRID" : "OFF GRID",
              dashboard_data.smartload_on ? "ON" : "OFF",
-             main_data.gen_voltage_raw);
+             daily_solar * 0.1f);
 }
 
 // ==================== FONCTIONS PUBLIQUES ====================
 static void deye_solarman_begin() {
-  DBG.println("=== DEYE SOLARMAN V5 ===");
-  DBG.print("Host: "); DBG.println(cfg_deye_host);
-  DBG.print("Port: "); DBG.println(DEYE_PORT);
-  DBG.print("Logger Serial: "); DBG.println(cfg_logger_serial);
+  DBG.println("=== DEYE SOLARMAN V5 (3 blocs comme Jeedom) ===");
+  DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
+  DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
+  DBG.printf("Bloc3: %d-%d (%d regs)\n", BLOCK3_START, BLOCK3_START + BLOCK3_COUNT - 1, BLOCK3_COUNT);
   
   main_data_valid = false;
   dashboard_data.valid = false;
@@ -330,27 +407,44 @@ static void deye_solarman_process() {
   if (now - last_modbus_read < MODBUS_READ_MS) return;
   last_modbus_read = now;
 
-  // =============================================
-  // 1. LECTURE BLOC PRINCIPAL (150-196)
-  // =============================================
-  uint8_t main_rtu[5 + MAIN_REG_COUNT * 2];
-  bool main_ok = solarman_read_block(MAIN_FIRST_REG, MAIN_REG_COUNT, main_rtu);
+  DBG.println("=== CYCLE DE LECTURE (3 blocs) ===");
 
-  if (main_ok) {
-    decode_main_block(main_rtu);
-    DBG.println("MAIN: OK");
+  // =============================================
+  // 1. BLOC 1 (3-112)
+  // =============================================
+  uint8_t b1_rtu[5 + BLOCK1_COUNT * 2];
+  if (solarman_read_block(BLOCK1_START, BLOCK1_COUNT, b1_rtu)) {
+    decode_block1(b1_rtu);
+    DBG.println("BLOC1 (3-112): OK");
   } else {
-    dashboard_data.valid = false;
-    DBG.println("MAIN: echec");
-    return;
+    DBG.println("BLOC1 (3-112): echec");
   }
 
-  delay(100);
+  delay(300);
 
   // =============================================
-  // 2. LECTURE TEMPÉRATURES (INDIVIDUELLE)
+  // 2. BLOC 2 (150-249)
   // =============================================
-  solarman_read_temperatures();
+  uint8_t b2_rtu[5 + BLOCK2_COUNT * 2];
+  if (solarman_read_block(BLOCK2_START, BLOCK2_COUNT, b2_rtu)) {
+    decode_block2(b2_rtu);
+    DBG.println("BLOC2 (150-249): OK");
+  } else {
+    DBG.println("BLOC2 (150-249): echec");
+  }
+
+  delay(300);
+
+  // =============================================
+  // 3. BLOC 3 (250-279) - Optionnel
+  // =============================================
+  uint8_t b3_rtu[5 + BLOCK3_COUNT * 2];
+  if (solarman_read_block(BLOCK3_START, BLOCK3_COUNT, b3_rtu)) {
+    decode_block3(b3_rtu);
+    DBG.println("BLOC3 (250-279): OK");
+  } else {
+    DBG.println("BLOC3 (250-279): echec");
+  }
 
   update_dashboard_from_data();
 }
@@ -365,5 +459,17 @@ static bool deye_is_on_grid() {
 }
 
 static uint16_t deye_get_pv_daily() {
-  return 0;
+  return pv_daily_yield;
+}
+
+static uint16_t deye_get_daily_load() {
+  return daily_load;
+}
+
+static uint16_t deye_get_daily_grid_buy() {
+  return daily_grid_buy;
+}
+
+static uint16_t deye_get_daily_grid_sell() {
+  return daily_grid_sell;
 }
