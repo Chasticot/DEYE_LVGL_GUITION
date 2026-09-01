@@ -19,9 +19,13 @@
 #define BLOCK2_START 150
 #define BLOCK2_COUNT 100
 
-#define TCP_CONNECT_TIMEOUT_MS 5000
-#define RESPONSE_WINDOW_MS 5000
-#define FRAME_TIMEOUT_MS 3000
+// Timeouts longs (comme Jeedom)
+#define TCP_CONNECT_TIMEOUT_MS 10000
+#define RESPONSE_WINDOW_MS 10000
+#define FRAME_TIMEOUT_MS 7000
+
+// Intervalles de lecture
+#define BLOCK_INTERVAL_MS 50   // 100 ms entre chaque bloc
 
 // ==================== STRUCTURES ====================
 struct MainData {
@@ -68,7 +72,6 @@ static bool pv_daily_yield_valid = false;
 static SemaphoreHandle_t data_mutex = nullptr;
 static volatile bool ui_active = false;
 static volatile bool reader_running = false;
-static volatile bool new_data_available = false;
 
 // ==================== DÉCLARATIONS ====================
 static void solarman_reader_task(void *pvParameters);
@@ -177,7 +180,7 @@ static bool get_rtu_from_v5_frame(const uint8_t *frame, size_t frame_len, uint16
   return false;
 }
 
-// ==================== LECTURE D'UN BLOC ====================
+// ==================== LECTURE D'UN BLOC (avec timeout long) ====================
 static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
   WiFiClient client;
   uint8_t rtu_request[8];
@@ -188,10 +191,11 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
   build_modbus_rtu_read(first_reg, count, rtu_request);
   size_t request_len = build_solarman_v5_request(rtu_request, sizeof(rtu_request), v5_request);
 
+  // Reconnexion systématique
   if (client.connected()) {
     client.stop();
-    delay(50);
   }
+  delay(50);
 
   if (!client.connect(cfg_deye_host.c_str(), DEYE_PORT, TCP_CONNECT_TIMEOUT_MS)) {
     return false;
@@ -304,8 +308,10 @@ static void solarman_reader_task(void *pvParameters) {
   int current_block = 0;
   uint32_t last_read_time = 0;
   bool first_read_done = false;
+  uint32_t startup_time = millis();
   
   while (true) {
+    // Si l'UI est active, on suspend la lecture
     if (ui_active) {
       vTaskDelay(pdMS_TO_TICKS(100));
       continue;
@@ -318,20 +324,23 @@ static void solarman_reader_task(void *pvParameters) {
 
     uint32_t now = millis();
     
+    // Première lecture : attendre 2s après le démarrage
     if (!first_read_done) {
-      if (now - last_read_time < 2000) {
+      if (now - startup_time < 2000) {
         vTaskDelay(pdMS_TO_TICKS(50));
         continue;
       }
       first_read_done = true;
       DBG.println("=== PREMIERE LECTURE (thread) ===");
     } else {
-      if (now - last_read_time < 5000) {
+      // Lecture toutes les 5 secondes
+      if (now - last_read_time < BLOCK_INTERVAL_MS) {
         vTaskDelay(pdMS_TO_TICKS(50));
         continue;
       }
     }
 
+    // Prendre le mutex avant de modifier les données partagées
     if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
       bool ok = false;
       
@@ -358,7 +367,6 @@ static void solarman_reader_task(void *pvParameters) {
       if (ok) {
         last_read_time = millis();
         update_dashboard_from_data();
-        new_data_available = true;
       }
 
       current_block = (current_block + 1) % 2;
@@ -376,9 +384,9 @@ void deye_solarman_set_ui_active(bool active) {
 }
 
 static void deye_solarman_begin() {
-  DBG.println("=== DEYE SOLARMAN V5 (Multithread) ===");
-  DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
-  DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
+  DBG.println("=== DEYE SOLARMAN V5 (Multithread + timeouts longs) ===");
+  DBG.printf("Bloc1: %d-%d (%d regs) - timeout 15s\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
+  DBG.printf("Bloc2: %d-%d (%d regs) - timeout 15s\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
   DBG.printf("Logger Serial: %lu\n", cfg_logger_serial);
   
   main_data_valid = false;
