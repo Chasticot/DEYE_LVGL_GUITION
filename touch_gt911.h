@@ -71,8 +71,12 @@ static bool touch_gt911_read() {
   uint16_t raw_x = (uint16_t)point[1] | ((uint16_t)point[2] << 8);
   uint16_t raw_y = (uint16_t)point[3] | ((uint16_t)point[4] << 8);
 
-  touch_x = constrain((int16_t)raw_y, 0, LCD_W - 1);
-  touch_y = constrain((int16_t)(LCD_H - 1 - raw_x), 0, LCD_H - 1);
+  // =============================================
+  // PAS DE ROTATION : coordonnées brutes
+  // (l'affichage est en rotation 0)
+  // =============================================
+  touch_x = constrain((int16_t)raw_x, 0, LCD_W - 1);
+  touch_y = constrain((int16_t)raw_y, 0, LCD_H - 1);
 
   gt911_clear_status();
   return true;
@@ -95,21 +99,32 @@ bool is_touch_active() {
   return touch_is_active;
 }
 
-// ==================== CALLBACK LVGL ====================
+// ==================== CALLBACK LVGL OPTIMISÉ ====================
 
 static void lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
   (void)drv;
 
+  static bool last_pressed = false;
+  static uint32_t last_touch_time = 0;
+
   bool pressed = touch_gt911_read();
-  
-  if (pressed) {
+  uint32_t now = millis();
+
+  // Détecter les changements d'état (pressed -> released)
+  if (pressed && !last_pressed) {
     touch_set_active();
-    deye_solarman_set_ui_active(true);  // Utilise set_ui_active
-  } else {
-    if (!is_touch_active()) {
-      deye_solarman_set_ui_active(false);  // Utilise set_ui_active
-    }
+    deye_solarman_set_ui_active(true);
+    last_touch_time = now;
+  } else if (pressed && last_pressed) {
+    last_touch_time = now;
   }
+
+  // Si le tactile est inactif depuis longtemps, on libère
+  if (!pressed && last_pressed && (now - last_touch_time > TOUCH_INACTIVITY_TIMEOUT)) {
+    deye_solarman_set_ui_active(false);
+  }
+
+  last_pressed = pressed;
 
   data->point.x = touch_x;
   data->point.y = touch_y;
