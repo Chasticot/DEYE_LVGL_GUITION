@@ -69,26 +69,6 @@ void lvgl_flush_cb(
   lv_disp_flush_ready(disp);
 }
 
-// =============================================
-// FONCTIONS DE NAVIGATION (DOIVENT ÊTRE ICI)
-// =============================================
-void ui_show_dashboard(lv_event_t *e) {
-  (void)e;
-  DBG.println("=== RETOUR DASHBOARD ===");
-  deye_solarman_set_ui_active(false);
-  lv_scr_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
-}
-
-void ui_show_settings(lv_event_t *e) {
-  (void)e;
-  DBG.println("=== BOUTON CFG CLIQUE ===");
-  if (screen_settings == nullptr) {
-    DBG.println("ERREUR: screen_settings est NULL");
-    return;
-  }
-  deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
-}
 
 // =============================================
 // SETUP
@@ -109,7 +89,7 @@ void setup() {
     while (true) delay(1000);
   }
 
-  gfx->setRotation(1);
+  gfx->setRotation(0);
   gfx->fillScreen(0x0000);
   touch_gt911_begin();
 
