@@ -1,3 +1,5 @@
+// settings.h - Version simplifiée pour le mode LSE/LSW
+
 #pragma once
 
 #include <Arduino.h>
@@ -9,6 +11,7 @@ static Preferences preferences;
 static String cfg_wifi_ssid;
 static String cfg_wifi_password;
 static String cfg_deye_host;
+static uint16_t cfg_deye_port = 8899;
 static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
@@ -38,7 +41,7 @@ struct CustomRegisters {
   uint32_t response_window;
   uint32_t frame_timeout;
   uint32_t block_interval;
-    // Coefficients
+  // Coefficients
   float coeff_grid_power;
   float coeff_load_power;
   float coeff_ups_power;
@@ -72,6 +75,7 @@ static void settings_save_registers(const CustomRegisters &regs) {
   preferences.putUInt("reg_resp_t", regs.response_window);
   preferences.putUInt("reg_frame_t", regs.frame_timeout);
   preferences.putUInt("reg_block_i", regs.block_interval);
+  // Coefficients
   preferences.putFloat("coeff_grid", regs.coeff_grid_power);
   preferences.putFloat("coeff_load", regs.coeff_load_power);
   preferences.putFloat("coeff_ups", regs.coeff_ups_power);
@@ -106,6 +110,7 @@ static CustomRegisters settings_load_registers() {
   regs.response_window = preferences.getUInt("reg_resp_t", 10000);
   regs.frame_timeout = preferences.getUInt("reg_frame_t", 7000);
   regs.block_interval = preferences.getUInt("reg_block_i", 100);
+  // Coefficients
   regs.coeff_grid_power = preferences.getFloat("coeff_grid", 1.0f);
   regs.coeff_load_power = preferences.getFloat("coeff_load", 1.0f);
   regs.coeff_ups_power = preferences.getFloat("coeff_ups", 1.0f);
@@ -115,20 +120,7 @@ static CustomRegisters settings_load_registers() {
   return regs;
 }
 
-static bool settings_get_gen_mode() {
-  preferences.begin("deye-ui", true);
-  bool mode = preferences.getBool("gen_smartload", true); // true = SmartLoad, false = GEN MO
-  preferences.end();
-  return mode;
-}
-
-static void settings_set_gen_mode(bool smartload) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("gen_smartload", smartload);
-  preferences.end();
-}
-
-// ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES ====================
+// ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES GÉNÉRAUX ====================
 
 static void settings_save_wifi(const String &ssid, const String &password) {
   preferences.begin("deye-ui", false);
@@ -149,14 +141,15 @@ static void settings_save_ntp(
   preferences.end();
 }
 
-static void settings_save_deye(const String &host, uint32_t logger_serial) {
+static void settings_save_deye(const String &host, uint32_t logger_serial, uint16_t port) {
   preferences.begin("deye-ui", false);
   preferences.putString("deye_host", host);
   preferences.putUInt("logger", logger_serial);
+  preferences.putUShort("deye_port", port);
   preferences.end();
 }
 
-// ==================== FONCTIONS DE CHARGEMENT ====================
+// ==================== CHARGEMENT GLOBAL ====================
 
 static void settings_load() {
   preferences.begin("deye-ui", true);
@@ -164,6 +157,7 @@ static void settings_load() {
   cfg_wifi_ssid = preferences.getString("wifi_ssid", DEFAULT_WIFI_SSID);
   cfg_wifi_password = preferences.getString("wifi_pwd", DEFAULT_WIFI_PASSWORD);
   cfg_deye_host = preferences.getString("deye_host", DEFAULT_DEYE_HOST);
+  cfg_deye_port = preferences.getUShort("deye_port", 8899);
   cfg_logger_serial = preferences.getUInt("logger", DEFAULT_LOGGER_SERIAL);
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);
@@ -172,8 +166,39 @@ static void settings_load() {
   preferences.end();
 }
 
-// ==================== FONCTIONS D'ACCÈS AUX REGISTRES ====================
+// ==================== ACCÈS AUX REGISTRES ====================
 
 static CustomRegisters get_custom_registers() {
   return settings_load_registers();
+}
+
+// ==================== MODE LSE / LSW (simplifié) ====================
+
+static bool settings_get_deye_mode_lse() {
+  preferences.begin("deye-ui", true);
+  bool mode = preferences.getBool("deye_mode_lse", false);
+  preferences.end();
+  return mode;
+}
+
+static void settings_set_deye_mode_lse(bool lse) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("deye_mode_lse", lse);
+  preferences.end();
+  DBG.printf("💾 settings_set_deye_mode_lse(%s) - sauvegardé\n", lse ? "LSE" : "LSW");
+}
+
+// ==================== MODE GEN (SmartLoad / GEN MO) ====================
+
+static bool settings_get_gen_mode() {
+  preferences.begin("deye-ui", true);
+  bool mode = preferences.getBool("gen_smartload", true);
+  preferences.end();
+  return mode;
+}
+
+static void settings_set_gen_mode(bool smartload) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("gen_smartload", smartload);
+  preferences.end();
 }

@@ -1,4 +1,4 @@
-// ui_settings.h - Version corrigée avec ui_show_settings
+// ui_settings.h - Version avec variable globale et logs pour déboguer
 
 #pragma once
 
@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include "config.h"
 #include "settings.h"
-#include "ui_registres_perso.h"   // Pour screen_registers
+#include "ui_registres_perso.h"
 
 // ==================== DÉCLARATIONS EXTERNES ====================
 extern void deye_solarman_set_ui_active(bool active);
@@ -28,6 +28,12 @@ static lv_obj_t *textarea_ntp_secondary = nullptr;
 
 static lv_obj_t *textarea_deye_host = nullptr;
 static lv_obj_t *textarea_logger_serial = nullptr;
+static lv_obj_t *textarea_deye_port = nullptr;
+static lv_obj_t *mode_btnmatrix = nullptr;
+
+// Variable globale pour stocker l'état du mode (true = LSE, false = LSW)
+// Elle est initialisée au démarrage et mise à jour à chaque clic
+static bool current_deye_mode_lse = false;
 
 static String wifi_ssid_list[32];
 static int wifi_ssid_count = 0;
@@ -159,7 +165,6 @@ void ui_show_settings_screen(lv_event_t *e) {
   lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
 }
 
-// Cette fonction est appelée par le bouton CFG de l'écran principal
 void ui_show_settings(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
@@ -272,10 +277,22 @@ static void ui_save_ntp(lv_event_t *e) {
   ui_settings_restart_message();
 }
 
+// ==================== ui_save_deye avec logs ====================
 static void ui_save_deye(lv_event_t *e) {
   (void)e;
+
+  DBG.printf("💾 ui_save_deye: current_deye_mode_lse = %s\n", current_deye_mode_lse ? "LSE" : "LSW");
+
+  // 1. Sauvegarder l'hôte, le serial et le port
   uint32_t serial = strtoul(lv_textarea_get_text(textarea_logger_serial), nullptr, 10);
-  settings_save_deye(lv_textarea_get_text(textarea_deye_host), serial);
+  uint16_t port = atoi(lv_textarea_get_text(textarea_deye_port));
+  if (port == 0) port = 8899;
+  settings_save_deye(lv_textarea_get_text(textarea_deye_host), serial, port);
+
+  // 2. Sauvegarder le mode depuis la variable globale
+  settings_set_deye_mode_lse(current_deye_mode_lse);
+
+  // 3. Redémarrer
   ui_settings_restart_message();
 }
 
@@ -289,27 +306,19 @@ static void ui_settings_create() {
   lv_obj_clear_flag(screen_settings, LV_OBJ_FLAG_SCROLLABLE);
   ui_settings_make_title(screen_settings, "CONFIGURATION");
 
-  // 2 COLONNES x 3 LIGNES
-  int btn_w = 190;
+  int btn_w = 280;
   int btn_h = 55;
   int spacing = 15;
-  int col1_x = 30;
-  int col2_x = 240;
+  int col_x = (LCD_W - btn_w) / 2;
   int start_y = 70;
   int step_y = btn_h + spacing;
 
-  // Colonne 1 (gauche)
-  ui_settings_make_button(screen_settings, "WIFI", col1_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_wifi_screen);
-  ui_settings_make_button(screen_settings, "HEURE / NTP", col1_x, start_y + 1 * step_y, btn_w, btn_h, ui_show_ntp_screen);
-  ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", col1_x, start_y + 2 * step_y, btn_w, btn_h, ui_show_deye_screen);
+  ui_settings_make_button(screen_settings, "WIFI", col_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_wifi_screen);
+  ui_settings_make_button(screen_settings, "HEURE / NTP", col_x, start_y + 1 * step_y, btn_w, btn_h, ui_show_ntp_screen);
+  ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", col_x, start_y + 2 * step_y, btn_w, btn_h, ui_show_deye_screen);
+  ui_settings_make_button(screen_settings, "REGISTRES PERSO", col_x, start_y + 3 * step_y, btn_w, btn_h, ui_show_registers);
 
-  // Colonne 2 (droite)
-  ui_settings_make_button(screen_settings, "REGISTRES PERSO", col2_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_registers);
-  ui_settings_make_button(screen_settings, "PRE CONF DEYE", col2_x, start_y + 1 * step_y, btn_w, btn_h, nullptr);
-  ui_settings_make_button(screen_settings, "VIDE", col2_x, start_y + 2 * step_y, btn_w, btn_h, nullptr);
-
-  // Bouton RETOUR
-  ui_settings_make_button(screen_settings, "RETOUR", 130, 415, 200, 50, ui_show_dashboard);
+  ui_settings_make_button(screen_settings, "RETOUR", col_x, 415, btn_w, 50, ui_show_dashboard);
 
   // ÉCRAN WIFI
   screen_wifi = lv_obj_create(nullptr);
@@ -411,13 +420,16 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_ntp, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
   ui_settings_make_button(screen_ntp, "SAUVEGARDER", 250, 370, 200, 55, ui_save_ntp);
 
-  // ÉCRAN DEYE
+  // ============================================================
+  // ÉCRAN DEYE / SOLARMAN
+  // ============================================================
   screen_deye = lv_obj_create(nullptr);
   lv_obj_set_style_bg_color(screen_deye, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_deye, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_deye, LV_OBJ_FLAG_SCROLLABLE);
   ui_settings_make_title(screen_deye, "CONFIGURATION DEYE");
 
+  // Adresse IP
   label = lv_label_create(screen_deye);
   lv_label_set_text(label, "Adresse IP du logger");
   lv_obj_set_pos(label, 20, 70);
@@ -431,9 +443,10 @@ static void ui_settings_create() {
     false
   );
 
+  // Numéro de série
   label = lv_label_create(screen_deye);
   lv_label_set_text(label, "Numero de serie du logger");
-  lv_obj_set_pos(label, 20, 180);
+  lv_obj_set_pos(label, 20, 170);
   lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
@@ -443,10 +456,78 @@ static void ui_settings_create() {
   textarea_logger_serial = ui_settings_make_textarea(
     screen_deye,
     serial,
-    20, 210,
+    20, 200,
     false
   );
 
-  ui_settings_make_button(screen_deye, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
-  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 370, 200, 55, ui_save_deye);
+  // Port
+  label = lv_label_create(screen_deye);
+  lv_label_set_text(label, "Port (default 8899)");
+  lv_obj_set_pos(label, 20, 270);
+  lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
+
+  char port_str[8];
+  snprintf(port_str, sizeof(port_str), "%d", cfg_deye_port);
+  textarea_deye_port = ui_settings_make_textarea(
+    screen_deye,
+    port_str,
+    20, 300,
+    false
+  );
+
+  // Mode LSE/LSW
+  lv_obj_t *mode_label = lv_label_create(screen_deye);
+  lv_label_set_text(mode_label, "Mode de communication");
+  lv_obj_set_pos(mode_label, 20, 370);
+  lv_obj_set_style_text_color(mode_label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_font(mode_label, &lv_font_montserrat_14, LV_PART_MAIN);
+
+  static const char *mode_opts[] = {"LSE", "LSW", ""};
+  mode_btnmatrix = lv_btnmatrix_create(screen_deye);
+  lv_btnmatrix_set_map(mode_btnmatrix, mode_opts);
+  lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKABLE);
+  lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKABLE);
+  lv_obj_set_pos(mode_btnmatrix, 160, 368);
+  lv_obj_set_size(mode_btnmatrix, 180, 34);
+  lv_obj_set_style_bg_color(mode_btnmatrix, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+  lv_obj_set_style_text_color(mode_btnmatrix, lv_color_white(), LV_PART_MAIN);
+  lv_obj_set_style_border_color(mode_btnmatrix, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+  lv_obj_set_style_border_width(mode_btnmatrix, 1, LV_PART_MAIN);
+  lv_obj_set_style_radius(mode_btnmatrix, 6, LV_PART_MAIN);
+  lv_obj_set_style_pad_all(mode_btnmatrix, 2, LV_PART_MAIN);
+
+  // Initialiser la variable globale avec la valeur sauvegardée
+  current_deye_mode_lse = settings_get_deye_mode_lse();
+  DBG.printf("🔍 ui_settings_create: mode lu = %s\n", current_deye_mode_lse ? "LSE" : "LSW");
+
+  // Cocher le bon bouton
+  if (current_deye_mode_lse) {
+    lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
+    lv_btnmatrix_clear_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
+  } else {
+    lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
+    lv_btnmatrix_clear_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
+  }
+
+  // Callback qui met à jour la variable globale ET l'affichage
+  lv_obj_add_event_cb(mode_btnmatrix, [](lv_event_t *e) {
+    lv_obj_t *btnm = lv_event_get_target(e);
+    uint32_t idx = lv_btnmatrix_get_selected_btn(btnm);
+    if (idx == 0) {
+      current_deye_mode_lse = true;
+      lv_btnmatrix_set_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
+      lv_btnmatrix_clear_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
+      DBG.println("🔄 Mode LSE sélectionné (variable = true)");
+    } else if (idx == 1) {
+      current_deye_mode_lse = false;
+      lv_btnmatrix_set_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
+      lv_btnmatrix_clear_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
+      DBG.println("🔄 Mode LSW sélectionné (variable = false)");
+    }
+  }, LV_EVENT_VALUE_CHANGED, NULL);
+
+  // Boutons RETOUR et SAUVEGARDER
+  ui_settings_make_button(screen_deye, "RETOUR", 20, 390, 190, 55, ui_show_settings_screen);
+  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 390, 200, 55, ui_save_deye);
 }
