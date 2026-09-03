@@ -53,6 +53,13 @@ static void textarea_defocus_cb(lv_event_t *e) {
 }
 
 // ==================== FONCTION UTILITAIRE ====================
+static const UiThemePalette &ui_registers_theme() {
+  return ui_theme_palette(cfg_ui_theme);
+}
+
+static lv_color_t ui_registers_color(uint32_t color) {
+  return lv_color_hex(color);
+}
 
 // Ajoute une ligne avec 3 colonnes : label, textarea valeur, textarea coeff (optionnel)
 static void add_reg_line(
@@ -69,7 +76,7 @@ static void add_reg_line(
   lv_label_set_text(label, label_text);
   lv_obj_set_pos(label, 5, y_pos);
   lv_obj_set_width(label, 130);
-  lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(label, ui_registers_color(ui_registers_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   // Textarea Valeur (colonne 2)
@@ -82,9 +89,9 @@ static void add_reg_line(
 
   lv_obj_set_pos(*textarea_val, 145, y_pos - 4);
   lv_obj_set_size(*textarea_val, 55, 32);
-  lv_obj_set_style_bg_color(*textarea_val, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_set_style_text_color(*textarea_val, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_border_color(*textarea_val, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(*textarea_val, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
+  lv_obj_set_style_text_color(*textarea_val, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_border_color(*textarea_val, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
   lv_obj_set_style_border_width(*textarea_val, 1, LV_PART_MAIN);
   lv_obj_set_style_radius(*textarea_val, 4, LV_PART_MAIN);
   lv_obj_set_scrollbar_mode(*textarea_val, LV_SCROLLBAR_MODE_OFF);
@@ -105,9 +112,9 @@ static void add_reg_line(
 
     lv_obj_set_pos(*textarea_coeff, 215, y_pos - 4);
     lv_obj_set_size(*textarea_coeff, 50, 32);
-    lv_obj_set_style_bg_color(*textarea_coeff, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(*textarea_coeff, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
     lv_obj_set_style_text_color(*textarea_coeff, lv_color_hex(0xFFD700), LV_PART_MAIN);
-    lv_obj_set_style_border_color(*textarea_coeff, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+    lv_obj_set_style_border_color(*textarea_coeff, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
     lv_obj_set_style_border_width(*textarea_coeff, 1, LV_PART_MAIN);
     lv_obj_set_style_radius(*textarea_coeff, 4, LV_PART_MAIN);
     lv_obj_set_scrollbar_mode(*textarea_coeff, LV_SCROLLBAR_MODE_OFF);
@@ -285,7 +292,7 @@ void ui_registers_create() {
   if (screen_registers != nullptr) return;
 
   screen_registers = lv_obj_create(nullptr);
-  lv_obj_set_style_bg_color(screen_registers, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(screen_registers, ui_registers_color(ui_registers_theme().screen_bg), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_registers, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_registers, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -296,19 +303,19 @@ void ui_registers_create() {
   lv_obj_set_width(title, LCD_W);
   lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
   lv_obj_set_style_text_font(title, &lv_font_montserrat_20, LV_PART_MAIN);
-  lv_obj_set_style_text_color(title, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(title, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
 
   // Entêtes de colonnes
   lv_obj_t *h1 = lv_label_create(screen_registers);
   lv_label_set_text(h1, "Registre");
   lv_obj_set_pos(h1, 10, 52);
-  lv_obj_set_style_text_color(h1, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(h1, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_text_font(h1, &lv_font_montserrat_14, LV_PART_MAIN);
 
   lv_obj_t *h2 = lv_label_create(screen_registers);
   lv_label_set_text(h2, "Valeur");
   lv_obj_set_pos(h2, 155, 52);
-  lv_obj_set_style_text_color(h2, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(h2, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_text_font(h2, &lv_font_montserrat_14, LV_PART_MAIN);
 
   lv_obj_t *h3 = lv_label_create(screen_registers);
@@ -357,7 +364,7 @@ void ui_registers_create() {
   lv_obj_t *timeout_label = lv_label_create(cont);
   lv_label_set_text(timeout_label, "--- TIMEOUTS (ms) ---");
   lv_obj_set_pos(timeout_label, 5, y);
-  lv_obj_set_style_text_color(timeout_label, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(timeout_label, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   y += 30;
   add_reg_line(cont, "Connect", &ta_connect_timeout, 10000, nullptr, 1.0f, y); y += step;
   add_reg_line(cont, "Response", &ta_response_window, 10000, nullptr, 1.0f, y); y += step;
@@ -369,7 +376,7 @@ void ui_registers_create() {
   lv_obj_t *gen_label = lv_label_create(cont);
   lv_label_set_text(gen_label, "Mode GEN :");
   lv_obj_set_pos(gen_label, 5, y);
-  lv_obj_set_style_text_color(gen_label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(gen_label, ui_registers_color(ui_registers_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(gen_label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   // Créer une ligne avec deux boutons radio (btnmatrix)
@@ -382,9 +389,9 @@ void ui_registers_create() {
   // Aucun flag "CHECK_STATE" n'existe, on utilise CHECKED pour marquer le bouton sélectionné
   lv_obj_set_pos(gen_btnmatrix, 130, y - 4);
   lv_obj_set_size(gen_btnmatrix, 200, 34);
-  lv_obj_set_style_bg_color(gen_btnmatrix, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_set_style_text_color(gen_btnmatrix, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_border_color(gen_btnmatrix, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
+  lv_obj_set_style_text_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_border_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
   lv_obj_set_style_border_width(gen_btnmatrix, 1, LV_PART_MAIN);
   lv_obj_set_style_radius(gen_btnmatrix, 6, LV_PART_MAIN);
   lv_obj_set_style_pad_all(gen_btnmatrix, 2, LV_PART_MAIN);
@@ -434,13 +441,13 @@ void ui_registers_create() {
   lv_obj_set_size(global_keyboard, LCD_W, 150);
   lv_obj_align(global_keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
   lv_obj_add_flag(global_keyboard, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_set_style_bg_color(global_keyboard, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(global_keyboard, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
 
   // Boutons en bas
   lv_obj_t *default_btn = lv_btn_create(screen_registers);
   lv_obj_set_size(default_btn, 110, 40);
   lv_obj_set_pos(default_btn, 20, 432);
-  lv_obj_set_style_bg_color(default_btn, lv_color_hex(0x1D4ED8), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(default_btn, ui_registers_color(ui_registers_theme().accent_dark), LV_PART_MAIN);
   lv_obj_set_style_radius(default_btn, 8, LV_PART_MAIN);
   lv_obj_add_event_cb(default_btn, [](lv_event_t *e) {
     (void)e;

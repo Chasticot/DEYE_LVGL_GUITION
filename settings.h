@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include "config.h"
+#include "ui_theme.h"
 
 static Preferences preferences;
 
@@ -16,6 +17,11 @@ static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
 static String cfg_tz_rule;
+static bool cfg_tempo_enabled = true;
+static bool cfg_tempo_colorblind_mode = false;
+static bool cfg_ev_charger_enabled = false;
+// Le thème historique est explicitement le thème par défaut.
+static UiThemeId cfg_ui_theme = UI_THEME_DEFAULT;
 
 // ==================== STRUCTURE POUR LES REGISTRES PERSONNALISÉS ====================
 struct CustomRegisters {
@@ -149,6 +155,36 @@ static void settings_save_deye(const String &host, uint32_t logger_serial, uint1
   preferences.end();
 }
 
+static void settings_set_tempo_enabled(bool enabled) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("tempo_enabled", enabled);
+  preferences.end();
+  cfg_tempo_enabled = enabled;
+}
+
+static void settings_set_tempo_colorblind_mode(bool enabled) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("tempo_colorblind", enabled);
+  preferences.end();
+  cfg_tempo_colorblind_mode = enabled;
+}
+
+static void settings_set_ev_charger_enabled(bool enabled) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("ev_charger_enabled", enabled);
+  preferences.end();
+  cfg_ev_charger_enabled = enabled;
+}
+
+static void settings_set_ui_theme(UiThemeId theme) {
+  theme = ui_theme_from_value(static_cast<uint8_t>(theme));
+  preferences.begin("deye-ui", false);
+  preferences.putUChar("ui_theme", static_cast<uint8_t>(theme));
+  preferences.putBool("ui_theme_v2", true);
+  preferences.end();
+  cfg_ui_theme = theme;
+}
+
 // ==================== CHARGEMENT GLOBAL ====================
 
 static void settings_load() {
@@ -163,6 +199,19 @@ static void settings_load() {
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);
   cfg_tz_rule = preferences.getString("tz_rule", DEFAULT_TZ_RULE);
+  cfg_tempo_enabled = preferences.getBool("tempo_enabled", true);
+  cfg_tempo_colorblind_mode = preferences.getBool("tempo_colorblind", false);
+  cfg_ev_charger_enabled = preferences.getBool("ev_charger_enabled", false);
+  const uint8_t stored_theme = preferences.getUChar(
+    "ui_theme", static_cast<uint8_t>(UI_THEME_DEFAULT)
+  );
+  // Migration : les anciennes versions avaient Actuel=0, Sombre=1 et Clair=2.
+  // Toute préférence ancienne sauf Clair devient donc le nouveau Sombre.
+  if (preferences.getBool("ui_theme_v2", false)) {
+    cfg_ui_theme = ui_theme_from_value(stored_theme);
+  } else {
+    cfg_ui_theme = stored_theme == 2 ? UI_THEME_LIGHT : UI_THEME_DARK;
+  }
 
   preferences.end();
 }

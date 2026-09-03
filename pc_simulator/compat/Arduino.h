@@ -9,6 +9,13 @@
 #include <cstring>
 #include <map>
 #include <string>
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
 
 class String {
  public:
@@ -63,5 +70,21 @@ inline bool getLocalTime(struct tm *timeinfo, uint32_t) {
   return localtime_s(timeinfo, &now) == 0;
 }
 
-class EspMock { public: void restart() {} };
+class EspMock {
+ public:
+  void restart() {
+    char executable[MAX_PATH] = {};
+    const DWORD length = GetModuleFileNameA(nullptr, executable, MAX_PATH);
+    if (length > 0 && length < MAX_PATH) {
+      STARTUPINFOA startup = {};
+      startup.cb = sizeof(startup);
+      PROCESS_INFORMATION process = {};
+      if (CreateProcessA(executable, nullptr, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup, &process)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+      }
+    }
+    std::exit(0);
+  }
+};
 inline EspMock ESP;

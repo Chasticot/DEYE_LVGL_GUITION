@@ -15,7 +15,7 @@ class WiFiMock {
   bool reconnect() { return true; }
   void disconnect() {}
   int status() const { return WL_CONNECTED; }
-  int RSSI() const { return -61; }
+  int RSSI() const { return -65; }
   int RSSI(int index) const { return index == 0 ? -61 : -72; }
   String SSID() const { return String("WiFi simulation"); }
   String SSID(int index) const { return String(index == 0 ? "WiFi simulation" : "Reseau voisin"); }
