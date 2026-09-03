@@ -179,45 +179,45 @@ static lv_obj_t *ui_settings_make_textarea(
 void ui_show_dashboard(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(false);
-  lv_scr_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_main);
 }
 
 void ui_show_settings_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_settings);
 }
 
 void ui_show_settings(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_settings);
 }
 
 void ui_show_registers(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
   if (screen_registers != nullptr) {
-    lv_scr_load_anim(screen_registers, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+    lv_scr_load(screen_registers);
   }
 }
 
 static void ui_show_wifi_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_wifi, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_wifi);
 }
 
 static void ui_show_ntp_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_ntp, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_ntp);
 }
 
 static void ui_show_deye_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
-  lv_scr_load_anim(screen_deye, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  lv_scr_load(screen_deye);
 }
 
 // ==================== FONCTIONS DE CONFIGURATION ====================
