@@ -45,6 +45,7 @@ Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
 #include "deye_solarman.h"
 #include "ui_main.h"
 #include "ui_settings.h"
+#include "ui_ve_deye.h"
 
 static lv_color_t *draw_buf = nullptr;
 static lv_disp_draw_buf_t lv_draw_buf;
@@ -128,6 +129,7 @@ void setup() {
   ui_main_create();
   ui_settings_create();
   ui_registers_create(); 
+  ui_ve_deye_create();
   
   if (screen_main != nullptr) {
     lv_scr_load(screen_main);
@@ -157,6 +159,7 @@ void loop() {
   if (now - last_display_update >= 500) {
     last_display_update = now;
     ui_main_update();
+    ui_ve_deye_update();
   }
 
   delay(1);

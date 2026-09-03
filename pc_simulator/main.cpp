@@ -11,6 +11,8 @@ void deye_solarman_set_ui_active(bool) {}
 void deye_solarman_set_touch_active(bool) {}
 
 #include "../app_data.h"
+#include "../ve_deye.h"
+#include "../settings.h"
 
 bool deye_copy_snapshot(
   DashboardData *out,
@@ -31,11 +33,20 @@ bool deye_copy_snapshot(
   return true;
 }
 
-#include "../settings.h"
+bool deye_copy_ev_snapshot(EvDeyeData *out) {
+  out->valid = cfg_ev_charger_enabled;
+  out->charge_power_w = 3680;
+  out->max_charge_power_raw = 740;
+  out->connection_state_raw = 1;
+  return cfg_ev_charger_enabled;
+}
+
 #include "../ui_main.h"
 #include "../ui_settings.h"
+#include "../ui_ve_deye.h"
 
 static void install_simulated_data() {
+  cfg_ev_charger_enabled = true;
   dashboard_data.valid = true;
   dashboard_data.pv1_w = 3366;
   dashboard_data.pv2_w = 3203;
@@ -79,11 +90,13 @@ int main() {
   ui_main_create();
   ui_settings_create();
   ui_registers_create();
+  ui_ve_deye_create();
   lv_scr_load(screen_main);
 
   while (true) {
     lv_tick_inc(5);
     ui_main_update();
+    ui_ve_deye_update();
     lv_timer_handler();
     SDL_Delay(5);
   }

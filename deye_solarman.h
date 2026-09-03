@@ -12,6 +12,7 @@
 #include "app_data.h"
 #include "modbus_tcp_codec.h"
 #include "settings.h"
+#include "ve_deye.h"
 
 // ==================== CONSTANTES ====================
 #define DEYE_MODBUS_SLAVE_ID 1
@@ -40,6 +41,8 @@ uint16_t BLOCK1_START = 76;
 uint16_t BLOCK1_COUNT = 37;
 uint16_t BLOCK2_START = 169;
 uint16_t BLOCK2_COUNT = 27;
+uint16_t BLOCK3_START = DEYE_REG_EV_CHARGE_POWER;
+uint16_t BLOCK3_COUNT = 1;
 
 uint32_t TCP_CONNECT_TIMEOUT_MS = 10000;
 uint32_t RESPONSE_WINDOW_MS = 10000;
@@ -92,6 +95,8 @@ static uint16_t daily_grid_sell = 0;
 static bool daily_grid_sell_valid = false;
 static uint16_t pv_daily_yield = 0;
 static bool pv_daily_yield_valid = false;
+static EvDeyeData ev_deye_data = {};
+static uint32_t last_ev_data_success_ms = 0;
 
 // ==================== SYNCHRONISATION ====================
 static SemaphoreHandle_t data_mutex = nullptr;
@@ -381,8 +386,10 @@ static void load_custom_registers() {
   uint16_t min_reg2 = 999, max_reg2 = 0;
   uint16_t regs2[] = {REG_GRID_POWER, REG_UPS_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP,
                       REG_BATTERY_VOLTAGE, REG_BATTERY_SOC, REG_PV1_POWER, REG_PV2_POWER,
-                      REG_PV3_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD};
-  for (int i = 0; i < 12; i++) {
+                      REG_PV3_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD,
+                      DEYE_REG_EV_CHARGE_MODE, DEYE_REG_EV_MAX_CHARGE_POWER};
+  const uint8_t regs2_count = cfg_ev_charger_enabled ? 14 : 12;
+  for (uint8_t i = 0; i < regs2_count; i++) {
     if (regs2[i] < min_reg2) min_reg2 = regs2[i];
     if (regs2[i] > max_reg2) max_reg2 = regs2[i];
   }
@@ -400,12 +407,16 @@ static void load_custom_registers() {
                                   COEFF_SMARTLOAD >= -100.0f && COEFF_SMARTLOAD <= 100.0f;
   register_config_valid = BLOCK1_COUNT > 0 && BLOCK1_COUNT <= MODBUS_MAX_READ_REGISTERS &&
                           BLOCK2_COUNT > 0 && BLOCK2_COUNT <= MODBUS_MAX_READ_REGISTERS &&
+                          (!cfg_ev_charger_enabled || (BLOCK3_COUNT > 0 && BLOCK3_COUNT <= MODBUS_MAX_READ_REGISTERS)) &&
                           timings_valid && coefficients_valid;
 
   DBG.println("=== REGISTRES PERSONNALISES CHARGES ===");
   DBG.printf("PV1=%d PV2=%d PV3=%d\n", REG_PV1_POWER, REG_PV2_POWER, REG_PV3_POWER);
   DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
   DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
+  if (cfg_ev_charger_enabled) {
+    DBG.printf("Bloc3 VE: %d-%d (%d reg)\n", BLOCK3_START, BLOCK3_START + BLOCK3_COUNT - 1, BLOCK3_COUNT);
+  }
   if (!register_config_valid) {
     DBG.println("ERREUR: registres, delais ou coefficients invalides");
   }
@@ -445,7 +456,16 @@ static void decode_block2(const uint8_t *rtu) {
   main_data.bat_power = (int16_t)modbus_get_u16_be(rtu, REG_BATTERY_POWER - offset);
   main_data.grid_status_raw = modbus_get_u16_be(rtu, REG_GRID_STATUS - offset);
   main_data.smartload_status_raw = modbus_get_u16_be(rtu, REG_SMARTLOAD - offset);
+  if (cfg_ev_charger_enabled) {
+    ev_deye_data.connection_state_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_CHARGE_MODE - offset);
+    ev_deye_data.max_charge_power_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_MAX_CHARGE_POWER - offset);
+  }
   main_data_valid = true;
+}
+
+static void decode_block3(const uint8_t *rtu) {
+  ev_deye_data.charge_power_w = modbus_get_u16_be(rtu, 0);
+  ev_deye_data.valid = true;
 }
 
 static int16_t scaled_power(int16_t raw, float coefficient, float scale) {
@@ -507,6 +527,20 @@ static bool deye_copy_snapshot(
   return true;
 }
 
+// Copie atomique des donnees VE. Lorsque le chargeur est desactive dans les
+// reglages, cette fonction reste volontairement inutilisable.
+bool deye_copy_ev_snapshot(EvDeyeData *out) {
+  if (out == nullptr || !cfg_ev_charger_enabled || data_mutex == nullptr ||
+      xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) {
+    return false;
+  }
+
+  *out = ev_deye_data;
+  out->valid = out->valid && (uint32_t)(millis() - last_ev_data_success_ms) <= DATA_STALE_AFTER_MS;
+  xSemaphoreGive(data_mutex);
+  return true;
+}
+
 // ==================== TÂCHE DE LECTURE ====================
 
 static void solarman_reader_task(void *pvParameters) {
@@ -558,7 +592,7 @@ static void solarman_reader_task(void *pvParameters) {
           xSemaphoreGive(data_mutex);
         }
       }
-    } else {
+    } else if (current_block == 1) {
       uint8_t b2_rtu[5 + MODBUS_MAX_READ_REGISTERS * 2];
       if (read_block(BLOCK2_START, BLOCK2_COUNT, b2_rtu)) {
         if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
@@ -569,11 +603,21 @@ static void solarman_reader_task(void *pvParameters) {
           xSemaphoreGive(data_mutex);
         }
       }
+    } else {
+      uint8_t b3_rtu[5 + MODBUS_MAX_READ_REGISTERS * 2];
+      if (read_block(BLOCK3_START, BLOCK3_COUNT, b3_rtu)) {
+        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+          decode_block3(b3_rtu);
+          last_ev_data_success_ms = millis();
+          ok = true;
+          xSemaphoreGive(data_mutex);
+        }
+      }
     }
     if (ok) {
       last_read_time = millis();
     }
-    current_block = (current_block + 1) % 2;
+    current_block = (current_block + 1) % (cfg_ev_charger_enabled ? 3 : 2);
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
@@ -601,7 +645,9 @@ void deye_solarman_begin() {
   main_data_valid = false;
   dashboard_data.valid = false;
   pv_daily_yield_valid = false;
+  ev_deye_data = {};
   last_data_success_ms = 0;
+  last_ev_data_success_ms = 0;
 
   data_mutex = xSemaphoreCreateMutex();
   if (data_mutex == NULL) {

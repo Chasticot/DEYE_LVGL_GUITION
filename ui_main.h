@@ -10,6 +10,7 @@
 #include "wifi_manager.h"
 #include "ntp_manager.h"
 #include "tempo_api.h"
+#include "ve_deye.h"
 
 // ==================== VARIABLES STATIQUES ====================
 static lv_obj_t *screen_main = nullptr;
@@ -35,7 +36,9 @@ static lv_obj_t *label_battery_state = nullptr;
 
 static lv_obj_t *label_load = nullptr;
 static lv_obj_t *label_load_daily = nullptr;
+static lv_obj_t *ev_charge_group = nullptr;
 static lv_obj_t *car_icon = nullptr;
+static lv_obj_t *label_ev_charge_power = nullptr;
 static lv_obj_t *tempo_card = nullptr;
 static lv_obj_t *label_tempo = nullptr;
 
@@ -58,6 +61,8 @@ static lv_obj_t *solar_rays[7] = {nullptr};
 
 // ==================== FONCTIONS EXTERNES ====================
 extern void ui_show_settings(lv_event_t *e);
+extern void ui_show_ve_deye(lv_event_t *e);
+extern bool deye_copy_ev_snapshot(EvDeyeData *out);
 
 // ==================== FONCTIONS UI ====================
 static lv_color_t ui_card_color() {
@@ -515,10 +520,16 @@ static void ui_main_create() {
   );
   lv_obj_align(label_load_daily, LV_ALIGN_CENTER, 0, 20);
 
+  // Groupe VE centre dans la tuile : l'icone et la puissance partagent le
+  // meme axe vertical, independamment de la hauteur de leur police.
+  ev_charge_group = ui_main_make_icon_container(load_card, 130, 24);
+  lv_obj_align(ev_charge_group, LV_ALIGN_BOTTOM_MID, 0, -5);
+
   // Petite voiture décorative sous la consommation journalière, dessinée
   // uniquement avec des primitives LVGL légères.
-  car_icon = ui_main_make_icon_container(load_card, 32, 17);
-  lv_obj_align(car_icon, LV_ALIGN_BOTTOM_MID, 0, -8);
+  car_icon = ui_main_make_icon_container(ev_charge_group, 32, 17);
+  lv_obj_align(car_icon, LV_ALIGN_LEFT_MID, 0, -2);
+  lv_obj_add_event_cb(car_icon, ui_show_ve_deye, LV_EVENT_CLICKED, nullptr);
   const lv_color_t car_color = lv_color_hex(0xFACC15);
 
   // Silhouette basse, habitacle vitré et phare : une forme plus moderne.
@@ -577,7 +588,12 @@ static void ui_main_create() {
     lv_obj_set_style_radius(hub, LV_RADIUS_CIRCLE, LV_PART_MAIN);
     lv_obj_clear_flag(hub, LV_OBJ_FLAG_CLICKABLE);
   }
-  if (!cfg_ev_charger_enabled) lv_obj_add_flag(car_icon, LV_OBJ_FLAG_HIDDEN);
+  label_ev_charge_power = ui_main_label(
+    ev_charge_group, "VE: -- W", 86, &lv_font_montserrat_14,
+    ui_main_theme_color(theme.muted_text), LV_TEXT_ALIGN_LEFT
+  );
+  lv_obj_align(label_ev_charge_power, LV_ALIGN_LEFT_MID, 40, 0);
+  if (!cfg_ev_charger_enabled) lv_obj_add_flag(ev_charge_group, LV_OBJ_FLAG_HIDDEN);
 
   // ======================================================
   // BLOC RESEAU
@@ -908,9 +924,19 @@ static void ui_main_update() {
   snprintf(text, sizeof(text), "Jour: %.1f kWh", daily_load * 0.1f);
   lv_label_set_text(label_load_daily, text);
   if (cfg_ev_charger_enabled) {
-    lv_obj_clear_flag(car_icon, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ev_charge_group, LV_OBJ_FLAG_HIDDEN);
   } else {
-    lv_obj_add_flag(car_icon, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ev_charge_group, LV_OBJ_FLAG_HIDDEN);
+  }
+
+  if (cfg_ev_charger_enabled) {
+    EvDeyeData ev = {};
+    if (deye_copy_ev_snapshot(&ev) && ev.valid) {
+      snprintf(text, sizeof(text), "VE: %u W", ev.charge_power_w);
+    } else {
+      snprintf(text, sizeof(text), "VE: -- W");
+    }
+    lv_label_set_text(label_ev_charge_power, text);
   }
 
   // L'endpoint /api/now tient compte de la bascule Tempo à 6 h.
