@@ -5,7 +5,7 @@ DEYE LVGL Monitor – Interface tactile pour onduleur Deye (Solarman V5)
 
 Interface de monitoring tactile pour onduleurs Deye hybrides (SG02LP1).
 Affiche en temps réel les données de production PV, batterie, consommation et réseau sur un écran 480×480.
-Communication via le protocole Solarman V5 – compatible avec les data loggers LSW3.
+Communication via Solarman V5 (LSW) ou Modbus TCP (LSE), selon la configuration du logger.
 
 https://docs/dashboard.png
 ✨ Fonctionnalités
@@ -38,11 +38,11 @@ https://docs/dashboard.png
 
         NTP (fuseau horaire, serveurs)
 
-        Deye (adresse IP, numéro de série du logger)
+        Deye (adresse IP, port, numéro de série et mode LSE/LSW)
 
     🖥️ Interface tactile :
 
-        Écran 480×480 avec rotation 90°
+        Écran 480×480 avec rotation définie dans le sketch (0 par défaut)
 
         Navigation fluide grâce au multithread (FreeRTOS)
 
@@ -60,7 +60,7 @@ https://docs/dashboard.png
 
     Ecran GUITION type ESP32-4848S040
     Le lien de celui que j'ai acheté en 2025 => https://fr.aliexpress.com/item/1005006622746590.html
-    Data logger Solarman LSW3 connecté à l’onduleur Deye (même réseau WiFi)
+    Data logger Solarman LSW3 ou LSE connecté au même réseau que l’écran
 
 🛠️ Configuration de l’environnement Arduino IDE
 1. Installer le support ESP32
@@ -124,13 +124,13 @@ SPI (optionnel)	39, 48, 47
 
         WiFi SSID / password
 
-        Adresse IP du logger Deye
+        Adresse IP, port et mode du logger Deye
 
-        Numéro de série du logger
+        Numéro de série du logger (LSW)
 
     Compilez et téléversez le code sur l’ESP32-S3.
 
-    À la première mise sous tension, l’écran affichera des données simulées. Utilisez le bouton CFG pour paramétrer votre réseau WiFi et votre onduleur.
+     À la première mise sous tension, l’écran affiche des valeurs indisponibles jusqu’à la première lecture réussie. Utilisez le bouton CFG pour paramétrer le réseau et le logger.
 
 📁 Structure du projet
 
@@ -142,7 +142,8 @@ SPI (optionnel)	39, 48, 47
      ├── wifi_manager.h             # WiFi
      ├── ntp_manager.h              # NTP
      ├── touch_gt911.h              # Driver GT911
-     ├── deye_solarman.h            # Protocole Solarman V5 (multithread)
+      ├── deye_solarman.h            # Solarman V5 / Modbus TCP (multithread)
+      ├── modbus_tcp_codec.h          # Validation des réponses Modbus TCP
      ├── ui_main.h                  # Interface principale (LVGL)
      └── ui_settings.h              # Écrans de configuration
 
@@ -154,7 +155,7 @@ L’interface de configuration vous permet de modifier :
 
     NTP : fuseau horaire, serveurs primaire et secondaire.
 
-    Deye : adresse IP du data logger et numéro de série (visible sur l’étiquette).
+    Deye : adresse IP, port, numéro de série et mode LSE/LSW.
 
 Les paramètres sont sauvegardés dans la mémoire flash (Preferences) et persistent après redémarrage.
 🧵 Multithreading et fluidité
@@ -164,13 +165,13 @@ L’interface LVGL tourne sur le cœur 0, ce qui garantit une navigation fluide 
 
     Mutex : protège les données partagées entre les cœurs.
 
-    Flag ui_active : suspend les lectures pendant la navigation dans les menus.
+Flag ui_active : suspend les lectures pendant la navigation dans les menus. Le pilote tactile ajoute une pause courte pendant l’interaction pour conserver une réponse immédiate.
 
 🔧 Dépannage
 Problème	Solution
-Écran noir / rotation inversée	Vérifier gfx->setRotation(1) dans setup()
+Écran noir / rotation inversée	Vérifier la valeur de gfx->setRotation() dans setup()
 Toucher non réactif	Vérifier les broches I2C du GT911
-Connexion Deye échoue	Vérifier l’adresse IP et le numéro de série dans la configuration
+Connexion Deye échoue	Vérifier l’adresse IP, le port, le mode LSE/LSW et le numéro de série (LSW)
 Lectures échouent souvent	Vérifier que le logger est sur le même réseau et que le port 8899 est ouvert
 Compilation – PSRAM manquant	Activer PSRAM dans les paramètres de la carte
 🙏 Remerciements

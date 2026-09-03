@@ -158,6 +158,7 @@ static void settings_load() {
   cfg_wifi_password = preferences.getString("wifi_pwd", DEFAULT_WIFI_PASSWORD);
   cfg_deye_host = preferences.getString("deye_host", DEFAULT_DEYE_HOST);
   cfg_deye_port = preferences.getUShort("deye_port", 8899);
+  if (cfg_deye_port == 0) cfg_deye_port = 8899;
   cfg_logger_serial = preferences.getUInt("logger", DEFAULT_LOGGER_SERIAL);
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);

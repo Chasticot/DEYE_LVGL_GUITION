@@ -424,6 +424,17 @@ static void ui_main_create() {
 static void ui_main_update() {
   if (screen_main == nullptr) return;
 
+  static DashboardData data = {};
+  static uint16_t pv_daily = 0;
+  static bool pv_daily_valid = false;
+  static uint16_t daily_load = 0;
+  static uint16_t daily_buy = 0;
+  static uint16_t daily_sell = 0;
+  static bool on_grid = true;
+  deye_copy_snapshot(
+    &data, &pv_daily, &pv_daily_valid, &daily_load, &daily_buy, &daily_sell, &on_grid
+  );
+
   char text[128];
   struct tm timeinfo;
 
@@ -452,13 +463,13 @@ static void ui_main_update() {
   // DEYE
   lv_led_set_color(
     led_deye,
-    dashboard_data.valid
+    data.valid
       ? lv_palette_main(LV_PALETTE_GREEN)
       : lv_palette_main(LV_PALETTE_RED)
   );
 
   // PRODUCTION PV
-  uint32_t pv_total = dashboard_data.pv1_w + dashboard_data.pv2_w + dashboard_data.pv3_w;
+  uint32_t pv_total = data.pv1_w + data.pv2_w + data.pv3_w;
 
   snprintf(text, sizeof(text), "%lu W", (unsigned long)pv_total);
   lv_label_set_text(label_pv_total, text);
@@ -467,21 +478,21 @@ static void ui_main_update() {
     text,
     sizeof(text),
     "PV1 %uW  PV2 %uW  PV3 %uW",
-    dashboard_data.pv1_w,
-    dashboard_data.pv2_w,
-    dashboard_data.pv3_w
+    data.pv1_w,
+    data.pv2_w,
+    data.pv3_w
   );
   lv_label_set_text(label_pv_detail, text);
 
-  if (pv_daily_yield_valid) {
-    snprintf(text, sizeof(text), "JOUR: %.1f kWh", pv_daily_yield * 0.1f);
+  if (pv_daily_valid) {
+    snprintf(text, sizeof(text), "JOUR: %.1f kWh", pv_daily * 0.1f);
   } else {
     snprintf(text, sizeof(text), "JOUR: --.- kWh");
   }
   lv_label_set_text(label_pv_daily, text);
 
   // BATTERIE
-  uint16_t soc = constrain(dashboard_data.battery_soc, 0, 100);
+  uint16_t soc = constrain(data.battery_soc, 0, 100);
   lv_arc_set_value(arc_soc, soc);
 
   if (soc < 20) {
@@ -495,16 +506,16 @@ static void ui_main_update() {
   snprintf(text, sizeof(text), "%u%%", soc);
   lv_label_set_text(label_soc, text);
 
-  snprintf(text, sizeof(text), "%.2f V", dashboard_data.battery_voltage);
+  snprintf(text, sizeof(text), "%.2f V", data.battery_voltage);
   lv_label_set_text(label_battery_voltage, text);
 
   const char *battery_state = "REPOS";
   lv_color_t battery_color = lv_color_hex(0xFACC15);
 
-  if (dashboard_data.battery_power < -5) {
+  if (data.battery_power < -5) {
     battery_state = "CHARGE";
     battery_color = lv_color_hex(0x22C55E);
-  } else if (dashboard_data.battery_power > 5) {
+  } else if (data.battery_power > 5) {
     battery_state = "DECHARGE";
     battery_color = lv_color_hex(0xFB7185);
   }
@@ -512,20 +523,18 @@ static void ui_main_update() {
   lv_label_set_text(label_battery_state, battery_state);
   lv_obj_set_style_text_color(label_battery_state, battery_color, LV_PART_MAIN);
 
-  snprintf(text, sizeof(text), "%d W", dashboard_data.battery_power);
+  snprintf(text, sizeof(text), "%d W", data.battery_power);
   lv_label_set_text(label_battery_power, text);
 
   // CONSOMMATION
-  snprintf(text, sizeof(text), "%d W", dashboard_data.load_power);
+  snprintf(text, sizeof(text), "%d W", data.load_power);
   lv_label_set_text(label_load, text);
 
-  float daily_load = deye_get_daily_load() * 0.1f;
-  snprintf(text, sizeof(text), "Jour: %.1f kWh", daily_load);
+  snprintf(text, sizeof(text), "Jour: %.1f kWh", daily_load * 0.1f);
   lv_label_set_text(label_load_daily, text);
 
   // RESEAU
-  int16_t grid_power = dashboard_data.grid_power;
-  bool on_grid = deye_on_grid_state;
+  int16_t grid_power = data.grid_power;
   
   char sign = (grid_power < 0) ? '-' : ' ';
   int32_t grid_abs = abs(grid_power);
@@ -533,10 +542,7 @@ static void ui_main_update() {
   snprintf(text, sizeof(text), "%c%ld W", sign, (long)grid_abs);
   lv_label_set_text(label_grid_power, text);
 
-  float daily_sell = deye_get_daily_grid_sell() * 0.1f;
-  float daily_buy = deye_get_daily_grid_buy() * 0.1f;
-
-  snprintf(text, sizeof(text), "D.Sell: %.1fkWh  D.Buy: %.1fkWh", daily_sell, daily_buy);
+  snprintf(text, sizeof(text), "D.Sell: %.1fkWh  D.Buy: %.1fkWh", daily_sell * 0.1f, daily_buy * 0.1f);
   lv_label_set_text(label_grid_daily, text);
 
   const char *grid_status = on_grid ? "ON GRID" : "OFF GRID";
@@ -569,13 +575,13 @@ static void ui_main_update() {
   if (gen_smartload) {
     // Mode SmartLoad : afficher ON/OFF
     snprintf(smart_text, sizeof(smart_text), "SMARTLOAD : %s", 
-             dashboard_data.smartload_on ? "ON" : "OFF");
+             data.smartload_on ? "ON" : "OFF");
     lv_obj_set_style_text_color(label_smartload, 
-                                dashboard_data.smartload_on ? lv_color_hex(0x22C55E) : lv_color_hex(0xFB7185),
+                                data.smartload_on ? lv_color_hex(0x22C55E) : lv_color_hex(0xFB7185),
                                 LV_PART_MAIN);
   } else {
     // Mode GEN MO : afficher la puissance
-    snprintf(smart_text, sizeof(smart_text), "GEN : %d W", dashboard_data.ups_power);
+    snprintf(smart_text, sizeof(smart_text), "GEN : %d W", data.ups_power);
     lv_obj_set_style_text_color(label_smartload, lv_color_hex(0x55D6FF), LV_PART_MAIN);
   }
   lv_label_set_text(label_smartload, smart_text);
@@ -584,9 +590,9 @@ static void ui_main_update() {
     text,
     sizeof(text),
     "DC %.1fC  AC %.1fC  BAT %.1fC",
-    dashboard_data.dc_temperature,
-    dashboard_data.ac_temperature,
-    dashboard_data.battery_temperature
+    data.dc_temperature,
+    data.ac_temperature,
+    data.battery_temperature
   );
   lv_label_set_text(label_temp, text);
 }

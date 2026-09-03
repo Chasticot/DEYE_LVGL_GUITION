@@ -1,0 +1,3 @@
+pc_simulator/build/
+.vscode/
+config.local.h

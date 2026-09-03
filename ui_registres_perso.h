@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <lvgl.h>
+#include <math.h>
 #include "config.h"
 #include "settings.h"
 
@@ -120,39 +121,106 @@ static void add_reg_line(
 
 // ==================== SAUVEGARDE ====================
 
+static void ui_registers_show_error(const char *message) {
+  lv_obj_t *msg = lv_msgbox_create(NULL, "Valeur invalide", message, NULL, true);
+  lv_obj_center(msg);
+}
+
+static bool ui_read_uint16(lv_obj_t *textarea, uint16_t *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0' || *text == '-') return false;
+  char *end = nullptr;
+  const unsigned long value = strtoul(text, &end, 10);
+  if (end == text || *end != '\0' || value > UINT16_MAX) return false;
+  *out = (uint16_t)value;
+  return true;
+}
+
+static bool ui_read_timeout(lv_obj_t *textarea, uint32_t *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0' || *text == '-') return false;
+  char *end = nullptr;
+  const unsigned long value = strtoul(text, &end, 10);
+  if (end == text || *end != '\0' || value < 50 || value > 60000) return false;
+  *out = (uint32_t)value;
+  return true;
+}
+
+static bool ui_read_coefficient(lv_obj_t *textarea, float *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0') return false;
+  char *end = nullptr;
+  const float value = strtof(text, &end);
+  if (end == text || *end != '\0' || !isfinite(value) || value < -100.0f || value > 100.0f) return false;
+  *out = value;
+  return true;
+}
+
+static bool ui_register_blocks_valid(const CustomRegisters &regs) {
+  const uint16_t block1[] = {
+    regs.grid_buy_daily, regs.grid_sell_daily, regs.load_daily,
+    regs.dc_temp, regs.ac_temp, regs.pv_daily
+  };
+  const uint16_t block2[] = {
+    regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+    regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power,
+    regs.pv3_power, regs.battery_power, regs.grid_status, regs.smartload
+  };
+  uint16_t min1 = block1[0], max1 = block1[0], min2 = block2[0], max2 = block2[0];
+  for (size_t i = 1; i < sizeof(block1) / sizeof(block1[0]); ++i) {
+    if (block1[i] < min1) min1 = block1[i];
+    if (block1[i] > max1) max1 = block1[i];
+  }
+  for (size_t i = 1; i < sizeof(block2) / sizeof(block2[0]); ++i) {
+    if (block2[i] < min2) min2 = block2[i];
+    if (block2[i] > max2) max2 = block2[i];
+  }
+  return (uint32_t)max1 - min1 + 1 <= 125 && (uint32_t)max2 - min2 + 1 <= 125;
+}
+
 static void ui_registers_save(lv_event_t *e) {
   (void)e;
 
   CustomRegisters regs;
-  // Valeurs des registres
-  regs.pv1_power = atoi(lv_textarea_get_text(ta_pv1_power));
-  regs.pv2_power = atoi(lv_textarea_get_text(ta_pv2_power));
-  regs.pv3_power = atoi(lv_textarea_get_text(ta_pv3_power));
-  regs.pv_daily = atoi(lv_textarea_get_text(ta_pv_daily));
-  regs.battery_soc = atoi(lv_textarea_get_text(ta_battery_soc));
-  regs.battery_voltage = atoi(lv_textarea_get_text(ta_battery_voltage));
-  regs.battery_power = atoi(lv_textarea_get_text(ta_battery_power));
-  regs.battery_temp = atoi(lv_textarea_get_text(ta_battery_temp));
-  regs.grid_power = atoi(lv_textarea_get_text(ta_grid_power));
-  regs.grid_status = atoi(lv_textarea_get_text(ta_grid_status));
-  regs.grid_buy_daily = atoi(lv_textarea_get_text(ta_grid_buy_daily));
-  regs.grid_sell_daily = atoi(lv_textarea_get_text(ta_grid_sell_daily));
-  regs.load_power = atoi(lv_textarea_get_text(ta_load_power));
-  regs.ups_power = atoi(lv_textarea_get_text(ta_ups_power));
-  regs.load_daily = atoi(lv_textarea_get_text(ta_load_daily));
-  regs.dc_temp = atoi(lv_textarea_get_text(ta_dc_temp));
-  regs.ac_temp = atoi(lv_textarea_get_text(ta_ac_temp));
-  regs.smartload = atoi(lv_textarea_get_text(ta_smartload));
-  regs.connect_timeout = atol(lv_textarea_get_text(ta_connect_timeout));
-  regs.response_window = atol(lv_textarea_get_text(ta_response_window));
-  regs.frame_timeout = atol(lv_textarea_get_text(ta_frame_timeout));
-  regs.block_interval = atol(lv_textarea_get_text(ta_block_interval));
+  #define READ_REGISTER(field, textarea) if (!ui_read_uint16(textarea, &regs.field)) { ui_registers_show_error("Les registres doivent etre entre 0 et 65535."); return; }
+  READ_REGISTER(pv1_power, ta_pv1_power);
+  READ_REGISTER(pv2_power, ta_pv2_power);
+  READ_REGISTER(pv3_power, ta_pv3_power);
+  READ_REGISTER(pv_daily, ta_pv_daily);
+  READ_REGISTER(battery_soc, ta_battery_soc);
+  READ_REGISTER(battery_voltage, ta_battery_voltage);
+  READ_REGISTER(battery_power, ta_battery_power);
+  READ_REGISTER(battery_temp, ta_battery_temp);
+  READ_REGISTER(grid_power, ta_grid_power);
+  READ_REGISTER(grid_status, ta_grid_status);
+  READ_REGISTER(grid_buy_daily, ta_grid_buy_daily);
+  READ_REGISTER(grid_sell_daily, ta_grid_sell_daily);
+  READ_REGISTER(load_power, ta_load_power);
+  READ_REGISTER(ups_power, ta_ups_power);
+  READ_REGISTER(load_daily, ta_load_daily);
+  READ_REGISTER(dc_temp, ta_dc_temp);
+  READ_REGISTER(ac_temp, ta_ac_temp);
+  READ_REGISTER(smartload, ta_smartload);
+  #undef READ_REGISTER
 
-  // Coefficients
-  regs.coeff_grid_power = atof(lv_textarea_get_text(ta_coeff_grid_power));
-  regs.coeff_load_power = atof(lv_textarea_get_text(ta_coeff_load_power));
-  regs.coeff_ups_power = atof(lv_textarea_get_text(ta_coeff_ups_power));
-  regs.coeff_smartload = atof(lv_textarea_get_text(ta_coeff_smartload));
+  if (!ui_read_timeout(ta_connect_timeout, &regs.connect_timeout) ||
+      !ui_read_timeout(ta_response_window, &regs.response_window) ||
+      !ui_read_timeout(ta_frame_timeout, &regs.frame_timeout) ||
+      !ui_read_timeout(ta_block_interval, &regs.block_interval)) {
+    ui_registers_show_error("Les timeouts doivent etre compris entre 50 et 60000 ms.");
+    return;
+  }
+  if (!ui_read_coefficient(ta_coeff_grid_power, &regs.coeff_grid_power) ||
+      !ui_read_coefficient(ta_coeff_load_power, &regs.coeff_load_power) ||
+      !ui_read_coefficient(ta_coeff_ups_power, &regs.coeff_ups_power) ||
+      !ui_read_coefficient(ta_coeff_smartload, &regs.coeff_smartload)) {
+    ui_registers_show_error("Les coefficients doivent etre entre -100 et 100.");
+    return;
+  }
+  if (!ui_register_blocks_valid(regs)) {
+    ui_registers_show_error("Chaque bloc de lecture doit contenir au maximum 125 registres.");
+    return;
+  }
 
   settings_save_registers(regs);
 
@@ -160,9 +228,10 @@ static void ui_registers_save(lv_event_t *e) {
   static const char *btn_txts[] = {"OK", NULL};
   lv_obj_t *msg = lv_msgbox_create(NULL, "Sauvegarde", "Registres et coefficients sauvegardes !\nRedemarrage en cours...", btn_txts, false);
   lv_obj_center(msg);
-  lv_timer_handler();
-  delay(300);
-  ESP.restart();
+  lv_timer_create([](lv_timer_t *timer) {
+    lv_timer_del(timer);
+    ESP.restart();
+  }, 300, NULL);
 }
 
 // ==================== CHARGEMENT DES VALEURS ====================

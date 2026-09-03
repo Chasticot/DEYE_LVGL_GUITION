@@ -148,7 +148,9 @@ void loop() {
   static uint32_t last_display_update = 0;
   
   // LVGL Timer Handler - PRIORITAIRE
+  lv_tick_inc(1);
   lv_timer_handler();
+  wifi_manager_process();
   
   // Mise à jour de l'affichage - toutes les 500ms
   uint32_t now = millis();
