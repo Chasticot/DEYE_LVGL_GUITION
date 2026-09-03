@@ -563,16 +563,22 @@ static void ui_main_update() {
   }
 
   // SMARTLOAD ET TEMPÉRATURES
-  lv_label_set_text(
-    label_smartload,
-    dashboard_data.smartload_on ? "SMARTLOAD : ON" : "SMARTLOAD : OFF"
-  );
-
-  lv_obj_set_style_text_color(
-    label_smartload,
-    dashboard_data.smartload_on ? lv_color_hex(0x22C55E) : lv_color_hex(0xFB7185),
-    LV_PART_MAIN
-  );
+  // SMARTLOAD / GEN MO
+  bool gen_smartload = settings_get_gen_mode();
+  char smart_text[32];
+  if (gen_smartload) {
+    // Mode SmartLoad : afficher ON/OFF
+    snprintf(smart_text, sizeof(smart_text), "SMARTLOAD : %s", 
+             dashboard_data.smartload_on ? "ON" : "OFF");
+    lv_obj_set_style_text_color(label_smartload, 
+                                dashboard_data.smartload_on ? lv_color_hex(0x22C55E) : lv_color_hex(0xFB7185),
+                                LV_PART_MAIN);
+  } else {
+    // Mode GEN MO : afficher la puissance
+    snprintf(smart_text, sizeof(smart_text), "GEN : %d W", dashboard_data.ups_power);
+    lv_obj_set_style_text_color(label_smartload, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  }
+  lv_label_set_text(label_smartload, smart_text);
 
   snprintf(
     text,

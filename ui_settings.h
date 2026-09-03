@@ -1,3 +1,5 @@
+// ui_settings.h - Version corrigée avec ui_show_settings
+
 #pragma once
 
 #include <Arduino.h>
@@ -5,11 +7,12 @@
 #include <WiFi.h>
 #include "config.h"
 #include "settings.h"
+#include "ui_registres_perso.h"   // Pour screen_registers
 
 // ==================== DÉCLARATIONS EXTERNES ====================
-extern void ui_show_dashboard(lv_event_t *e);
+extern void deye_solarman_set_ui_active(bool active);
 
-// ==================== VARIABLES ====================
+// ==================== VARIABLES STATIQUES ====================
 static lv_obj_t *screen_settings = nullptr;
 static lv_obj_t *screen_wifi = nullptr;
 static lv_obj_t *screen_ntp = nullptr;
@@ -25,6 +28,9 @@ static lv_obj_t *textarea_ntp_secondary = nullptr;
 
 static lv_obj_t *textarea_deye_host = nullptr;
 static lv_obj_t *textarea_logger_serial = nullptr;
+
+static String wifi_ssid_list[32];
+static int wifi_ssid_count = 0;
 
 static const char *timezone_names =
   "Europe/Paris\n"
@@ -48,7 +54,6 @@ static const char *timezone_rules[] = {
 };
 
 // ==================== FONCTIONS UI ====================
-
 static lv_obj_t *ui_settings_make_title(lv_obj_t *parent, const char *text) {
   lv_obj_t *title = lv_label_create(parent);
   lv_label_set_text(title, text);
@@ -74,7 +79,11 @@ static lv_obj_t *ui_settings_make_button(
   lv_obj_set_pos(button, x, y);
   lv_obj_set_style_bg_color(button, lv_color_hex(0x1D4ED8), LV_PART_MAIN);
   lv_obj_set_style_radius(button, 8, LV_PART_MAIN);
-  lv_obj_add_event_cb(button, callback, LV_EVENT_CLICKED, nullptr);
+  if (callback != nullptr) {
+    lv_obj_add_event_cb(button, callback, LV_EVENT_CLICKED, nullptr);
+  } else {
+    lv_obj_add_flag(button, LV_OBJ_FLAG_CLICKABLE);
+  }
 
   lv_obj_t *label = lv_label_create(button);
   lv_label_set_text(label, text);
@@ -111,12 +120,17 @@ static void ui_textarea_event(lv_event_t *e) {
 
 static lv_obj_t *ui_settings_make_textarea(
   lv_obj_t *parent,
-  lv_obj_t *keyboard,
   const char *value,
   lv_coord_t x,
   lv_coord_t y,
   bool password
 ) {
+  lv_obj_t *keyboard = lv_keyboard_create(parent);
+  lv_obj_set_size(keyboard, LCD_W, 190);
+  lv_obj_align(keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
+  lv_obj_set_style_bg_color(keyboard, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+  lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+
   lv_obj_t *textarea = lv_textarea_create(parent);
   lv_textarea_set_one_line(textarea, true);
   lv_textarea_set_password_mode(textarea, password);
@@ -133,25 +147,49 @@ static lv_obj_t *ui_settings_make_textarea(
 }
 
 // ==================== FONCTIONS DE NAVIGATION ====================
+void ui_show_dashboard(lv_event_t *e) {
+  (void)e;
+  deye_solarman_set_ui_active(false);
+  lv_scr_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+}
+
+void ui_show_settings_screen(lv_event_t *e) {
+  (void)e;
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+}
+
+// Cette fonction est appelée par le bouton CFG de l'écran principal
+void ui_show_settings(lv_event_t *e) {
+  (void)e;
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+}
+
+void ui_show_registers(lv_event_t *e) {
+  (void)e;
+  deye_solarman_set_ui_active(true);
+  if (screen_registers != nullptr) {
+    lv_scr_load_anim(screen_registers, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
+  }
+}
 
 static void ui_show_wifi_screen(lv_event_t *e) {
   (void)e;
-  lv_scr_load_anim(screen_wifi, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_wifi, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
 }
 
 static void ui_show_ntp_screen(lv_event_t *e) {
   (void)e;
-  lv_scr_load_anim(screen_ntp, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_ntp, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
 }
 
 static void ui_show_deye_screen(lv_event_t *e) {
   (void)e;
-  lv_scr_load_anim(screen_deye, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
-}
-
-static void ui_show_settings_screen(lv_event_t *e) {
-  (void)e;
-  lv_scr_load_anim(screen_settings, LV_SCR_LOAD_ANIM_FADE_ON, 150, 0, false);
+  deye_solarman_set_ui_active(true);
+  lv_scr_load_anim(screen_deye, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, false);
 }
 
 // ==================== FONCTIONS DE CONFIGURATION ====================
@@ -162,43 +200,60 @@ static void ui_scan_wifi(lv_event_t *e) {
     DBG.println("ERROR: dropdown_wifi is NULL");
     return;
   }
-  
+
   lv_label_set_text(label_wifi_scan, "Scan en cours...");
   lv_timer_handler();
 
   WiFi.mode(WIFI_STA);
   delay(100);
-  
+
   int count = WiFi.scanNetworks();
-  
   if (count <= 0) {
     lv_label_set_text(label_wifi_scan, "Aucun reseau trouve");
     WiFi.scanDelete();
     return;
   }
 
-  String names = "";
-  for (int i = 0; i < count; i++) {
-    if (i > 0) names += "\n";
-    names += WiFi.SSID(i);
+  wifi_ssid_count = 0;
+  String display_list = "";
+
+  for (int i = 0; i < count && i < 32; i++) {
+    String ssid = WiFi.SSID(i);
+    if (ssid.length() == 0) continue;
+
+    int rssi = WiFi.RSSI(i);
+    int quality;
+    if (rssi <= -100) quality = 0;
+    else if (rssi >= -50) quality = 100;
+    else quality = 2 * (rssi + 100);
+
+    wifi_ssid_list[wifi_ssid_count] = ssid;
+    wifi_ssid_count++;
+
+    if (i > 0) display_list += "\n";
+    display_list += ssid + " " + String(quality) + "%";
   }
 
-  lv_dropdown_set_options(dropdown_wifi, names.c_str());
+  lv_dropdown_set_options(dropdown_wifi, display_list.c_str());
   lv_dropdown_set_selected(dropdown_wifi, 0);
   lv_obj_invalidate(dropdown_wifi);
   lv_dropdown_open(dropdown_wifi);
-  
+
   char msg[64];
-  snprintf(msg, sizeof(msg), "%d reseaux trouves", count);
+  snprintf(msg, sizeof(msg), "%d reseaux trouves", wifi_ssid_count);
   lv_label_set_text(label_wifi_scan, msg);
-  
+
   WiFi.scanDelete();
 }
 
 static void ui_save_wifi(lv_event_t *e) {
   (void)e;
-  char ssid[64];
-  lv_dropdown_get_selected_str(dropdown_wifi, ssid, sizeof(ssid));
+  uint16_t selected = lv_dropdown_get_selected(dropdown_wifi);
+  if (selected >= wifi_ssid_count) {
+    DBG.println("Erreur: selection invalide");
+    return;
+  }
+  String ssid = wifi_ssid_list[selected];
   settings_save_wifi(ssid, lv_textarea_get_text(textarea_wifi_password));
   ui_settings_restart_message();
 }
@@ -227,22 +282,36 @@ static void ui_save_deye(lv_event_t *e) {
 // ==================== CRÉATION DES ÉCRANS ====================
 
 static void ui_settings_create() {
-  DBG.println("=== CREATION ECRAN SETTINGS ===");
-  
+  // ÉCRAN PRINCIPAL SETTINGS
   screen_settings = lv_obj_create(nullptr);
   lv_obj_set_style_bg_color(screen_settings, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_settings, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_settings, LV_OBJ_FLAG_SCROLLABLE);
   ui_settings_make_title(screen_settings, "CONFIGURATION");
 
-  ui_settings_make_button(screen_settings, "WIFI", 80, 90, 320, 60, ui_show_wifi_screen);
-  ui_settings_make_button(screen_settings, "HEURE / NTP", 80, 180, 320, 60, ui_show_ntp_screen);
-  ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", 80, 270, 320, 60, ui_show_deye_screen);
-  ui_settings_make_button(screen_settings, "RETOUR", 140, 385, 200, 50, ui_show_dashboard);
+  // 2 COLONNES x 3 LIGNES
+  int btn_w = 190;
+  int btn_h = 55;
+  int spacing = 15;
+  int col1_x = 30;
+  int col2_x = 240;
+  int start_y = 70;
+  int step_y = btn_h + spacing;
 
-  // =============================================
+  // Colonne 1 (gauche)
+  ui_settings_make_button(screen_settings, "WIFI", col1_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_wifi_screen);
+  ui_settings_make_button(screen_settings, "HEURE / NTP", col1_x, start_y + 1 * step_y, btn_w, btn_h, ui_show_ntp_screen);
+  ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", col1_x, start_y + 2 * step_y, btn_w, btn_h, ui_show_deye_screen);
+
+  // Colonne 2 (droite)
+  ui_settings_make_button(screen_settings, "REGISTRES PERSO", col2_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_registers);
+  ui_settings_make_button(screen_settings, "PRE CONF DEYE", col2_x, start_y + 1 * step_y, btn_w, btn_h, nullptr);
+  ui_settings_make_button(screen_settings, "VIDE", col2_x, start_y + 2 * step_y, btn_w, btn_h, nullptr);
+
+  // Bouton RETOUR
+  ui_settings_make_button(screen_settings, "RETOUR", 130, 415, 200, 50, ui_show_dashboard);
+
   // ÉCRAN WIFI
-  // =============================================
   screen_wifi = lv_obj_create(nullptr);
   lv_obj_set_style_bg_color(screen_wifi, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_wifi, LV_OPA_COVER, LV_PART_MAIN);
@@ -265,7 +334,7 @@ static void ui_settings_create() {
   lv_obj_set_style_border_width(dropdown_wifi, 1, LV_PART_MAIN);
   lv_obj_set_style_radius(dropdown_wifi, 6, LV_PART_MAIN);
   lv_obj_set_style_max_height(dropdown_wifi, 200, LV_PART_MAIN);
-  
+
   ui_settings_make_button(screen_wifi, "SCAN", 335, 82, 115, 45, ui_scan_wifi);
 
   label = lv_label_create(screen_wifi);
@@ -274,15 +343,8 @@ static void ui_settings_create() {
   lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
-  lv_obj_t *kb_wifi = lv_keyboard_create(screen_wifi);
-  lv_obj_set_size(kb_wifi, LCD_W, 190);
-  lv_obj_align(kb_wifi, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_style_bg_color(kb_wifi, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_add_flag(kb_wifi, LV_OBJ_FLAG_HIDDEN);
-
   textarea_wifi_password = ui_settings_make_textarea(
     screen_wifi,
-    kb_wifi,
     cfg_wifi_password.c_str(),
     20, 172,
     true
@@ -297,9 +359,7 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_wifi, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
   ui_settings_make_button(screen_wifi, "SAUVEGARDER", 250, 370, 200, 55, ui_save_wifi);
 
-  // =============================================
   // ÉCRAN NTP
-  // =============================================
   screen_ntp = lv_obj_create(nullptr);
   lv_obj_set_style_bg_color(screen_ntp, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_ntp, LV_OPA_COVER, LV_PART_MAIN);
@@ -328,15 +388,8 @@ static void ui_settings_create() {
   lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
-  lv_obj_t *kb_ntp = lv_keyboard_create(screen_ntp);
-  lv_obj_set_size(kb_ntp, LCD_W, 190);
-  lv_obj_align(kb_ntp, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_style_bg_color(kb_ntp, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_add_flag(kb_ntp, LV_OBJ_FLAG_HIDDEN);
-
   textarea_ntp_primary = ui_settings_make_textarea(
     screen_ntp,
-    kb_ntp,
     cfg_ntp_primary.c_str(),
     20, 167,
     false
@@ -350,7 +403,6 @@ static void ui_settings_create() {
 
   textarea_ntp_secondary = ui_settings_make_textarea(
     screen_ntp,
-    kb_ntp,
     cfg_ntp_secondary.c_str(),
     20, 252,
     false
@@ -359,9 +411,7 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_ntp, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
   ui_settings_make_button(screen_ntp, "SAUVEGARDER", 250, 370, 200, 55, ui_save_ntp);
 
-  // =============================================
   // ÉCRAN DEYE
-  // =============================================
   screen_deye = lv_obj_create(nullptr);
   lv_obj_set_style_bg_color(screen_deye, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_deye, LV_OPA_COVER, LV_PART_MAIN);
@@ -374,15 +424,8 @@ static void ui_settings_create() {
   lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
-  lv_obj_t *kb_deye_text = lv_keyboard_create(screen_deye);
-  lv_obj_set_size(kb_deye_text, LCD_W, 190);
-  lv_obj_align(kb_deye_text, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_style_bg_color(kb_deye_text, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_add_flag(kb_deye_text, LV_OBJ_FLAG_HIDDEN);
-
   textarea_deye_host = ui_settings_make_textarea(
     screen_deye,
-    kb_deye_text,
     cfg_deye_host.c_str(),
     20, 100,
     false
@@ -394,19 +437,11 @@ static void ui_settings_create() {
   lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
-  lv_obj_t *kb_deye_number = lv_keyboard_create(screen_deye);
-  lv_keyboard_set_mode(kb_deye_number, LV_KEYBOARD_MODE_NUMBER);
-  lv_obj_set_size(kb_deye_number, LCD_W, 190);
-  lv_obj_align(kb_deye_number, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_style_bg_color(kb_deye_number, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_add_flag(kb_deye_number, LV_OBJ_FLAG_HIDDEN);
-
   char serial[16];
   snprintf(serial, sizeof(serial), "%lu", (unsigned long)cfg_logger_serial);
 
   textarea_logger_serial = ui_settings_make_textarea(
     screen_deye,
-    kb_deye_number,
     serial,
     20, 210,
     false
@@ -414,6 +449,4 @@ static void ui_settings_create() {
 
   ui_settings_make_button(screen_deye, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
   ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 370, 200, 55, ui_save_deye);
-  
-  DBG.println("=== TOUS LES ECRANS SETTINGS CREES ===");
 }
