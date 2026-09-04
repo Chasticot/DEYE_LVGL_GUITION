@@ -1,0 +1,1 @@
+-include C:/Users/lagie/Documents/Arduino/DEYE_LVGL_GUITION-main3/DEYE_LVGL_UI_2x2_menu_avance_coef_LSE_LSW/lv_conf.h

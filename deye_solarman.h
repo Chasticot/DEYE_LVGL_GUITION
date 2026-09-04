@@ -9,14 +9,14 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include <math.h>
+#include "config.h"
 #include "app_data.h"
-#include "modbus_tcp_codec.h"
 #include "settings.h"
 #include "ve_deye.h"
 
 // ==================== CONSTANTES ====================
+#define DEYE_PORT 8899
 #define DEYE_MODBUS_SLAVE_ID 1
-#define DEYE_LSW_PORT 8899
 
 // ==================== VARIABLES DYNAMIQUES (valeurs par défaut, écrasées par settings) ====================
 uint16_t REG_PV1_POWER = 186;
@@ -55,7 +55,7 @@ float COEFF_UPS_POWER = 1.0f;
 float COEFF_SMARTLOAD = 1.0f;
 
 #define MODBUS_MAX_READ_REGISTERS 125
-#define DATA_STALE_AFTER_MS 30000UL
+#define DATA_STALE_AFTER_MS 120000UL
 
 // ==================== STRUCTURES ====================
 struct MainData {
@@ -102,10 +102,7 @@ static uint32_t last_ev_data_success_ms = 0;
 // ==================== SYNCHRONISATION ====================
 static SemaphoreHandle_t data_mutex = nullptr;
 static volatile bool ui_active = false;
-static volatile bool touch_pause_active = false;
 static volatile bool reader_running = false;
-static bool register_config_valid = false;
-static bool deye_mode_lse = false;
 static uint32_t last_data_success_ms = 0;
 
 // ==================== DÉCLARATIONS ====================
@@ -183,17 +180,6 @@ static bool read_exact(WiFiClient &client, uint8_t *buffer, size_t wanted, uint3
   return received == wanted;
 }
 
-static bool read_exact_until(WiFiClient &client, uint8_t *buffer, size_t wanted, uint32_t deadline) {
-  size_t received = 0;
-  while (received < wanted && (int32_t)(deadline - millis()) > 0) {
-    while (client.available() && received < wanted) {
-      buffer[received++] = client.read();
-    }
-    delay(1);
-  }
-  return received == wanted;
-}
-
 static bool receive_one_v5_frame(WiFiClient &client, uint8_t *frame, size_t *frame_len) {
   uint8_t header[11];
   if (!read_exact(client, header, sizeof(header), FRAME_TIMEOUT_MS)) return false;
@@ -226,70 +212,6 @@ static bool get_rtu_from_v5_frame(const uint8_t *frame, size_t frame_len, uint16
   return false;
 }
 
-// ==================== LECTURE MODBUS TCP (LSE) ====================
-
-static bool modbus_tcp_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
-  if (count == 0 || count > MODBUS_MAX_READ_REGISTERS) return false;
-
-  WiFiClient client;
-  uint8_t tcp_frame[12];
-  uint8_t response[6 + 1 + 1 + 1 + MODBUS_MAX_READ_REGISTERS * 2];
-  static uint16_t trans_id = 0;
-  trans_id++;
-  tcp_frame[0] = trans_id >> 8;
-  tcp_frame[1] = trans_id & 0xFF;
-  tcp_frame[2] = 0x00;
-  tcp_frame[3] = 0x00;
-  tcp_frame[4] = 0x00;
-  tcp_frame[5] = 0x06;
-  tcp_frame[6] = DEYE_MODBUS_SLAVE_ID;
-  tcp_frame[7] = 0x03;
-  tcp_frame[8] = (uint8_t)(first_reg >> 8);
-  tcp_frame[9] = (uint8_t)(first_reg & 0xFF);
-  tcp_frame[10] = (uint8_t)(count >> 8);
-  tcp_frame[11] = (uint8_t)(count & 0xFF);
-
-  if (!client.connect(cfg_deye_host.c_str(), cfg_deye_port, TCP_CONNECT_TIMEOUT_MS)) {
-    DBG.printf("❌ LSE: connexion échouée à %s:%d\n", cfg_deye_host.c_str(), cfg_deye_port);
-    return false;
-  }
-
-  if (client.write(tcp_frame, sizeof(tcp_frame)) != sizeof(tcp_frame)) {
-    client.stop();
-    return false;
-  }
-
-  uint32_t deadline = millis() + RESPONSE_WINDOW_MS;
-  // Read MBAP (6 bytes) and the unit id. The remaining byte count is declared in MBAP.
-  if (!read_exact_until(client, response, 7, deadline)) {
-    DBG.println("❌ LSE: réponse trop courte");
-    client.stop();
-    return false;
-  }
-
-  const uint16_t mbap_length = ((uint16_t)response[4] << 8) | response[5];
-  if (mbap_length < 3 || mbap_length > 3 + MODBUS_MAX_READ_REGISTERS * 2) {
-    DBG.println("❌ LSE: longueur MBAP invalide");
-    client.stop();
-    return false;
-  }
-
-  const size_t response_len = 6 + mbap_length;
-  const bool complete = read_exact_until(client, response + 7, mbap_length - 1, deadline);
-  client.stop();
-  if (!complete) {
-    DBG.println("❌ LSE: données incomplètes");
-    return false;
-  }
-
-  if (!modbus_tcp_read_response_to_rtu(
-        response, response_len, trans_id, DEYE_MODBUS_SLAVE_ID, count, rtu_response)) {
-    DBG.println("❌ LSE: trame Modbus TCP invalide");
-    return false;
-  }
-  return true;
-}
-
 // ==================== LECTURE SOLARMAN V5 (LSW) ====================
 
 static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
@@ -305,13 +227,7 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
   if (client.connected()) client.stop();
   delay(50);
 
-  // Le LSW attend le protocole propriétaire Solarman V5 sur 8899. La requête
-  // RTU ci-dessus est uniquement la charge utile de la trame V5 ; elle ne doit
-  // jamais être envoyée directement comme une trame Modbus TCP/RTU standard.
-  if (!client.connect(cfg_deye_host.c_str(), DEYE_LSW_PORT, TCP_CONNECT_TIMEOUT_MS)) {
-    DBG.printf("❌ LSW: connexion Solarman V5 échouée à %s:%d\n", cfg_deye_host.c_str(), DEYE_LSW_PORT);
-    return false;
-  }
+  if (!client.connect(cfg_deye_host.c_str(), DEYE_PORT, TCP_CONNECT_TIMEOUT_MS)) return false;
 
   client.write(v5_request, request_len);
 
@@ -333,17 +249,6 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
   }
   client.stop();
   return found;
-}
-
-// ==================== LECTURE GÉNÉRIQUE (selon mode LSE/LSW) ====================
-
-static bool read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
-  if (count == 0 || count > MODBUS_MAX_READ_REGISTERS) return false;
-  if (deye_mode_lse) {
-    return modbus_tcp_read_block(first_reg, count, rtu_response);
-  } else {
-    return solarman_read_block(first_reg, count, rtu_response);
-  }
 }
 
 // ==================== CHARGEMENT DES REGISTRES ====================
@@ -390,40 +295,22 @@ static void load_custom_registers() {
   uint16_t min_reg2 = 999, max_reg2 = 0;
   uint16_t regs2[] = {REG_GRID_POWER, REG_UPS_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP,
                       REG_BATTERY_VOLTAGE, REG_BATTERY_SOC, REG_PV1_POWER, REG_PV2_POWER,
-                      REG_PV3_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD,
-                      DEYE_REG_EV_CHARGE_MODE, DEYE_REG_EV_MAX_CHARGE_POWER};
-  const uint8_t regs2_count = cfg_ev_charger_enabled ? 14 : 12;
-  for (uint8_t i = 0; i < regs2_count; i++) {
+                      REG_PV3_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD};
+  for (uint8_t i = 0; i < 12; i++) {
     if (regs2[i] < min_reg2) min_reg2 = regs2[i];
     if (regs2[i] > max_reg2) max_reg2 = regs2[i];
   }
   BLOCK2_START = min_reg2;
   BLOCK2_COUNT = max_reg2 - min_reg2 + 1;
-  const bool timings_valid = TCP_CONNECT_TIMEOUT_MS >= 50 && TCP_CONNECT_TIMEOUT_MS <= 60000 &&
-                             RESPONSE_WINDOW_MS >= 50 && RESPONSE_WINDOW_MS <= 60000 &&
-                             FRAME_TIMEOUT_MS >= 50 && FRAME_TIMEOUT_MS <= 60000 &&
-                             BLOCK_INTERVAL_MS >= 50 && BLOCK_INTERVAL_MS <= 60000;
-  const bool coefficients_valid = isfinite(COEFF_GRID_POWER) && isfinite(COEFF_LOAD_POWER) &&
-                                  isfinite(COEFF_UPS_POWER) && isfinite(COEFF_SMARTLOAD) &&
-                                  COEFF_GRID_POWER >= -100.0f && COEFF_GRID_POWER <= 100.0f &&
-                                  COEFF_LOAD_POWER >= -100.0f && COEFF_LOAD_POWER <= 100.0f &&
-                                  COEFF_UPS_POWER >= -100.0f && COEFF_UPS_POWER <= 100.0f &&
-                                  COEFF_SMARTLOAD >= -100.0f && COEFF_SMARTLOAD <= 100.0f;
-  register_config_valid = BLOCK1_COUNT > 0 && BLOCK1_COUNT <= MODBUS_MAX_READ_REGISTERS &&
-                          BLOCK2_COUNT > 0 && BLOCK2_COUNT <= MODBUS_MAX_READ_REGISTERS &&
-                          (!cfg_ev_charger_enabled || (BLOCK3_COUNT > 0 && BLOCK3_COUNT <= MODBUS_MAX_READ_REGISTERS)) &&
-                          timings_valid && coefficients_valid;
-
   DBG.println("=== REGISTRES PERSONNALISES CHARGES ===");
   DBG.printf("PV1=%d PV2=%d PV3=%d\n", REG_PV1_POWER, REG_PV2_POWER, REG_PV3_POWER);
   DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
   DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
-  if (cfg_ev_charger_enabled) {
-    DBG.printf("Bloc3 VE: %d-%d (%d reg)\n", BLOCK3_START, BLOCK3_START + BLOCK3_COUNT - 1, BLOCK3_COUNT);
-  }
-  if (!register_config_valid) {
-    DBG.println("ERREUR: registres, delais ou coefficients invalides");
-  }
+  DBG.printf("Timeouts: C=%lu R=%lu F=%lu I=%lu\n",
+             (unsigned long)TCP_CONNECT_TIMEOUT_MS,
+             (unsigned long)RESPONSE_WINDOW_MS,
+             (unsigned long)FRAME_TIMEOUT_MS,
+             (unsigned long)BLOCK_INTERVAL_MS);
 }
 
 // ==================== DÉCODAGE ====================
@@ -553,18 +440,15 @@ static void solarman_reader_task(void *pvParameters) {
   bool first_read_done = false;
   uint32_t startup_time = millis();
 
-  randomSeed(esp_random());
+  // Séquence de lecture restaurée depuis le projet V3 LSW fonctionnel.
+  randomSeed(analogRead(0) + millis());
 
   while (true) {
-    if (ui_active || touch_pause_active) {
+    if (ui_active) {
       vTaskDelay(pdMS_TO_TICKS(100));
       continue;
     }
     if (WiFi.status() != WL_CONNECTED) {
-      vTaskDelay(pdMS_TO_TICKS(1000));
-      continue;
-    }
-    if (!register_config_valid) {
       vTaskDelay(pdMS_TO_TICKS(1000));
       continue;
     }
@@ -585,43 +469,38 @@ static void solarman_reader_task(void *pvParameters) {
     int random_delay = random(0, 200);
     vTaskDelay(pdMS_TO_TICKS(random_delay));
 
-    bool ok = false;
-    if (current_block == 0) {
-      uint8_t b1_rtu[5 + MODBUS_MAX_READ_REGISTERS * 2];
-      if (read_block(BLOCK1_START, BLOCK1_COUNT, b1_rtu)) {
-        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+    if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+      bool ok = false;
+
+      if (current_block == 0) {
+        uint8_t b1_rtu[5 + BLOCK1_COUNT * 2];
+        if (solarman_read_block(BLOCK1_START, BLOCK1_COUNT, b1_rtu)) {
           decode_block1(b1_rtu);
-          last_data_success_ms = millis();
+          DBG.println("BLOC1 OK");
           ok = true;
-          xSemaphoreGive(data_mutex);
+        } else {
+          DBG.println("BLOC1 echec");
         }
-      }
-    } else if (current_block == 1) {
-      uint8_t b2_rtu[5 + MODBUS_MAX_READ_REGISTERS * 2];
-      if (read_block(BLOCK2_START, BLOCK2_COUNT, b2_rtu)) {
-        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+      } else {
+        uint8_t b2_rtu[5 + BLOCK2_COUNT * 2];
+        if (solarman_read_block(BLOCK2_START, BLOCK2_COUNT, b2_rtu)) {
           decode_block2(b2_rtu);
-          update_dashboard_from_data();
-          last_data_success_ms = millis();
+          DBG.println("BLOC2 OK");
           ok = true;
-          xSemaphoreGive(data_mutex);
+        } else {
+          DBG.println("BLOC2 echec");
         }
       }
-    } else {
-      uint8_t b3_rtu[5 + MODBUS_MAX_READ_REGISTERS * 2];
-      if (read_block(BLOCK3_START, BLOCK3_COUNT, b3_rtu)) {
-        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-          decode_block3(b3_rtu);
-          last_ev_data_success_ms = millis();
-          ok = true;
-          xSemaphoreGive(data_mutex);
-        }
+
+      if (ok) {
+        last_read_time = millis();
+        last_data_success_ms = last_read_time;
+        update_dashboard_from_data();
       }
+
+      current_block = (current_block + 1) % 2;
+      xSemaphoreGive(data_mutex);
     }
-    if (ok) {
-      last_read_time = millis();
-    }
-    current_block = (current_block + 1) % (cfg_ev_charger_enabled ? 3 : 2);
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
@@ -633,25 +512,20 @@ void deye_solarman_set_ui_active(bool active) {
 }
 
 void deye_solarman_set_touch_active(bool active) {
-  touch_pause_active = active;
+  // Compatibilite avec le pilote tactile actuel : le lecteur historique LSW
+  // ne suspendait pas ses lectures sur cet indicateur distinct.
+  (void)active;
 }
 
 void deye_solarman_begin() {
-  DBG.println("=== DEYE SOLARMAN V5 (LSW) / Modbus TCP (LSE) ===");
+  DBG.println("=== DEYE SOLARMAN V5 ===");
   load_custom_registers();
-
-  deye_mode_lse = settings_get_deye_mode_lse();
-  DBG.printf("🔍 Mode lu depuis settings : %s\n", deye_mode_lse ? "LSE" : "LSW");
-  DBG.printf("🔍 Port configuré : %d\n", cfg_deye_port);
-
-  DBG.printf("Mode de communication : %s\n", deye_mode_lse ? "LSE / Modbus TCP" : "LSW / Solarman V5");
 
   main_data_valid = false;
   dashboard_data.valid = false;
   pv_daily_yield_valid = false;
   ev_deye_data = {};
   last_data_success_ms = 0;
-  last_ev_data_success_ms = 0;
 
   data_mutex = xSemaphoreCreateMutex();
   if (data_mutex == NULL) {

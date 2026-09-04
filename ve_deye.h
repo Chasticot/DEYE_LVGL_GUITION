@@ -15,9 +15,9 @@ static constexpr uint32_t DEYE_EV_THREE_PHASE_MAX_POWER_W = 22000;
 
 struct EvDeyeData {
   bool valid;
-  uint16_t charge_power_w;       // Registre 709, en W.
-  uint16_t max_charge_power_raw; // Registre 260, en pas de 10 W.
-  uint16_t connection_state_raw; // Registre 259, masque/mode brut.
+  uint16_t charge_power_w;        // Registre 709, en W.
+  uint16_t max_charge_power_raw;  // Registre 260, en pas de 10 W.
+  uint16_t connection_state_raw;  // Registre 259, masque/mode brut.
 };
 
 static inline uint32_t deye_ev_max_power_w(uint16_t raw_value) {

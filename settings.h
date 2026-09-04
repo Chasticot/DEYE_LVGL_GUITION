@@ -1,4 +1,4 @@
-// settings.h - Version simplifiée pour le mode LSE/LSW
+// settings.h - Configuration Solarman V5 (LSW)
 
 #pragma once
 
@@ -12,7 +12,6 @@ static Preferences preferences;
 static String cfg_wifi_ssid;
 static String cfg_wifi_password;
 static String cfg_deye_host;
-static uint16_t cfg_deye_port = 8899;
 static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
@@ -128,11 +127,25 @@ static CustomRegisters settings_load_registers() {
 
 // ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES GÉNÉRAUX ====================
 
-static void settings_save_wifi(const String &ssid, const String &password) {
-  preferences.begin("deye-ui", false);
+static bool settings_save_wifi(const String &ssid, const String &password) {
+  if (ssid.length() == 0 || !preferences.begin("deye-ui", false)) {
+    DBG.println("ERREUR: sauvegarde Wi-Fi impossible.");
+    return false;
+  }
   preferences.putString("wifi_ssid", ssid);
   preferences.putString("wifi_pwd", password);
+  const String saved_ssid = preferences.getString("wifi_ssid", "");
+  const String saved_password = preferences.getString("wifi_pwd", "");
   preferences.end();
+  const bool saved = saved_ssid == ssid && saved_password == password;
+  if (!saved) {
+    DBG.println("ERREUR: verification de sauvegarde Wi-Fi echouee.");
+    return false;
+  }
+  cfg_wifi_ssid = ssid;
+  cfg_wifi_password = password;
+  DBG.printf("Wi-Fi sauvegarde : SSID=%s, mot de passe=%u caracteres\n", ssid.c_str(), password.length());
+  return true;
 }
 
 static void settings_save_ntp(
@@ -147,11 +160,10 @@ static void settings_save_ntp(
   preferences.end();
 }
 
-static void settings_save_deye(const String &host, uint32_t logger_serial, uint16_t port) {
+static void settings_save_deye(const String &host, uint32_t logger_serial) {
   preferences.begin("deye-ui", false);
   preferences.putString("deye_host", host);
   preferences.putUInt("logger", logger_serial);
-  preferences.putUShort("deye_port", port);
   preferences.end();
 }
 
@@ -193,9 +205,14 @@ static void settings_load() {
   cfg_wifi_ssid = preferences.getString("wifi_ssid", DEFAULT_WIFI_SSID);
   cfg_wifi_password = preferences.getString("wifi_pwd", DEFAULT_WIFI_PASSWORD);
   cfg_deye_host = preferences.getString("deye_host", DEFAULT_DEYE_HOST);
-  cfg_deye_port = preferences.getUShort("deye_port", 8899);
-  if (cfg_deye_port == 0) cfg_deye_port = 8899;
   cfg_logger_serial = preferences.getUInt("logger", DEFAULT_LOGGER_SERIAL);
+  // Migration des builds qui avaient sauvegardé le numéro factice utilisé
+  // pendant les essais. Ce numéro est placé dans l'en-tête Solarman V5 ; avec
+  // lui, le logger ignore les requêtes même si le réseau est correct.
+  if (cfg_logger_serial == 123456789UL) {
+    cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
+    DBG.println("Serial logger factice remplace par le serial configure par defaut.");
+  }
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);
   cfg_tz_rule = preferences.getString("tz_rule", DEFAULT_TZ_RULE);
@@ -220,22 +237,6 @@ static void settings_load() {
 
 static CustomRegisters get_custom_registers() {
   return settings_load_registers();
-}
-
-// ==================== MODE LSE / LSW (simplifié) ====================
-
-static bool settings_get_deye_mode_lse() {
-  preferences.begin("deye-ui", true);
-  bool mode = preferences.getBool("deye_mode_lse", false);
-  preferences.end();
-  return mode;
-}
-
-static void settings_set_deye_mode_lse(bool lse) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("deye_mode_lse", lse);
-  preferences.end();
-  DBG.printf("💾 settings_set_deye_mode_lse(%s) - sauvegardé\n", lse ? "LSE" : "LSW");
 }
 
 // ==================== MODE GEN (SmartLoad / GEN MO) ====================

@@ -4,10 +4,19 @@
 #include <WiFi.h>
 #include "settings.h"
 
+static bool wifi_manager_scan_active = false;
+
+static void wifi_manager_set_scan_active(bool active) {
+  wifi_manager_scan_active = active;
+}
+
+static void wifi_manager_resume_after_scan() {
+  wifi_manager_scan_active = false;
+  WiFi.begin(cfg_wifi_ssid.c_str(), cfg_wifi_password.c_str());
+}
+
 static void wifi_manager_begin() {
   WiFi.mode(WIFI_STA);
-  WiFi.persistent(false);
-  WiFi.setAutoReconnect(true);
   WiFi.begin(cfg_wifi_ssid.c_str(), cfg_wifi_password.c_str());
 
   DBG.print("Connexion Wi-Fi : ");
@@ -15,14 +24,7 @@ static void wifi_manager_begin() {
 }
 
 static void wifi_manager_process() {
-  static uint32_t last_reconnect_attempt = 0;
-  if (WiFi.status() == WL_CONNECTED) return;
-
-  const uint32_t now = millis();
-  if (now - last_reconnect_attempt >= 10000) {
-    last_reconnect_attempt = now;
-    WiFi.reconnect();
-  }
+  // WiFi.begin() maintains the connection itself, as in the known-working project.
 }
 
 static int wifi_quality_percent() {

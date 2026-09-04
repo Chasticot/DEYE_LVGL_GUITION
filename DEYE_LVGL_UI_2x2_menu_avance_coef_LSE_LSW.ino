@@ -4,6 +4,7 @@
 #include <lvgl.h>
 #include <Arduino_GFX_Library.h>
 #include <SPI.h>
+#include <esp_heap_caps.h>
 
 #include "config.h"
 #include "ui_registres_perso.h"
@@ -81,6 +82,12 @@ void setup() {
   DBG.println();
   DBG.println("=== DEYE LVGL V3 - UI ONLY ===");
 
+  if (!psramFound()) {
+    DBG.println("ERREUR : PSRAM absente ou desactivee (OPI PSRAM requis).");
+    while (true) delay(1000);
+  }
+  DBG.printf("PSRAM detectee : %u octets\n", ESP.getPsramSize());
+
   settings_load();
 
   pinMode(GFX_BL, OUTPUT);
@@ -103,7 +110,13 @@ void setup() {
   );
 
   if (draw_buf == nullptr) {
-    DBG.println("ERREUR : allocation buffer LVGL");
+    DBG.println("Buffer LVGL PSRAM indisponible, essai RAM interne...");
+    draw_buf = (lv_color_t *)heap_caps_malloc(
+      DRAW_BUF_PIXELS * sizeof(lv_color_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT
+    );
+  }
+  if (draw_buf == nullptr) {
+    DBG.println("ERREUR : allocation buffer LVGL impossible");
     while (true) delay(1000);
   }
 
@@ -127,12 +140,10 @@ void setup() {
   lv_indev_drv_register(&lv_indev_drv);
 
   ui_main_create();
-  ui_settings_create();
-  ui_registers_create(); 
-  ui_ve_deye_create();
   
   if (screen_main != nullptr) {
     lv_scr_load(screen_main);
+    lv_refr_now(nullptr);
     DBG.println("Ecran principal charge");
   }
 

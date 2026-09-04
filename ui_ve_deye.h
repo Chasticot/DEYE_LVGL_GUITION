@@ -41,6 +41,8 @@ static uint16_t ve_pending_max_power_raw = 0;
 static bool ve_slider_is_syncing = false;
 static uint32_t ve_charge_power_limit_w = DEYE_EV_SINGLE_PHASE_MAX_POWER_W;
 
+static void ui_ve_deye_create();
+
 static const UiThemePalette &ui_ve_deye_theme() {
   return ui_theme_palette(cfg_ui_theme);
 }
@@ -168,7 +170,9 @@ static void ui_ve_deye_textarea_event(lv_event_t *e) {
 
 void ui_show_ve_deye(lv_event_t *e) {
   (void)e;
-  if (!cfg_ev_charger_enabled || screen_ve_deye == nullptr) return;
+  if (!cfg_ev_charger_enabled) return;
+  if (screen_ve_deye == nullptr) ui_ve_deye_create();
+  if (screen_ve_deye == nullptr) return;
 
   // Cet ecran est une supervision : la lecture Modbus reste active afin que
   // les valeurs VE et le tableau de bord restent a jour.

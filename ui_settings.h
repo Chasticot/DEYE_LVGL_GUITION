@@ -23,6 +23,7 @@ static lv_obj_t *screen_theme = nullptr;
 static lv_obj_t *dropdown_wifi = nullptr;
 static lv_obj_t *textarea_wifi_password = nullptr;
 static lv_obj_t *label_wifi_scan = nullptr;
+static lv_obj_t *label_wifi_password_length = nullptr;
 
 static lv_obj_t *dropdown_timezone = nullptr;
 static lv_obj_t *textarea_ntp_primary = nullptr;
@@ -30,8 +31,6 @@ static lv_obj_t *textarea_ntp_secondary = nullptr;
 
 static lv_obj_t *textarea_deye_host = nullptr;
 static lv_obj_t *textarea_logger_serial = nullptr;
-static lv_obj_t *textarea_deye_port = nullptr;
-static lv_obj_t *mode_btnmatrix = nullptr;
 static lv_obj_t *switch_tempo = nullptr;
 static lv_obj_t *switch_tempo_colorblind = nullptr;
 static lv_obj_t *switch_ev_charger = nullptr;
@@ -41,9 +40,8 @@ static lv_obj_t *keyboard_wifi = nullptr;
 static lv_obj_t *keyboard_ntp = nullptr;
 static lv_obj_t *keyboard_deye = nullptr;
 
-// Variable globale pour stocker l'état du mode (true = LSE, false = LSW)
-// Elle est initialisée au démarrage et mise à jour à chaque clic
-static bool current_deye_mode_lse = false;
+static void ui_settings_create();
+
 static UiThemeId selected_ui_theme = UI_THEME_DEFAULT;
 
 static String wifi_ssid_list[32];
@@ -200,18 +198,32 @@ void ui_show_dashboard(lv_event_t *e) {
 void ui_show_settings_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
+  if (screen_settings == nullptr) ui_settings_create();
+  if (screen_settings == nullptr) return;
   lv_scr_load(screen_settings);
+}
+
+static void ui_wifi_password_length_changed(lv_event_t *e) {
+  if (label_wifi_password_length == nullptr) return;
+  const char *password = lv_textarea_get_text(lv_event_get_target(e));
+  const size_t length = password == nullptr ? 0 : strlen(password);
+  char text[48];
+  snprintf(text, sizeof(text), "Mot de passe saisi : %u caracteres", (unsigned)length);
+  lv_label_set_text(label_wifi_password_length, text);
 }
 
 void ui_show_settings(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
+  if (screen_settings == nullptr) ui_settings_create();
+  if (screen_settings == nullptr) return;
   lv_scr_load(screen_settings);
 }
 
 void ui_show_registers(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
+  if (screen_registers == nullptr) ui_registers_create();
   if (screen_registers != nullptr) {
     lv_scr_load(screen_registers);
   }
@@ -255,8 +267,12 @@ static void ui_show_theme_screen(lv_event_t *e) {
 // ==================== FONCTIONS DE CONFIGURATION ====================
 
 static void ui_finish_wifi_scan(int count) {
+  wifi_manager_resume_after_scan();
   if (count <= 0) {
-    lv_label_set_text(label_wifi_scan, "Aucun reseau trouve");
+    lv_label_set_text(
+      label_wifi_scan,
+      count == WIFI_SCAN_FAILED ? "Echec du scan Wi-Fi" : "Aucun reseau trouve"
+    );
     WiFi.scanDelete();
     return;
   }
@@ -313,15 +329,19 @@ static void ui_scan_wifi(lv_event_t *e) {
   }
 
   lv_label_set_text(label_wifi_scan, "Scan en cours...");
+  wifi_manager_set_scan_active(true);
+
+  // ESP32 Arduino core 2.0.x returns WIFI_SCAN_FAILED (-2) when a scan is
+  // requested while a previous Wi-Fi connection attempt is still active.
+  // End that attempt first, scan, then restore the saved connection.
+  WiFi.disconnect(false, false);
   WiFi.mode(WIFI_STA);
   WiFi.scanDelete();
-  const int result = WiFi.scanNetworks(true, true);
-  if (result == WIFI_SCAN_FAILED) {
-    lv_label_set_text(label_wifi_scan, "Echec du scan Wi-Fi");
-    return;
-  }
-  lv_timer_reset(wifi_scan_timer);
-  lv_timer_resume(wifi_scan_timer);
+  delay(150);
+  lv_refr_now(nullptr);
+  const int result = WiFi.scanNetworks(false, true);
+  DBG.printf("Resultat Wi-Fi scan : %d\n", result);
+  ui_finish_wifi_scan(result);
 }
 
 static void ui_save_wifi(lv_event_t *e) {
@@ -332,7 +352,16 @@ static void ui_save_wifi(lv_event_t *e) {
     return;
   }
   String ssid = wifi_ssid_list[selected];
-  settings_save_wifi(ssid, lv_textarea_get_text(textarea_wifi_password));
+  const char *entered_password = lv_textarea_get_text(textarea_wifi_password);
+  // The password field starts blank so a new value can never be appended to
+  // an invisible old value.  Leaving it blank preserves the stored password.
+  const String password = (entered_password != nullptr && *entered_password != '\0')
+    ? String(entered_password)
+    : cfg_wifi_password;
+  if (!settings_save_wifi(ssid, password)) {
+    ui_settings_show_error("Sauvegarde Wi-Fi echouee.");
+    return;
+  }
   ui_settings_restart_message();
 }
 
@@ -350,26 +379,18 @@ static void ui_save_ntp(lv_event_t *e) {
   ui_settings_restart_message();
 }
 
-// ==================== ui_save_deye avec logs ====================
+// ==================== SAUVEGARDE DEYE / SOLARMAN V5 ====================
 static void ui_save_deye(lv_event_t *e) {
   (void)e;
 
   const char *host = lv_textarea_get_text(textarea_deye_host);
   uint32_t serial = 0;
-  uint32_t port_value = 0;
   if (host == nullptr || *host == '\0' || strlen(host) > 63 ||
-      !ui_parse_u32(lv_textarea_get_text(textarea_logger_serial), 1, UINT32_MAX, &serial) ||
-      !ui_parse_u32(lv_textarea_get_text(textarea_deye_port), 1, 65535, &port_value)) {
-    ui_settings_show_error("Verifier l'hote, le serial et le port (1-65535).");
+      !ui_parse_u32(lv_textarea_get_text(textarea_logger_serial), 1, UINT32_MAX, &serial)) {
+    ui_settings_show_error("Verifier l'hote et le serial du logger.");
     return;
   }
-  const uint16_t port = (uint16_t)port_value;
-  settings_save_deye(host, serial, port);
-
-  // 2. Sauvegarder le mode depuis la variable globale
-  settings_set_deye_mode_lse(current_deye_mode_lse);
-
-  // 3. Redémarrer
+  settings_save_deye(host, serial);
   ui_settings_restart_message();
 }
 
@@ -594,22 +615,28 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_wifi, "SCAN", 335, 82, 115, 45, ui_scan_wifi);
 
   label = lv_label_create(screen_wifi);
-  lv_label_set_text(label, "Mot de passe");
+  lv_label_set_text(label, "Mot de passe (vide = conserver)");
   lv_obj_set_pos(label, 20, 145);
   lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   textarea_wifi_password = ui_settings_make_textarea(
     screen_wifi,
-    cfg_wifi_password.c_str(),
+    "",
     20, 172,
     true,
     &keyboard_wifi
   );
+  label_wifi_password_length = lv_label_create(screen_wifi);
+  lv_label_set_text(label_wifi_password_length, "Mot de passe : vide (conserver l'actuel)");
+  lv_obj_set_pos(label_wifi_password_length, 20, 220);
+  lv_obj_set_style_text_color(label_wifi_password_length, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
+  lv_obj_set_style_text_font(label_wifi_password_length, &lv_font_montserrat_12, LV_PART_MAIN);
+  lv_obj_add_event_cb(textarea_wifi_password, ui_wifi_password_length_changed, LV_EVENT_VALUE_CHANGED, nullptr);
 
   label_wifi_scan = lv_label_create(screen_wifi);
   lv_label_set_text(label_wifi_scan, "");
-  lv_obj_set_pos(label_wifi_scan, 20, 235);
+  lv_obj_set_pos(label_wifi_scan, 20, 245);
   lv_obj_set_style_text_color(label_wifi_scan, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label_wifi_scan, &lv_font_montserrat_14, LV_PART_MAIN);
   wifi_scan_timer = lv_timer_create(ui_wifi_scan_timer_cb, 200, nullptr);
@@ -699,7 +726,7 @@ static void ui_settings_create() {
   // Numéro de série
   label = lv_label_create(screen_deye);
   lv_label_set_text(label, "Numero de serie du logger");
-  lv_obj_set_pos(label, 20, 170);
+  lv_obj_set_pos(label, 20, 180);
   lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
@@ -709,99 +736,11 @@ static void ui_settings_create() {
   textarea_logger_serial = ui_settings_make_textarea(
     screen_deye,
     serial,
-    20, 200,
+    20, 210,
     false,
     &keyboard_deye
   );
 
-  // Port
-  label = lv_label_create(screen_deye);
-  lv_label_set_text(label, "Port (default 8899)");
-  lv_obj_set_pos(label, 20, 270);
-  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
-  lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
-
-  char port_str[8];
-  snprintf(port_str, sizeof(port_str), "%d", cfg_deye_port);
-  textarea_deye_port = ui_settings_make_textarea(
-    screen_deye,
-    port_str,
-    20, 300,
-    false,
-    &keyboard_deye
-  );
-
-  // Mode LSE/LSW
-  lv_obj_t *mode_label = lv_label_create(screen_deye);
-  lv_label_set_text(mode_label, "Mode de communication");
-  lv_obj_set_pos(mode_label, 20, 360);
-  lv_obj_set_style_text_color(mode_label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
-  lv_obj_set_style_text_font(mode_label, &lv_font_montserrat_14, LV_PART_MAIN);
-
-  static const char *mode_opts[] = {"LSE", "LSW", ""};
-  mode_btnmatrix = lv_btnmatrix_create(screen_deye);
-  lv_btnmatrix_set_map(mode_btnmatrix, mode_opts);
-  lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKABLE);
-  lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKABLE);
-  // LSE et LSW sont mutuellement exclusifs et l'option active reste cochée.
-  lv_btnmatrix_set_one_checked(mode_btnmatrix, true);
-  lv_obj_set_pos(mode_btnmatrix, 250, 350);
-  lv_obj_set_size(mode_btnmatrix, 180, 34);
-  lv_obj_set_style_bg_color(mode_btnmatrix, ui_settings_color(ui_settings_theme().control_bg), LV_PART_MAIN);
-  lv_obj_set_style_text_color(mode_btnmatrix, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
-  lv_obj_set_style_border_color(mode_btnmatrix, ui_settings_color(ui_settings_theme().control_border), LV_PART_MAIN);
-  lv_obj_set_style_border_width(mode_btnmatrix, 1, LV_PART_MAIN);
-  lv_obj_set_style_radius(mode_btnmatrix, 6, LV_PART_MAIN);
-  lv_obj_set_style_pad_all(mode_btnmatrix, 2, LV_PART_MAIN);
-  // Styles des deux boutons : sombre au repos, bleu lorsqu'ils sont sélectionnés.
-  lv_obj_set_style_bg_color(mode_btnmatrix, ui_settings_color(ui_settings_theme().control_bg), LV_PART_ITEMS);
-  lv_obj_set_style_bg_opa(mode_btnmatrix, LV_OPA_COVER, LV_PART_ITEMS);
-  lv_obj_set_style_text_color(mode_btnmatrix, ui_settings_color(ui_settings_theme().text), LV_PART_ITEMS);
-  lv_obj_set_style_border_width(mode_btnmatrix, 0, LV_PART_ITEMS);
-  lv_obj_set_style_radius(mode_btnmatrix, 6, LV_PART_ITEMS);
-  lv_obj_set_style_bg_color(
-    mode_btnmatrix, ui_settings_color(ui_settings_theme().accent), LV_PART_ITEMS | LV_STATE_CHECKED
-  );
-  lv_obj_set_style_bg_opa(mode_btnmatrix, LV_OPA_COVER, LV_PART_ITEMS | LV_STATE_CHECKED);
-  lv_obj_set_style_text_color(
-    mode_btnmatrix, ui_settings_color(ui_settings_theme().accent_text), LV_PART_ITEMS | LV_STATE_CHECKED
-  );
-  lv_obj_set_style_border_color(
-    mode_btnmatrix, ui_settings_color(ui_settings_theme().accent), LV_PART_ITEMS | LV_STATE_CHECKED
-  );
-  lv_obj_set_style_border_width(mode_btnmatrix, 2, LV_PART_ITEMS | LV_STATE_CHECKED);
-
-  // Initialiser la variable globale avec la valeur sauvegardée
-  current_deye_mode_lse = settings_get_deye_mode_lse();
-  DBG.printf("🔍 ui_settings_create: mode lu = %s\n", current_deye_mode_lse ? "LSE" : "LSW");
-
-  // Cocher le bon bouton
-  if (current_deye_mode_lse) {
-    lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_clear_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
-  } else {
-    lv_btnmatrix_set_btn_ctrl(mode_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_clear_btn_ctrl(mode_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
-  }
-
-  // Callback qui met à jour la variable globale ET l'affichage
-  lv_obj_add_event_cb(mode_btnmatrix, [](lv_event_t *e) {
-    lv_obj_t *btnm = lv_event_get_target(e);
-    uint32_t idx = lv_btnmatrix_get_selected_btn(btnm);
-    if (idx == 0) {
-      current_deye_mode_lse = true;
-      lv_btnmatrix_set_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
-      lv_btnmatrix_clear_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
-      DBG.println("🔄 Mode LSE sélectionné (variable = true)");
-    } else if (idx == 1) {
-      current_deye_mode_lse = false;
-      lv_btnmatrix_set_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
-      lv_btnmatrix_clear_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
-      DBG.println("🔄 Mode LSW sélectionné (variable = false)");
-    }
-  }, LV_EVENT_VALUE_CHANGED, NULL);
-
-  // Boutons RETOUR et SAUVEGARDER
-  ui_settings_make_button(screen_deye, "RETOUR", 20, 415, 190, 50, ui_show_settings_screen);
-  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 415, 200, 50, ui_save_deye);
+  ui_settings_make_button(screen_deye, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
+  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 370, 200, 55, ui_save_deye);
 }
