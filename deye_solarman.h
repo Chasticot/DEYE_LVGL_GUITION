@@ -16,6 +16,7 @@
 
 // ==================== CONSTANTES ====================
 #define DEYE_MODBUS_SLAVE_ID 1
+#define DEYE_LSW_PORT 8899
 
 // ==================== VARIABLES DYNAMIQUES (valeurs par défaut, écrasées par settings) ====================
 uint16_t REG_PV1_POWER = 186;
@@ -304,8 +305,11 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
   if (client.connected()) client.stop();
   delay(50);
 
-  if (!client.connect(cfg_deye_host.c_str(), cfg_deye_port, TCP_CONNECT_TIMEOUT_MS)) {
-    DBG.printf("❌ LSW: connexion échouée à %s:%d\n", cfg_deye_host.c_str(), cfg_deye_port);
+  // Le LSW attend le protocole propriétaire Solarman V5 sur 8899. La requête
+  // RTU ci-dessus est uniquement la charge utile de la trame V5 ; elle ne doit
+  // jamais être envoyée directement comme une trame Modbus TCP/RTU standard.
+  if (!client.connect(cfg_deye_host.c_str(), DEYE_LSW_PORT, TCP_CONNECT_TIMEOUT_MS)) {
+    DBG.printf("❌ LSW: connexion Solarman V5 échouée à %s:%d\n", cfg_deye_host.c_str(), DEYE_LSW_PORT);
     return false;
   }
 
