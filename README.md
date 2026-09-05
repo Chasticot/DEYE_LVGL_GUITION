@@ -188,4 +188,10 @@ Compilation – PSRAM manquant	Activer PSRAM dans les paramètres de la carte
 
 Ce projet est distribué sous licence MIT. Utilisez-le à vos propres risques.
 
+## Versions et releases
+
+La version stable LSW + TEMPO fournie depuis le dossier de travail est disponible dans [`versions/DEYE_LVGL_UI_2x2_menu_avance_coef_LSW_TEMPO`](versions/DEYE_LVGL_UI_2x2_menu_avance_coef_LSW_TEMPO).
+
+Les releases GitHub contiennent les fichiers binaires ESP32-S3 nécessaires au flash : firmware applicatif, bootloader et partitions. La branche `ve-option` contient l'intégration VE expérimentale, non terminée.
+
 ⭐ Si ce projet vous est utile, n’hésitez pas à mettre une étoile sur GitHub !
