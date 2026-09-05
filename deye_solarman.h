@@ -1,5 +1,3 @@
-// deye_solarman.h - Version corrigée et unifiée
-
 #pragma once
 
 #include <Arduino.h>
@@ -8,11 +6,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/semphr.h>
-#include <math.h>
-#include "config.h"
 #include "app_data.h"
 #include "settings.h"
-#include "ve_deye.h"
 
 // ==================== CONSTANTES ====================
 #define DEYE_PORT 8899
@@ -42,20 +37,11 @@ uint16_t BLOCK1_START = 76;
 uint16_t BLOCK1_COUNT = 37;
 uint16_t BLOCK2_START = 169;
 uint16_t BLOCK2_COUNT = 27;
-uint16_t BLOCK3_START = DEYE_REG_EV_CHARGE_POWER;
-uint16_t BLOCK3_COUNT = 1;
 
 uint32_t TCP_CONNECT_TIMEOUT_MS = 10000;
 uint32_t RESPONSE_WINDOW_MS = 10000;
 uint32_t FRAME_TIMEOUT_MS = 7000;
 uint32_t BLOCK_INTERVAL_MS = 100;
-float COEFF_GRID_POWER = 1.0f;
-float COEFF_LOAD_POWER = 1.0f;
-float COEFF_UPS_POWER = 1.0f;
-float COEFF_SMARTLOAD = 1.0f;
-
-#define MODBUS_MAX_READ_REGISTERS 125
-#define DATA_STALE_AFTER_MS 120000UL
 
 // ==================== STRUCTURES ====================
 struct MainData {
@@ -94,21 +80,19 @@ static uint16_t daily_grid_buy = 0;
 static bool daily_grid_buy_valid = false;
 static uint16_t daily_grid_sell = 0;
 static bool daily_grid_sell_valid = false;
+
 static uint16_t pv_daily_yield = 0;
 static bool pv_daily_yield_valid = false;
-static EvDeyeData ev_deye_data = {};
-static uint32_t last_ev_data_success_ms = 0;
 
 // ==================== SYNCHRONISATION ====================
 static SemaphoreHandle_t data_mutex = nullptr;
 static volatile bool ui_active = false;
 static volatile bool reader_running = false;
-static uint32_t last_data_success_ms = 0;
 
 // ==================== DÉCLARATIONS ====================
 static void solarman_reader_task(void *pvParameters);
 
-// ==================== FONCTIONS PROTOCOLE (LSW - Solarman V5) ====================
+// ==================== FONCTIONS PROTOCOLE ====================
 
 static uint16_t modbus_crc16(const uint8_t *data, size_t len) {
   uint16_t crc = 0xFFFF;
@@ -212,49 +196,13 @@ static bool get_rtu_from_v5_frame(const uint8_t *frame, size_t frame_len, uint16
   return false;
 }
 
-// ==================== LECTURE SOLARMAN V5 (LSW) ====================
-
-static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
-  WiFiClient client;
-  uint8_t rtu_request[8];
-  uint8_t v5_request[64];
-  uint8_t frame[256];
-  size_t frame_len = 0;
-
-  build_modbus_rtu_read(first_reg, count, rtu_request);
-  size_t request_len = build_solarman_v5_request(rtu_request, sizeof(rtu_request), v5_request);
-
-  if (client.connected()) client.stop();
-  delay(50);
-
-  if (!client.connect(cfg_deye_host.c_str(), DEYE_PORT, TCP_CONNECT_TIMEOUT_MS)) return false;
-
-  client.write(v5_request, request_len);
-
-  uint32_t deadline = millis() + RESPONSE_WINDOW_MS;
-  bool found = false;
-
-  while ((int32_t)(deadline - millis()) > 0) {
-    if (!client.available()) {
-      delay(2);
-      continue;
-    }
-    if (!receive_one_v5_frame(client, frame, &frame_len)) {
-      break;
-    }
-    if (get_rtu_from_v5_frame(frame, frame_len, count, rtu_response)) {
-      found = true;
-      break;
-    }
-  }
-  client.stop();
-  return found;
-}
-
-// ==================== CHARGEMENT DES REGISTRES ====================
+// ==================== CHARGEMENT DES REGISTRES DEPUIS settings.h ====================
 
 static void load_custom_registers() {
+  // Récupérer les registres personnalisés depuis settings.h
   CustomRegisters regs = get_custom_registers();
+  
+  // Mettre à jour les variables avec les valeurs chargées
   REG_PV1_POWER = regs.pv1_power;
   REG_PV2_POWER = regs.pv2_power;
   REG_PV3_POWER = regs.pv3_power;
@@ -273,16 +221,13 @@ static void load_custom_registers() {
   REG_DC_TEMP = regs.dc_temp;
   REG_AC_TEMP = regs.ac_temp;
   REG_SMARTLOAD = regs.smartload;
+  
   TCP_CONNECT_TIMEOUT_MS = regs.connect_timeout;
   RESPONSE_WINDOW_MS = regs.response_window;
   FRAME_TIMEOUT_MS = regs.frame_timeout;
   BLOCK_INTERVAL_MS = regs.block_interval;
-  COEFF_GRID_POWER = regs.coeff_grid_power;
-  COEFF_LOAD_POWER = regs.coeff_load_power;
-  COEFF_UPS_POWER = regs.coeff_ups_power;
-  COEFF_SMARTLOAD = regs.coeff_smartload;
-
-  // Calcul des blocs (inchangé)
+  
+  // Calculer les plages de lecture
   uint16_t min_reg1 = 999, max_reg1 = 0;
   uint16_t regs1[] = {REG_GRID_BUY_DAY, REG_GRID_SELL_DAY, REG_LOAD_DAY, REG_DC_TEMP, REG_AC_TEMP, REG_PV_DAILY};
   for (int i = 0; i < 6; i++) {
@@ -291,42 +236,93 @@ static void load_custom_registers() {
   }
   BLOCK1_START = min_reg1;
   BLOCK1_COUNT = max_reg1 - min_reg1 + 1;
-
+  
   uint16_t min_reg2 = 999, max_reg2 = 0;
-  uint16_t regs2[] = {REG_GRID_POWER, REG_UPS_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP,
-                      REG_BATTERY_VOLTAGE, REG_BATTERY_SOC, REG_PV1_POWER, REG_PV2_POWER,
+  uint16_t regs2[] = {REG_GRID_POWER, REG_UPS_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP, 
+                      REG_BATTERY_VOLTAGE, REG_BATTERY_SOC, REG_PV1_POWER, REG_PV2_POWER, 
                       REG_PV3_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD};
-  for (uint8_t i = 0; i < 12; i++) {
+  for (int i = 0; i < 12; i++) {
     if (regs2[i] < min_reg2) min_reg2 = regs2[i];
     if (regs2[i] > max_reg2) max_reg2 = regs2[i];
   }
   BLOCK2_START = min_reg2;
   BLOCK2_COUNT = max_reg2 - min_reg2 + 1;
+  
   DBG.println("=== REGISTRES PERSONNALISES CHARGES ===");
   DBG.printf("PV1=%d PV2=%d PV3=%d\n", REG_PV1_POWER, REG_PV2_POWER, REG_PV3_POWER);
   DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
   DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
-  DBG.printf("Timeouts: C=%lu R=%lu F=%lu I=%lu\n",
-             (unsigned long)TCP_CONNECT_TIMEOUT_MS,
-             (unsigned long)RESPONSE_WINDOW_MS,
-             (unsigned long)FRAME_TIMEOUT_MS,
-             (unsigned long)BLOCK_INTERVAL_MS);
+  DBG.printf("Timeouts: C=%d R=%d F=%d I=%d\n", 
+             TCP_CONNECT_TIMEOUT_MS, RESPONSE_WINDOW_MS, FRAME_TIMEOUT_MS, BLOCK_INTERVAL_MS);
 }
 
-// ==================== DÉCODAGE ====================
+// ==================== LECTURE D'UN BLOC ====================
+static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu_response) {
+  WiFiClient client;
+  uint8_t rtu_request[8];
+  uint8_t v5_request[64];
+  uint8_t frame[256];
+  size_t frame_len = 0;
+
+  build_modbus_rtu_read(first_reg, count, rtu_request);
+  size_t request_len = build_solarman_v5_request(rtu_request, sizeof(rtu_request), v5_request);
+
+  if (client.connected()) client.stop();
+  delay(50);
+
+  if (!client.connect(cfg_deye_host.c_str(), DEYE_PORT, TCP_CONNECT_TIMEOUT_MS)) {
+    return false;
+  }
+
+  client.write(v5_request, request_len);
+
+  uint32_t deadline = millis() + RESPONSE_WINDOW_MS;
+  bool found = false;
+
+  while ((int32_t)(deadline - millis()) > 0) {
+    if (!client.available()) {
+      delay(2);
+      continue;
+    }
+
+    if (!receive_one_v5_frame(client, frame, &frame_len)) {
+      break;
+    }
+
+    if (get_rtu_from_v5_frame(frame, frame_len, count, rtu_response)) {
+      found = true;
+      break;
+    }
+  }
+
+  client.stop();
+  return found;
+}
+
+// ==================== DÉCODAGE AVEC REGISTRES DYNAMIQUES ====================
 
 static void decode_block1(const uint8_t *rtu) {
   int offset = BLOCK1_START;
+  
   daily_grid_buy = modbus_get_u16_be(rtu, REG_GRID_BUY_DAY - offset);
   daily_grid_buy_valid = true;
+  
   daily_grid_sell = modbus_get_u16_be(rtu, REG_GRID_SELL_DAY - offset);
   daily_grid_sell_valid = true;
+  
   daily_load = modbus_get_u16_be(rtu, REG_LOAD_DAY - offset);
   daily_load_valid = true;
+  
   uint16_t dc_raw = modbus_get_u16_be(rtu, REG_DC_TEMP - offset);
-  if (dc_raw != 0 && dc_raw != 1000) main_data.dc_temperature_raw = (int16_t)dc_raw;
+  if (dc_raw != 0 && dc_raw != 1000) {
+    main_data.dc_temperature_raw = (int16_t)dc_raw;
+  }
+  
   uint16_t ac_raw = modbus_get_u16_be(rtu, REG_AC_TEMP - offset);
-  if (ac_raw != 0 && ac_raw != 1000) main_data.ac_temperature_raw = (int16_t)ac_raw;
+  if (ac_raw != 0 && ac_raw != 1000) {
+    main_data.ac_temperature_raw = (int16_t)ac_raw;
+  }
+  
   daily_solar = modbus_get_u16_be(rtu, REG_PV_DAILY - offset);
   daily_solar_valid = true;
   pv_daily_yield = daily_solar;
@@ -335,6 +331,10 @@ static void decode_block1(const uint8_t *rtu) {
 
 static void decode_block2(const uint8_t *rtu) {
   int offset = BLOCK2_START;
+  
+  main_data.gen_voltage_raw = modbus_get_u16_be(rtu, 150 - offset);
+  main_data.ups_load_voltage_raw = modbus_get_u16_be(rtu, 150 - offset);
+  
   main_data.grid_power = (int16_t)modbus_get_u16_be(rtu, REG_GRID_POWER - offset);
   main_data.ups_load_power = (int16_t)modbus_get_u16_be(rtu, REG_UPS_POWER - offset);
   main_data.load_power = (int16_t)modbus_get_u16_be(rtu, REG_LOAD_POWER - offset);
@@ -347,27 +347,13 @@ static void decode_block2(const uint8_t *rtu) {
   main_data.bat_power = (int16_t)modbus_get_u16_be(rtu, REG_BATTERY_POWER - offset);
   main_data.grid_status_raw = modbus_get_u16_be(rtu, REG_GRID_STATUS - offset);
   main_data.smartload_status_raw = modbus_get_u16_be(rtu, REG_SMARTLOAD - offset);
-  if (cfg_ev_charger_enabled) {
-    ev_deye_data.connection_state_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_CHARGE_MODE - offset);
-    ev_deye_data.max_charge_power_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_MAX_CHARGE_POWER - offset);
-  }
+  
   main_data_valid = true;
-}
-
-static void decode_block3(const uint8_t *rtu) {
-  ev_deye_data.charge_power_w = modbus_get_u16_be(rtu, 0);
-  ev_deye_data.valid = true;
-}
-
-static int16_t scaled_power(int16_t raw, float coefficient, float scale) {
-  const float value = raw * coefficient * scale;
-  if (value >= INT16_MAX) return INT16_MAX;
-  if (value <= INT16_MIN) return INT16_MIN;
-  return (int16_t)lroundf(value);
 }
 
 static void update_dashboard_from_data() {
   if (!main_data_valid) return;
+
   dashboard_data.valid = true;
   dashboard_data.pv1_w = main_data.pv1_power;
   dashboard_data.pv2_w = main_data.pv2_power;
@@ -376,60 +362,19 @@ static void update_dashboard_from_data() {
   dashboard_data.battery_voltage = main_data.bat_voltage_raw * 0.01f;
   dashboard_data.battery_power = main_data.bat_power;
   dashboard_data.battery_temperature = (main_data.bat_temperature_raw - 1000) * 0.1f;
-  dashboard_data.grid_power = scaled_power(main_data.grid_power, COEFF_GRID_POWER, 10.0f);
-  dashboard_data.load_power = scaled_power(main_data.load_power, COEFF_LOAD_POWER, 10.0f);
-  dashboard_data.ups_power = scaled_power(main_data.ups_load_power, COEFF_UPS_POWER, 1.0f);
+  dashboard_data.grid_power = main_data.grid_power * 10;
+  dashboard_data.load_power = main_data.load_power * 10;
+  dashboard_data.ups_power = main_data.ups_load_power;
+  dashboard_data.ups_voltage = main_data.ups_load_voltage_raw * 0.1f;
   dashboard_data.dc_temperature = (main_data.dc_temperature_raw - 1000) * 0.1f;
   dashboard_data.ac_temperature = (main_data.ac_temperature_raw - 1000) * 0.1f;
-  dashboard_data.smartload_on = ((main_data.smartload_status_raw & 0x01) * COEFF_SMARTLOAD) >= 0.5f;
+  dashboard_data.smartload_on = (main_data.smartload_status_raw & 0x01) == 0x01;
   deye_on_grid_state = (main_data.grid_status_raw == 1);
+  
   if (daily_solar_valid) {
     pv_daily_yield = daily_solar;
     pv_daily_yield_valid = true;
   }
-}
-
-static bool deye_copy_snapshot(
-  DashboardData *out,
-  uint16_t *pv_daily,
-  bool *pv_daily_valid_out,
-  uint16_t *daily_load_out,
-  uint16_t *daily_buy_out,
-  uint16_t *daily_sell_out,
-  bool *on_grid_out
-) {
-  if (out == nullptr || pv_daily == nullptr || pv_daily_valid_out == nullptr ||
-      daily_load_out == nullptr || daily_buy_out == nullptr || daily_sell_out == nullptr ||
-      on_grid_out == nullptr || data_mutex == nullptr ||
-      xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) {
-    return false;
-  }
-
-  *out = dashboard_data;
-  *pv_daily = pv_daily_yield;
-  *pv_daily_valid_out = pv_daily_yield_valid;
-  *daily_load_out = daily_load;
-  *daily_buy_out = daily_grid_buy;
-  *daily_sell_out = daily_grid_sell;
-  *on_grid_out = deye_on_grid_state;
-  const bool fresh = main_data_valid && (uint32_t)(millis() - last_data_success_ms) <= DATA_STALE_AFTER_MS;
-  out->valid = out->valid && fresh;
-  xSemaphoreGive(data_mutex);
-  return true;
-}
-
-// Copie atomique des donnees VE. Lorsque le chargeur est desactive dans les
-// reglages, cette fonction reste volontairement inutilisable.
-bool deye_copy_ev_snapshot(EvDeyeData *out) {
-  if (out == nullptr || !cfg_ev_charger_enabled || data_mutex == nullptr ||
-      xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) {
-    return false;
-  }
-
-  *out = ev_deye_data;
-  out->valid = out->valid && (uint32_t)(millis() - last_ev_data_success_ms) <= DATA_STALE_AFTER_MS;
-  xSemaphoreGive(data_mutex);
-  return true;
 }
 
 // ==================== TÂCHE DE LECTURE ====================
@@ -440,7 +385,6 @@ static void solarman_reader_task(void *pvParameters) {
   bool first_read_done = false;
   uint32_t startup_time = millis();
 
-  // Séquence de lecture restaurée depuis le projet V3 LSW fonctionnel.
   randomSeed(analogRead(0) + millis());
 
   while (true) {
@@ -448,11 +392,14 @@ static void solarman_reader_task(void *pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(100));
       continue;
     }
+
     if (WiFi.status() != WL_CONNECTED) {
       vTaskDelay(pdMS_TO_TICKS(1000));
       continue;
     }
+
     uint32_t now = millis();
+
     if (!first_read_done) {
       if (now - startup_time < 2000) {
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -466,6 +413,7 @@ static void solarman_reader_task(void *pvParameters) {
         continue;
       }
     }
+
     int random_delay = random(0, 200);
     vTaskDelay(pdMS_TO_TICKS(random_delay));
 
@@ -494,13 +442,13 @@ static void solarman_reader_task(void *pvParameters) {
 
       if (ok) {
         last_read_time = millis();
-        last_data_success_ms = last_read_time;
         update_dashboard_from_data();
       }
 
       current_block = (current_block + 1) % 2;
       xSemaphoreGive(data_mutex);
     }
+
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
@@ -511,21 +459,15 @@ void deye_solarman_set_ui_active(bool active) {
   ui_active = active;
 }
 
-void deye_solarman_set_touch_active(bool active) {
-  // Compatibilite avec le pilote tactile actuel : le lecteur historique LSW
-  // ne suspendait pas ses lectures sur cet indicateur distinct.
-  (void)active;
-}
-
-void deye_solarman_begin() {
+static void deye_solarman_begin() {
   DBG.println("=== DEYE SOLARMAN V5 ===");
+  
+  // Charger les registres personnalisés depuis settings.h
   load_custom_registers();
-
+  
   main_data_valid = false;
   dashboard_data.valid = false;
   pv_daily_yield_valid = false;
-  ev_deye_data = {};
-  last_data_success_ms = 0;
 
   data_mutex = xSemaphoreCreateMutex();
   if (data_mutex == NULL) {
@@ -547,10 +489,14 @@ void deye_solarman_begin() {
   reader_running = true;
 }
 
+static void deye_solarman_process() {
+  // Rien à faire – la tâche tourne en arrière‑plan
+}
+
 // ==================== FONCTIONS POUR L'INTERFACE ====================
-bool deye_is_connected() { return main_data_valid; }
-bool deye_is_on_grid() { return deye_on_grid_state; }
-uint16_t deye_get_pv_daily() { return pv_daily_yield; }
-uint16_t deye_get_daily_load() { return daily_load; }
-uint16_t deye_get_daily_grid_buy() { return daily_grid_buy; }
-uint16_t deye_get_daily_grid_sell() { return daily_grid_sell; }
+static bool deye_is_connected() { return main_data_valid; }
+static bool deye_is_on_grid() { return deye_on_grid_state; }
+static uint16_t deye_get_pv_daily() { return pv_daily_yield; }
+static uint16_t deye_get_daily_load() { return daily_load; }
+static uint16_t deye_get_daily_grid_buy() { return daily_grid_buy; }
+static uint16_t deye_get_daily_grid_sell() { return daily_grid_sell; }

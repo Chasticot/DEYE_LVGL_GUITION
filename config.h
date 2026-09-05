@@ -17,9 +17,10 @@
 #define DRAW_BUF_PIXELS (LCD_W * 40)
 
 #define DEFAULT_WIFI_SSID "wifi-ssid"
-#define DEFAULT_WIFI_PASSWORD "wifi-password"
+#define DEFAULT_WIFI_PASSWORD "wifi_password"
 #define DEFAULT_DEYE_HOST "192.168.1.12"
-#define DEFAULT_LOGGER_SERIAL 0123456789UL
+#define DEFAULT_LOGGER_SERIAL 123456789UL
 #define DEFAULT_NTP_PRIMARY "pool.ntp.org"
 #define DEFAULT_NTP_SECONDARY "time.google.com"
 #define DEFAULT_TZ_RULE "CET-1CEST,M3.5.0,M10.5.0/3"
+

@@ -15,7 +15,7 @@ static uint32_t touch_last_activity = 0;
 #define TOUCH_INACTIVITY_TIMEOUT 2000
 
 // ==================== DÉCLARATION EXTERNE ====================
-extern void deye_solarman_set_touch_active(bool active);
+extern void deye_solarman_set_ui_active(bool active);
 
 static bool gt911_read_register(uint16_t reg, uint8_t *buffer, uint8_t length) {
   Wire.beginTransmission(GT911_ADDR);
@@ -94,7 +94,6 @@ bool is_touch_active() {
   if (touch_is_active) {
     if (now - touch_last_activity > TOUCH_INACTIVITY_TIMEOUT) {
       touch_is_active = false;
-      deye_solarman_set_touch_active(false);
     }
   }
   return touch_is_active;
@@ -106,22 +105,23 @@ static void lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
   (void)drv;
 
   static bool last_pressed = false;
+  static uint32_t last_touch_time = 0;
 
   bool pressed = touch_gt911_read();
   uint32_t now = millis();
 
-  // Pause the reader directly from the touch driver so the UI remains responsive.
-  // The pause is released after a real period of inactivity, including after release.
+  // Détecter les changements d'état (pressed -> released)
   if (pressed && !last_pressed) {
     touch_set_active();
-    deye_solarman_set_touch_active(true);
+    deye_solarman_set_ui_active(true);
+    last_touch_time = now;
   } else if (pressed && last_pressed) {
-    touch_set_active();
+    last_touch_time = now;
   }
 
-  if (!pressed && touch_is_active && now - touch_last_activity >= TOUCH_INACTIVITY_TIMEOUT) {
-    touch_is_active = false;
-    deye_solarman_set_touch_active(false);
+  // Si le tactile est inactif depuis longtemps, on libère
+  if (!pressed && last_pressed && (now - last_touch_time > TOUCH_INACTIVITY_TIMEOUT)) {
+    deye_solarman_set_ui_active(false);
   }
 
   last_pressed = pressed;

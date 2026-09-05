@@ -1,11 +1,8 @@
-// settings.h - Configuration Solarman V5 (LSW)
-
 #pragma once
 
 #include <Arduino.h>
 #include <Preferences.h>
 #include "config.h"
-#include "ui_theme.h"
 
 static Preferences preferences;
 
@@ -16,11 +13,6 @@ static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
 static String cfg_tz_rule;
-static bool cfg_tempo_enabled = true;
-static bool cfg_tempo_colorblind_mode = false;
-static bool cfg_ev_charger_enabled = false;
-// Le thème historique est explicitement le thème par défaut.
-static UiThemeId cfg_ui_theme = UI_THEME_DEFAULT;
 
 // ==================== STRUCTURE POUR LES REGISTRES PERSONNALISÉS ====================
 struct CustomRegisters {
@@ -46,7 +38,7 @@ struct CustomRegisters {
   uint32_t response_window;
   uint32_t frame_timeout;
   uint32_t block_interval;
-  // Coefficients
+    // Coefficients
   float coeff_grid_power;
   float coeff_load_power;
   float coeff_ups_power;
@@ -80,7 +72,6 @@ static void settings_save_registers(const CustomRegisters &regs) {
   preferences.putUInt("reg_resp_t", regs.response_window);
   preferences.putUInt("reg_frame_t", regs.frame_timeout);
   preferences.putUInt("reg_block_i", regs.block_interval);
-  // Coefficients
   preferences.putFloat("coeff_grid", regs.coeff_grid_power);
   preferences.putFloat("coeff_load", regs.coeff_load_power);
   preferences.putFloat("coeff_ups", regs.coeff_ups_power);
@@ -115,7 +106,6 @@ static CustomRegisters settings_load_registers() {
   regs.response_window = preferences.getUInt("reg_resp_t", 10000);
   regs.frame_timeout = preferences.getUInt("reg_frame_t", 7000);
   regs.block_interval = preferences.getUInt("reg_block_i", 100);
-  // Coefficients
   regs.coeff_grid_power = preferences.getFloat("coeff_grid", 1.0f);
   regs.coeff_load_power = preferences.getFloat("coeff_load", 1.0f);
   regs.coeff_ups_power = preferences.getFloat("coeff_ups", 1.0f);
@@ -125,27 +115,26 @@ static CustomRegisters settings_load_registers() {
   return regs;
 }
 
-// ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES GÉNÉRAUX ====================
+static bool settings_get_gen_mode() {
+  preferences.begin("deye-ui", true);
+  bool mode = preferences.getBool("gen_smartload", true); // true = SmartLoad, false = GEN MO
+  preferences.end();
+  return mode;
+}
 
-static bool settings_save_wifi(const String &ssid, const String &password) {
-  if (ssid.length() == 0 || !preferences.begin("deye-ui", false)) {
-    DBG.println("ERREUR: sauvegarde Wi-Fi impossible.");
-    return false;
-  }
+static void settings_set_gen_mode(bool smartload) {
+  preferences.begin("deye-ui", false);
+  preferences.putBool("gen_smartload", smartload);
+  preferences.end();
+}
+
+// ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES ====================
+
+static void settings_save_wifi(const String &ssid, const String &password) {
+  preferences.begin("deye-ui", false);
   preferences.putString("wifi_ssid", ssid);
   preferences.putString("wifi_pwd", password);
-  const String saved_ssid = preferences.getString("wifi_ssid", "");
-  const String saved_password = preferences.getString("wifi_pwd", "");
   preferences.end();
-  const bool saved = saved_ssid == ssid && saved_password == password;
-  if (!saved) {
-    DBG.println("ERREUR: verification de sauvegarde Wi-Fi echouee.");
-    return false;
-  }
-  cfg_wifi_ssid = ssid;
-  cfg_wifi_password = password;
-  DBG.printf("Wi-Fi sauvegarde : SSID=%s, mot de passe=%u caracteres\n", ssid.c_str(), password.length());
-  return true;
 }
 
 static void settings_save_ntp(
@@ -167,37 +156,7 @@ static void settings_save_deye(const String &host, uint32_t logger_serial) {
   preferences.end();
 }
 
-static void settings_set_tempo_enabled(bool enabled) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("tempo_enabled", enabled);
-  preferences.end();
-  cfg_tempo_enabled = enabled;
-}
-
-static void settings_set_tempo_colorblind_mode(bool enabled) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("tempo_colorblind", enabled);
-  preferences.end();
-  cfg_tempo_colorblind_mode = enabled;
-}
-
-static void settings_set_ev_charger_enabled(bool enabled) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("ev_charger_enabled", enabled);
-  preferences.end();
-  cfg_ev_charger_enabled = enabled;
-}
-
-static void settings_set_ui_theme(UiThemeId theme) {
-  theme = ui_theme_from_value(static_cast<uint8_t>(theme));
-  preferences.begin("deye-ui", false);
-  preferences.putUChar("ui_theme", static_cast<uint8_t>(theme));
-  preferences.putBool("ui_theme_v2", true);
-  preferences.end();
-  cfg_ui_theme = theme;
-}
-
-// ==================== CHARGEMENT GLOBAL ====================
+// ==================== FONCTIONS DE CHARGEMENT ====================
 
 static void settings_load() {
   preferences.begin("deye-ui", true);
@@ -206,50 +165,15 @@ static void settings_load() {
   cfg_wifi_password = preferences.getString("wifi_pwd", DEFAULT_WIFI_PASSWORD);
   cfg_deye_host = preferences.getString("deye_host", DEFAULT_DEYE_HOST);
   cfg_logger_serial = preferences.getUInt("logger", DEFAULT_LOGGER_SERIAL);
-  // Migration des builds qui avaient sauvegardé le numéro factice utilisé
-  // pendant les essais. Ce numéro est placé dans l'en-tête Solarman V5 ; avec
-  // lui, le logger ignore les requêtes même si le réseau est correct.
-  if (cfg_logger_serial == 123456789UL) {
-    cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
-    DBG.println("Serial logger factice remplace par le serial configure par defaut.");
-  }
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);
   cfg_tz_rule = preferences.getString("tz_rule", DEFAULT_TZ_RULE);
-  cfg_tempo_enabled = preferences.getBool("tempo_enabled", true);
-  cfg_tempo_colorblind_mode = preferences.getBool("tempo_colorblind", false);
-  cfg_ev_charger_enabled = preferences.getBool("ev_charger_enabled", false);
-  const uint8_t stored_theme = preferences.getUChar(
-    "ui_theme", static_cast<uint8_t>(UI_THEME_DEFAULT)
-  );
-  // Migration : les anciennes versions avaient Actuel=0, Sombre=1 et Clair=2.
-  // Toute préférence ancienne sauf Clair devient donc le nouveau Sombre.
-  if (preferences.getBool("ui_theme_v2", false)) {
-    cfg_ui_theme = ui_theme_from_value(stored_theme);
-  } else {
-    cfg_ui_theme = stored_theme == 2 ? UI_THEME_LIGHT : UI_THEME_DARK;
-  }
 
   preferences.end();
 }
 
-// ==================== ACCÈS AUX REGISTRES ====================
+// ==================== FONCTIONS D'ACCÈS AUX REGISTRES ====================
 
 static CustomRegisters get_custom_registers() {
   return settings_load_registers();
-}
-
-// ==================== MODE GEN (SmartLoad / GEN MO) ====================
-
-static bool settings_get_gen_mode() {
-  preferences.begin("deye-ui", true);
-  bool mode = preferences.getBool("gen_smartload", true);
-  preferences.end();
-  return mode;
-}
-
-static void settings_set_gen_mode(bool smartload) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("gen_smartload", smartload);
-  preferences.end();
 }
