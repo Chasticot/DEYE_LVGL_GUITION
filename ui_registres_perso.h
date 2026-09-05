@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <lvgl.h>
+#include <math.h>
 #include "config.h"
 #include "settings.h"
 
@@ -52,6 +53,13 @@ static void textarea_defocus_cb(lv_event_t *e) {
 }
 
 // ==================== FONCTION UTILITAIRE ====================
+static const UiThemePalette &ui_registers_theme() {
+  return ui_theme_palette(cfg_ui_theme);
+}
+
+static lv_color_t ui_registers_color(uint32_t color) {
+  return lv_color_hex(color);
+}
 
 // Ajoute une ligne avec 3 colonnes : label, textarea valeur, textarea coeff (optionnel)
 static void add_reg_line(
@@ -68,7 +76,7 @@ static void add_reg_line(
   lv_label_set_text(label, label_text);
   lv_obj_set_pos(label, 5, y_pos);
   lv_obj_set_width(label, 130);
-  lv_obj_set_style_text_color(label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(label, ui_registers_color(ui_registers_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   // Textarea Valeur (colonne 2)
@@ -81,9 +89,9 @@ static void add_reg_line(
 
   lv_obj_set_pos(*textarea_val, 145, y_pos - 4);
   lv_obj_set_size(*textarea_val, 55, 32);
-  lv_obj_set_style_bg_color(*textarea_val, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_set_style_text_color(*textarea_val, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_border_color(*textarea_val, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(*textarea_val, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
+  lv_obj_set_style_text_color(*textarea_val, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_border_color(*textarea_val, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
   lv_obj_set_style_border_width(*textarea_val, 1, LV_PART_MAIN);
   lv_obj_set_style_radius(*textarea_val, 4, LV_PART_MAIN);
   lv_obj_set_scrollbar_mode(*textarea_val, LV_SCROLLBAR_MODE_OFF);
@@ -104,9 +112,9 @@ static void add_reg_line(
 
     lv_obj_set_pos(*textarea_coeff, 215, y_pos - 4);
     lv_obj_set_size(*textarea_coeff, 50, 32);
-    lv_obj_set_style_bg_color(*textarea_coeff, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(*textarea_coeff, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
     lv_obj_set_style_text_color(*textarea_coeff, lv_color_hex(0xFFD700), LV_PART_MAIN);
-    lv_obj_set_style_border_color(*textarea_coeff, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+    lv_obj_set_style_border_color(*textarea_coeff, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
     lv_obj_set_style_border_width(*textarea_coeff, 1, LV_PART_MAIN);
     lv_obj_set_style_radius(*textarea_coeff, 4, LV_PART_MAIN);
     lv_obj_set_scrollbar_mode(*textarea_coeff, LV_SCROLLBAR_MODE_OFF);
@@ -120,39 +128,106 @@ static void add_reg_line(
 
 // ==================== SAUVEGARDE ====================
 
+static void ui_registers_show_error(const char *message) {
+  lv_obj_t *msg = lv_msgbox_create(NULL, "Valeur invalide", message, NULL, true);
+  lv_obj_center(msg);
+}
+
+static bool ui_read_uint16(lv_obj_t *textarea, uint16_t *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0' || *text == '-') return false;
+  char *end = nullptr;
+  const unsigned long value = strtoul(text, &end, 10);
+  if (end == text || *end != '\0' || value > UINT16_MAX) return false;
+  *out = (uint16_t)value;
+  return true;
+}
+
+static bool ui_read_timeout(lv_obj_t *textarea, uint32_t *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0' || *text == '-') return false;
+  char *end = nullptr;
+  const unsigned long value = strtoul(text, &end, 10);
+  if (end == text || *end != '\0' || value < 50 || value > 60000) return false;
+  *out = (uint32_t)value;
+  return true;
+}
+
+static bool ui_read_coefficient(lv_obj_t *textarea, float *out) {
+  const char *text = lv_textarea_get_text(textarea);
+  if (text == nullptr || *text == '\0') return false;
+  char *end = nullptr;
+  const float value = strtof(text, &end);
+  if (end == text || *end != '\0' || !isfinite(value) || value < -100.0f || value > 100.0f) return false;
+  *out = value;
+  return true;
+}
+
+static bool ui_register_blocks_valid(const CustomRegisters &regs) {
+  const uint16_t block1[] = {
+    regs.grid_buy_daily, regs.grid_sell_daily, regs.load_daily,
+    regs.dc_temp, regs.ac_temp, regs.pv_daily
+  };
+  const uint16_t block2[] = {
+    regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+    regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power,
+    regs.pv3_power, regs.battery_power, regs.grid_status, regs.smartload
+  };
+  uint16_t min1 = block1[0], max1 = block1[0], min2 = block2[0], max2 = block2[0];
+  for (size_t i = 1; i < sizeof(block1) / sizeof(block1[0]); ++i) {
+    if (block1[i] < min1) min1 = block1[i];
+    if (block1[i] > max1) max1 = block1[i];
+  }
+  for (size_t i = 1; i < sizeof(block2) / sizeof(block2[0]); ++i) {
+    if (block2[i] < min2) min2 = block2[i];
+    if (block2[i] > max2) max2 = block2[i];
+  }
+  return (uint32_t)max1 - min1 + 1 <= 125 && (uint32_t)max2 - min2 + 1 <= 125;
+}
+
 static void ui_registers_save(lv_event_t *e) {
   (void)e;
 
   CustomRegisters regs;
-  // Valeurs des registres
-  regs.pv1_power = atoi(lv_textarea_get_text(ta_pv1_power));
-  regs.pv2_power = atoi(lv_textarea_get_text(ta_pv2_power));
-  regs.pv3_power = atoi(lv_textarea_get_text(ta_pv3_power));
-  regs.pv_daily = atoi(lv_textarea_get_text(ta_pv_daily));
-  regs.battery_soc = atoi(lv_textarea_get_text(ta_battery_soc));
-  regs.battery_voltage = atoi(lv_textarea_get_text(ta_battery_voltage));
-  regs.battery_power = atoi(lv_textarea_get_text(ta_battery_power));
-  regs.battery_temp = atoi(lv_textarea_get_text(ta_battery_temp));
-  regs.grid_power = atoi(lv_textarea_get_text(ta_grid_power));
-  regs.grid_status = atoi(lv_textarea_get_text(ta_grid_status));
-  regs.grid_buy_daily = atoi(lv_textarea_get_text(ta_grid_buy_daily));
-  regs.grid_sell_daily = atoi(lv_textarea_get_text(ta_grid_sell_daily));
-  regs.load_power = atoi(lv_textarea_get_text(ta_load_power));
-  regs.ups_power = atoi(lv_textarea_get_text(ta_ups_power));
-  regs.load_daily = atoi(lv_textarea_get_text(ta_load_daily));
-  regs.dc_temp = atoi(lv_textarea_get_text(ta_dc_temp));
-  regs.ac_temp = atoi(lv_textarea_get_text(ta_ac_temp));
-  regs.smartload = atoi(lv_textarea_get_text(ta_smartload));
-  regs.connect_timeout = atol(lv_textarea_get_text(ta_connect_timeout));
-  regs.response_window = atol(lv_textarea_get_text(ta_response_window));
-  regs.frame_timeout = atol(lv_textarea_get_text(ta_frame_timeout));
-  regs.block_interval = atol(lv_textarea_get_text(ta_block_interval));
+  #define READ_REGISTER(field, textarea) if (!ui_read_uint16(textarea, &regs.field)) { ui_registers_show_error("Les registres doivent etre entre 0 et 65535."); return; }
+  READ_REGISTER(pv1_power, ta_pv1_power);
+  READ_REGISTER(pv2_power, ta_pv2_power);
+  READ_REGISTER(pv3_power, ta_pv3_power);
+  READ_REGISTER(pv_daily, ta_pv_daily);
+  READ_REGISTER(battery_soc, ta_battery_soc);
+  READ_REGISTER(battery_voltage, ta_battery_voltage);
+  READ_REGISTER(battery_power, ta_battery_power);
+  READ_REGISTER(battery_temp, ta_battery_temp);
+  READ_REGISTER(grid_power, ta_grid_power);
+  READ_REGISTER(grid_status, ta_grid_status);
+  READ_REGISTER(grid_buy_daily, ta_grid_buy_daily);
+  READ_REGISTER(grid_sell_daily, ta_grid_sell_daily);
+  READ_REGISTER(load_power, ta_load_power);
+  READ_REGISTER(ups_power, ta_ups_power);
+  READ_REGISTER(load_daily, ta_load_daily);
+  READ_REGISTER(dc_temp, ta_dc_temp);
+  READ_REGISTER(ac_temp, ta_ac_temp);
+  READ_REGISTER(smartload, ta_smartload);
+  #undef READ_REGISTER
 
-  // Coefficients
-  regs.coeff_grid_power = atof(lv_textarea_get_text(ta_coeff_grid_power));
-  regs.coeff_load_power = atof(lv_textarea_get_text(ta_coeff_load_power));
-  regs.coeff_ups_power = atof(lv_textarea_get_text(ta_coeff_ups_power));
-  regs.coeff_smartload = atof(lv_textarea_get_text(ta_coeff_smartload));
+  if (!ui_read_timeout(ta_connect_timeout, &regs.connect_timeout) ||
+      !ui_read_timeout(ta_response_window, &regs.response_window) ||
+      !ui_read_timeout(ta_frame_timeout, &regs.frame_timeout) ||
+      !ui_read_timeout(ta_block_interval, &regs.block_interval)) {
+    ui_registers_show_error("Les timeouts doivent etre compris entre 50 et 60000 ms.");
+    return;
+  }
+  if (!ui_read_coefficient(ta_coeff_grid_power, &regs.coeff_grid_power) ||
+      !ui_read_coefficient(ta_coeff_load_power, &regs.coeff_load_power) ||
+      !ui_read_coefficient(ta_coeff_ups_power, &regs.coeff_ups_power) ||
+      !ui_read_coefficient(ta_coeff_smartload, &regs.coeff_smartload)) {
+    ui_registers_show_error("Les coefficients doivent etre entre -100 et 100.");
+    return;
+  }
+  if (!ui_register_blocks_valid(regs)) {
+    ui_registers_show_error("Chaque bloc de lecture doit contenir au maximum 125 registres.");
+    return;
+  }
 
   settings_save_registers(regs);
 
@@ -160,9 +235,10 @@ static void ui_registers_save(lv_event_t *e) {
   static const char *btn_txts[] = {"OK", NULL};
   lv_obj_t *msg = lv_msgbox_create(NULL, "Sauvegarde", "Registres et coefficients sauvegardes !\nRedemarrage en cours...", btn_txts, false);
   lv_obj_center(msg);
-  lv_timer_handler();
-  delay(300);
-  ESP.restart();
+  lv_timer_create([](lv_timer_t *timer) {
+    lv_timer_del(timer);
+    ESP.restart();
+  }, 300, NULL);
 }
 
 // ==================== CHARGEMENT DES VALEURS ====================
@@ -216,7 +292,7 @@ void ui_registers_create() {
   if (screen_registers != nullptr) return;
 
   screen_registers = lv_obj_create(nullptr);
-  lv_obj_set_style_bg_color(screen_registers, lv_color_hex(0x0a0a1a), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(screen_registers, ui_registers_color(ui_registers_theme().screen_bg), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_registers, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_registers, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -227,19 +303,19 @@ void ui_registers_create() {
   lv_obj_set_width(title, LCD_W);
   lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
   lv_obj_set_style_text_font(title, &lv_font_montserrat_20, LV_PART_MAIN);
-  lv_obj_set_style_text_color(title, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(title, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
 
   // Entêtes de colonnes
   lv_obj_t *h1 = lv_label_create(screen_registers);
   lv_label_set_text(h1, "Registre");
   lv_obj_set_pos(h1, 10, 52);
-  lv_obj_set_style_text_color(h1, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(h1, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_text_font(h1, &lv_font_montserrat_14, LV_PART_MAIN);
 
   lv_obj_t *h2 = lv_label_create(screen_registers);
   lv_label_set_text(h2, "Valeur");
   lv_obj_set_pos(h2, 155, 52);
-  lv_obj_set_style_text_color(h2, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(h2, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_text_font(h2, &lv_font_montserrat_14, LV_PART_MAIN);
 
   lv_obj_t *h3 = lv_label_create(screen_registers);
@@ -288,7 +364,7 @@ void ui_registers_create() {
   lv_obj_t *timeout_label = lv_label_create(cont);
   lv_label_set_text(timeout_label, "--- TIMEOUTS (ms) ---");
   lv_obj_set_pos(timeout_label, 5, y);
-  lv_obj_set_style_text_color(timeout_label, lv_color_hex(0x55D6FF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(timeout_label, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   y += 30;
   add_reg_line(cont, "Connect", &ta_connect_timeout, 10000, nullptr, 1.0f, y); y += step;
   add_reg_line(cont, "Response", &ta_response_window, 10000, nullptr, 1.0f, y); y += step;
@@ -300,7 +376,7 @@ void ui_registers_create() {
   lv_obj_t *gen_label = lv_label_create(cont);
   lv_label_set_text(gen_label, "Mode GEN :");
   lv_obj_set_pos(gen_label, 5, y);
-  lv_obj_set_style_text_color(gen_label, lv_color_hex(0x9CA3AF), LV_PART_MAIN);
+  lv_obj_set_style_text_color(gen_label, ui_registers_color(ui_registers_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(gen_label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   // Créer une ligne avec deux boutons radio (btnmatrix)
@@ -313,9 +389,9 @@ void ui_registers_create() {
   // Aucun flag "CHECK_STATE" n'existe, on utilise CHECKED pour marquer le bouton sélectionné
   lv_obj_set_pos(gen_btnmatrix, 130, y - 4);
   lv_obj_set_size(gen_btnmatrix, 200, 34);
-  lv_obj_set_style_bg_color(gen_btnmatrix, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
-  lv_obj_set_style_text_color(gen_btnmatrix, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_border_color(gen_btnmatrix, lv_color_hex(0x3a3a5e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
+  lv_obj_set_style_text_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_border_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
   lv_obj_set_style_border_width(gen_btnmatrix, 1, LV_PART_MAIN);
   lv_obj_set_style_radius(gen_btnmatrix, 6, LV_PART_MAIN);
   lv_obj_set_style_pad_all(gen_btnmatrix, 2, LV_PART_MAIN);
@@ -365,13 +441,13 @@ void ui_registers_create() {
   lv_obj_set_size(global_keyboard, LCD_W, 150);
   lv_obj_align(global_keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
   lv_obj_add_flag(global_keyboard, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_set_style_bg_color(global_keyboard, lv_color_hex(0x1a1a2e), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(global_keyboard, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
 
   // Boutons en bas
   lv_obj_t *default_btn = lv_btn_create(screen_registers);
   lv_obj_set_size(default_btn, 110, 40);
   lv_obj_set_pos(default_btn, 20, 432);
-  lv_obj_set_style_bg_color(default_btn, lv_color_hex(0x1D4ED8), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(default_btn, ui_registers_color(ui_registers_theme().accent_dark), LV_PART_MAIN);
   lv_obj_set_style_radius(default_btn, 8, LV_PART_MAIN);
   lv_obj_add_event_cb(default_btn, [](lv_event_t *e) {
     (void)e;
