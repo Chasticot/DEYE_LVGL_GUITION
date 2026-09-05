@@ -10,7 +10,7 @@ Le projet affiche localement les principales mesures de l'installation photovolt
 
 La branche `main` contient le développement actuel avec l'intégration VE. Le reste de l'interface est opérationnel, mais les commandes VE doivent encore être confirmées sur l'onduleur avant d'être considérées comme définitives.
 
-La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/V1_base_LSW). Elle sert de référence pour les installations qui souhaitent uniquement le suivi LSW/LSE classique.
+La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/V1_base_LSW). Elle sert de référence pour les installations LSW classiques.
 
 ## Fonctions principales
 
@@ -23,14 +23,14 @@ La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https
 - Synchronisation NTP et réglage du fuseau horaire.
 - Interface tactile LVGL fluide avec indicateurs de connexion Wi-Fi et Deye.
 - Sauvegarde des paramètres dans la mémoire non volatile de l'ESP32.
-- Communication Solarman V5 pour LSW et Modbus TCP pour LSE selon la configuration utilisée.
+- Communication Solarman V5 via logger LSW.
 - Intégration VE en cours de validation dans `main`.
 
 ## Matériel
 
 - Écran GUITION ESP32-S3 480 x 480, par exemple ESP32-4848S040.
 - PSRAM OPI activée.
-- Logger Solarman LSW3 ou LSE relié au même réseau que l'écran.
+- Logger Solarman LSW3 relié au même réseau que l'écran.
 - Onduleur Deye compatible avec le profil de registres utilisé par le projet.
 
 ## Câblage par défaut
@@ -73,7 +73,7 @@ Ne partagez jamais un vrai mot de passe Wi-Fi dans un dépôt public.
 Ouvrir le sketch correspondant à la branche utilisée :
 
 - `DEYE_LVGL_UI_2x2_menu_avance_coef.ino` pour le tag `V1_base_LSW`.
-- `DEYE_LVGL_UI_2x2_menu_avance_coef_LSE_LSW.ino` pour `main`.
+- `DEYE_LVGL_UI_2x2_menu_avance_coef_LSW.ino` pour `main`.
 
 Compiler puis téléverser avec les réglages ESP32-S3 ci-dessus. Un effacement complet de la flash n'est pas recommandé si les paramètres sauvegardés doivent être conservés.
 
@@ -83,7 +83,7 @@ Les fichiers `.bin` de flash seront publiés dans les releases GitHub après val
 
 ```text
 .
-├── DEYE_LVGL_UI_2x2_menu_avance_coef_LSE_LSW.ino
+├── DEYE_LVGL_UI_2x2_menu_avance_coef_LSW.ino
 ├── config.h
 ├── app_data.h
 ├── deye_solarman.h
