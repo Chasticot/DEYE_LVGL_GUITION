@@ -1,197 +1,111 @@
-DEYE LVGL Monitor – Interface tactile pour onduleur Deye (Solarman V5)
+# DEYE LVGL GUITION
 
-<img width="1536" height="2048" alt="image" src="https://github.com/user-attachments/assets/73ff4867-a7e3-4e30-a7ba-2dfac98bcd35" />
+Interface tactile autonome pour écran GUITION 480 x 480 basé sur ESP32-S3, destinée au suivi d'un onduleur Deye via logger Solarman.
 
+![Écran DEYE LVGL GUITION](https://github.com/user-attachments/assets/73ff4867-a7e3-4e30-a7ba-2dfac98bcd35)
 
-Interface de monitoring tactile pour onduleurs Deye hybrides (SG02LP1).
-Affiche en temps réel les données de production PV, batterie, consommation et réseau sur un écran 480×480.
-Communication via Solarman V5 (LSW) ou Modbus TCP (LSE), selon la configuration du logger.
+Le projet affiche localement les principales mesures de l'installation photovoltaïque et permet de consulter les informations de l'onduleur sans dépendre d'un ordinateur ou d'un serveur domotique.
 
-https://docs/dashboard.png
-✨ Fonctionnalités
+## État du projet
 
-    📊 Affichage en temps réel :
+La branche `main` contient le développement actuel avec l'intégration VE. Le reste de l'interface est opérationnel, mais les commandes VE doivent encore être confirmées sur l'onduleur avant d'être considérées comme définitives.
 
-        Production PV (PV1, PV2, PV3)
+La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/V1_base_LSW). Elle sert de référence pour les installations qui souhaitent uniquement le suivi LSW/LSE classique.
 
-        État de la batterie (SOC, tension, puissance, température)
+## Fonctions principales
 
-        Consommation globale (LOAD + UPS)
+- Affichage en temps réel de la production PV, de la batterie, de la consommation et du réseau.
+- Indication de l'import et de l'export réseau avec distinction des puissances positives et négatives.
+- Suivi de l'état de charge, des tensions, puissances et températures.
+- Bilans journaliers de production, consommation, achat et vente d'énergie.
+- Écran de configuration Wi-Fi avec scan des réseaux et indicateur de qualité.
+- Configuration de l'adresse IP, du port, du mode de communication et du numéro de série du logger.
+- Synchronisation NTP et réglage du fuseau horaire.
+- Interface tactile LVGL fluide avec indicateurs de connexion Wi-Fi et Deye.
+- Sauvegarde des paramètres dans la mémoire non volatile de l'ESP32.
+- Communication Solarman V5 pour LSW et Modbus TCP pour LSE selon la configuration utilisée.
+- Intégration VE en cours de validation dans `main`.
 
-        Puissance réseau (IMPORT / EXPORT) avec signe négatif en cas d’injection
+## Matériel
 
-        SmartLoad ON/OFF
+- Écran GUITION ESP32-S3 480 x 480, par exemple ESP32-4848S040.
+- PSRAM OPI activée.
+- Logger Solarman LSW3 ou LSE relié au même réseau que l'écran.
+- Onduleur Deye compatible avec le profil de registres utilisé par le projet.
 
-        Températures DC/AC/BAT
+## Câblage par défaut
 
-    📈 Données journalières :
+Les broches principales sont définies dans `config.h` :
 
-        Production PV du jour (kWh)
+| Fonction | GPIO |
+| --- | ---: |
+| GT911 SDA | 19 |
+| GT911 SCL | 45 |
+| Rétroéclairage | 38 |
+| Adresse GT911 | `0x5D` |
 
-        Consommation du jour (kWh)
+Les broches du panneau RGB dépendent du modèle d'écran. Vérifiez toujours le brochage de votre carte avant le premier flash.
 
-        Achat et vente réseau (kWh)
+## Préparer Arduino IDE
 
-    ⚙️ Configuration sans fil :
+1. Installer le support de cartes ESP32 depuis l'URL officielle Espressif :
+   `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+2. Sélectionner `ESP32S3 Dev Module` ou le modèle correspondant à votre carte.
+3. Installer `lvgl` version 8.4.0 et `Arduino_GFX` version 1.4.7.
+4. Utiliser les réglages suivants :
 
-        WiFi (scan des réseaux avec affichage de la qualité en %)
+| Réglage | Valeur recommandée |
+| --- | --- |
+| USB CDC On Boot | Enabled |
+| CPU Frequency | 240 MHz (WiFi) |
+| PSRAM | OPI PSRAM |
+| Partition Scheme | Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS) |
+| Upload Speed | 921600 |
 
-        NTP (fuseau horaire, serveurs)
+## Configuration
 
-        Deye (adresse IP, port, numéro de série et mode LSE/LSW)
+Les paramètres par défaut se trouvent dans `config.h`. Pour éviter de publier des identifiants personnels, les valeurs Wi-Fi et le numéro de série peuvent rester génériques dans le dépôt public. Après le premier démarrage, configurez-les depuis l'écran de réglages ; ils sont ensuite conservés dans la mémoire de l'ESP32.
 
-    🖥️ Interface tactile :
+Ne partagez jamais un vrai mot de passe Wi-Fi dans un dépôt public.
 
-        Écran 480×480 avec rotation définie dans le sketch (0 par défaut)
+## Compiler et flasher
 
-        Navigation fluide grâce au multithread (FreeRTOS)
+Ouvrir le sketch correspondant à la branche utilisée :
 
-        LEDs d’état WiFi et Deye
+- `DEYE_LVGL_UI_2x2_menu_avance_coef.ino` pour le tag `V1_base_LSW`.
+- `DEYE_LVGL_UI_2x2_menu_avance_coef_LSE_LSW.ino` pour `main`.
 
-    🔌 Protocole Solarman V5 :
+Compiler puis téléverser avec les réglages ESP32-S3 ci-dessus. Un effacement complet de la flash n'est pas recommandé si les paramètres sauvegardés doivent être conservés.
 
-        Lecture Modbus RTU encapsulée
+Les fichiers `.bin` de flash seront publiés dans les releases GitHub après validation de la compilation de chaque version. Un flash complet utilise le firmware applicatif, le bootloader et le fichier de partitions correspondant à la même version.
 
-        Timeouts longs (15s) inspirés du plugin Jeedom
+## Organisation
 
-        Reconnexion automatique à chaque lecture
+```text
+.
+├── DEYE_LVGL_UI_2x2_menu_avance_coef_LSE_LSW.ino
+├── config.h
+├── app_data.h
+├── deye_solarman.h
+├── settings.h
+├── wifi_manager.h
+├── ui_main.h
+├── ui_settings.h
+├── ui_ve_deye.h
+├── ve_deye.h
+├── ve_modbus_codec.h
+├── VE_INTEGRATION.md
+└── pc_simulator/
+```
 
-🧰 Matériel requis
+## Documentation VE
 
-    Ecran GUITION type ESP32-4848S040
-    Le lien de celui que j'ai acheté en 2025 => https://fr.aliexpress.com/item/1005006622746590.html
-    Data logger Solarman LSW3 ou LSE connecté au même réseau que l’écran
+Les détails techniques, les limites connues et les points restant à valider sont regroupés dans [`VE_INTEGRATION.md`](VE_INTEGRATION.md).
 
-🛠️ Configuration de l’environnement Arduino IDE
-1. Installer le support ESP32
+## Remerciements
 
-    Ouvrez Arduino IDE → Fichier → Préférences.
+Le projet s'appuie notamment sur LVGL, Arduino_GFX, les travaux pySolarmanV5 et les échanges de la communauté Jeedom et Home Assistant autour du protocole Solarman V5.
 
-    Dans « URL de gestionnaire de cartes supplémentaires », ajoutez :
-    text
-
-    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-
-    Ouvrez Outils → Type de carte → Gestionnaire de cartes….
-
-    Recherchez esp32 et installez la version 2.0.17.
-
-2. Choisir la carte et ses paramètres
-
-Sélectionnez la carte adaptée à votre matériel, par exemple :
-
-    Outils → Type de carte → ESP32S3 Dev Module (ou le modèle exact de votre carte).
-
-Paramètres recommandés (pour ESP32-S3) :
-Paramètre	Valeur
-USB CDC On Boot	Enabled
-CPU Frequency	240 MHz (WiFi)
-Flash Size	16 MB (ou selon votre carte)
-Partition Scheme	Huge App (3MB No OTA/1MB SPIFFS)
-PSRAM	OPI PSRAM (si présente)
-Upload Speed	921600
-
-    ⚠️ Le PSRAM est obligatoire pour le buffer LVGL. Activez-le dans les paramètres.
-
-3. Installer les bibliothèques requises
-
-Via le Gestionnaire de bibliothèques (croquis → Inclure une bibliothèque → Gérer les bibliothèques…) :
-Bibliothèque	Version	Utilisation
-lvgl	8.4.0	Interface graphique
-Arduino_GFX	1.4.7	Driver écran RGB/SPI
-WiFi	(incluse)	Connexion réseau
-Wire	(incluse)	I2C pour le tactile
-Preferences	(incluse)	Stockage des paramètres
-🔌 Schéma de connexion (pins)
-
-Les broches utilisées sont définies dans config.h. Adaptez-les à votre carte :
-Composant	Pins ESP32-S3
-RGB Panel	18, 17, 16, 21, 11, 12, 13, 14, 0, 8, 20, 3, 46, 9, 10, 4, 5, 6, 7, 15
-GT911 SDA	19
-GT911 SCL	45
-Rétroéclairage	38
-SPI (optionnel)	39, 48, 47
-📦 Installation et premier lancement
-
-    Clonez le dépôt :
-    bash
-
-    git clone 
-
-    Ouvrez le fichier DEYE_LVGL_UI_2x2.ino dans Arduino IDE.
-
-    Vérifiez les paramètres par défaut dans config.h :
-
-        WiFi SSID / password
-
-        Adresse IP, port et mode du logger Deye
-
-        Numéro de série du logger (LSW)
-
-    Compilez et téléversez le code sur l’ESP32-S3.
-
-     À la première mise sous tension, l’écran affiche des valeurs indisponibles jusqu’à la première lecture réussie. Utilisez le bouton CFG pour paramétrer le réseau et le logger.
-
-📁 Structure du projet
-
-     DEYE_LVGL_UI_2x2/
-     ├── DEYE_LVGL_UI_2x2.ino       # Point d’entrée
-     ├── config.h                   # Pins, WiFi, Deye, NTP
-     ├── app_data.h                 # Structure des données
-     ├── settings.h                 # Gestion des préférences (Preferences)
-     ├── wifi_manager.h             # WiFi
-     ├── ntp_manager.h              # NTP
-     ├── touch_gt911.h              # Driver GT911
-      ├── deye_solarman.h            # Solarman V5 / Modbus TCP (multithread)
-      ├── modbus_tcp_codec.h          # Validation des réponses Modbus TCP
-     ├── ui_main.h                  # Interface principale (LVGL)
-     └── ui_settings.h              # Écrans de configuration
-
-⚙️ Configuration sans fil
-
-L’interface de configuration vous permet de modifier :
-
-    WiFi : scan des réseaux avec affichage de la qualité en %.
-
-    NTP : fuseau horaire, serveurs primaire et secondaire.
-
-    Deye : adresse IP, port, numéro de série et mode LSE/LSW.
-
-Les paramètres sont sauvegardés dans la mémoire flash (Preferences) et persistent après redémarrage.
-🧵 Multithreading et fluidité
-
-Le projet utilise FreeRTOS pour déporter les lectures Solarman sur le cœur 1 de l’ESP32-S3.
-L’interface LVGL tourne sur le cœur 0, ce qui garantit une navigation fluide même en cas de timeouts réseau.
-
-    Mutex : protège les données partagées entre les cœurs.
-
-Flag ui_active : suspend les lectures pendant la navigation dans les menus. Le pilote tactile ajoute une pause courte pendant l’interaction pour conserver une réponse immédiate.
-
-🔧 Dépannage
-Problème	Solution
-Écran noir / rotation inversée	Vérifier la valeur de gfx->setRotation() dans setup()
-Toucher non réactif	Vérifier les broches I2C du GT911
-Connexion Deye échoue	Vérifier l’adresse IP, le port, le mode LSE/LSW et le numéro de série (LSW)
-Lectures échouent souvent	Vérifier que le logger est sur le même réseau et que le port 8899 est ouvert
-Compilation – PSRAM manquant	Activer PSRAM dans les paramètres de la carte
-🙏 Remerciements
-
-    LVGL – bibliothèque graphique
-
-    Arduino_GFX – driver écran
-
-    pySolarmanV5 – inspiration pour le protocole
-
-    La communauté Jeedom et Home Assistant pour les échanges sur Solarman V5
-
-📄 Licence
+## Licence
 
 Ce projet est distribué sous licence MIT. Utilisez-le à vos propres risques.
-
-## Versions et releases
-
-La release stable de base correspond au firmware sans TEMPO ni VE. La branche `main` contient le développement actuel avec l'intégration VE, encore à confirmer sur l'onduleur.
-
-Les releases GitHub contiennent les fichiers binaires ESP32-S3 nécessaires au flash : firmware applicatif, bootloader et partitions.
-
-⭐ Si ce projet vous est utile, n’hésitez pas à mettre une étoile sur GitHub !
