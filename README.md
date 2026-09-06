@@ -25,6 +25,8 @@ La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https
 - Sauvegarde des paramètres dans la mémoire non volatile de l'ESP32.
 - Communication Solarman V5 via logger LSW.
 - Intégration VE en cours de validation dans `main`.
+- Page Web locale pour faciliter la configuration du Wi-Fi, du réseau, du logger, de l'onduleur, du NTP et de l'affichage.
+- Mise à jour du firmware par OTA depuis cette page Web.
 
 ## Matériel
 
@@ -68,6 +70,14 @@ Les paramètres par défaut se trouvent dans `config.h`. Pour éviter de publier
 
 Ne partagez jamais un vrai mot de passe Wi-Fi dans un dépôt public.
 
+### Configuration par page Web
+
+Une fois l'écran connecté au réseau, ouvrez `http://ADRESSE_IP_DE_L_ECRAN/` depuis un appareil présent sur le même réseau. La page Web permet de modifier les paramètres principaux sans devoir recompiler le firmware. L'accès est protégé par l'authentification configurée par le firmware ; consultez [`WEB_SERVER.md`](WEB_SERVER.md) pour les détails.
+
+### Mise à jour OTA
+
+Pour faire une mise à jour OTA, il faut prendre le fichier firmware applicatif `.bin` de la release, c'est-à-dire le fichier qui se termine par `.ino.bin`. Dans la page Web, ouvrez **Mise à jour OTA**, sélectionnez ce `.bin`, puis lancez l'installation. N'utilisez pas le `.bootloader.bin`, le `.partitions.bin` ni une image fusionnée pour une mise à jour OTA. L'écran redémarre automatiquement lorsque la mise à jour est terminée et les paramètres enregistrés sont conservés.
+
 ## Compiler et flasher
 
 Ouvrir le sketch correspondant à la branche utilisée :
@@ -77,7 +87,7 @@ Ouvrir le sketch correspondant à la branche utilisée :
 
 Compiler puis téléverser avec les réglages ESP32-S3 ci-dessus. Un effacement complet de la flash n'est pas recommandé si les paramètres sauvegardés doivent être conservés.
 
-Les fichiers `.bin` de flash seront publiés dans les releases GitHub après validation de la compilation de chaque version. Un flash complet utilise le firmware applicatif, le bootloader et le fichier de partitions correspondant à la même version.
+Les fichiers `.bin` de flash sont publiés dans les releases GitHub après validation de la compilation de chaque version. Un flash complet utilise le firmware applicatif, le bootloader et le fichier de partitions correspondant à la même version. Pour une mise à jour OTA, utilisez uniquement le `.ino.bin` indiqué dans la section précédente.
 
 ## Organisation
 

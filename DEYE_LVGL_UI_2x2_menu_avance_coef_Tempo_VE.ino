@@ -47,6 +47,7 @@ Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
 #include "ui_main.h"
 #include "ui_settings.h"
 #include "ui_ve_deye.h"
+#include "web_server.h"
 
 static lv_color_t *draw_buf = nullptr;
 static lv_disp_draw_buf_t lv_draw_buf;
@@ -150,6 +151,7 @@ void setup() {
   wifi_manager_begin();
   ntp_manager_begin();
   deye_solarman_begin();
+  web_server_begin();
 
   DBG.println("Interface LVGL prete");
 }
@@ -164,12 +166,14 @@ void loop() {
   lv_tick_inc(1);
   lv_timer_handler();
   wifi_manager_process();
+  web_server_process();
   
   // Mise à jour de l'affichage - toutes les 500ms
   uint32_t now = millis();
   if (now - last_display_update >= 500) {
     last_display_update = now;
     ui_main_update();
+    ui_wifi_update_ip();
     ui_ve_deye_update();
   }
 
