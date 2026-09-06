@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#define DBG Serial
+#define DBG Serial0
 
 #define LCD_W 480
 #define LCD_H 480
