@@ -73,7 +73,7 @@ Ne partagez jamais un vrai mot de passe Wi-Fi dans un dépôt public.
 Ouvrir le sketch correspondant à la branche utilisée :
 
 - `DEYE_LVGL_UI_2x2_menu_avance_coef.ino` pour le tag `V1_base_LSW`.
-- `DEYE_LVGL_UI_2x2_menu_avance_coef_LSW.ino` pour `main`.
+- `DEYE_LVGL_UI_2x2_menu_avance_coef_Tempo_VE.ino` pour `main`.
 
 Compiler puis téléverser avec les réglages ESP32-S3 ci-dessus. Un effacement complet de la flash n'est pas recommandé si les paramètres sauvegardés doivent être conservés.
 
@@ -83,7 +83,7 @@ Les fichiers `.bin` de flash seront publiés dans les releases GitHub après val
 
 ```text
 .
-├── DEYE_LVGL_UI_2x2_menu_avance_coef_LSW.ino
+├── DEYE_LVGL_UI_2x2_menu_avance_coef_Tempo_VE.ino
 ├── config.h
 ├── app_data.h
 ├── deye_solarman.h
