@@ -229,7 +229,10 @@ static void ui_registers_save(lv_event_t *e) {
     return;
   }
 
-  settings_save_registers(regs);
+  if (!settings_save_registers(regs)) {
+    ui_registers_show_error("Sauvegarde des registres impossible.");
+    return;
+  }
 
   // Message de confirmation
   static const char *btn_txts[] = {"OK", NULL};

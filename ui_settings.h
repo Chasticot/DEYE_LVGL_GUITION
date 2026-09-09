@@ -11,6 +11,7 @@
 
 // ==================== DÉCLARATIONS EXTERNES ====================
 extern void deye_solarman_set_ui_active(bool active);
+extern bool deye_copy_diagnostics(DeyeDiagnostics *out);
 
 // ==================== VARIABLES STATIQUES ====================
 static lv_obj_t *screen_settings = nullptr;
@@ -22,8 +23,10 @@ static lv_obj_t *screen_theme = nullptr;
 
 static lv_obj_t *dropdown_wifi = nullptr;
 static lv_obj_t *textarea_wifi_password = nullptr;
+static lv_obj_t *checkbox_web_auth_reset = nullptr;
 static lv_obj_t *label_wifi_scan = nullptr;
 static lv_obj_t *label_wifi_password_length = nullptr;
+static lv_obj_t *label_wifi_ip = nullptr;
 
 static lv_obj_t *dropdown_timezone = nullptr;
 static lv_obj_t *textarea_ntp_primary = nullptr;
@@ -35,12 +38,20 @@ static lv_obj_t *switch_tempo = nullptr;
 static lv_obj_t *switch_tempo_colorblind = nullptr;
 static lv_obj_t *switch_ev_charger = nullptr;
 static lv_obj_t *theme_btnmatrix = nullptr;
+static lv_obj_t *slider_day_brightness = nullptr;
+static lv_obj_t *slider_night_brightness = nullptr;
+static lv_obj_t *switch_night_mode = nullptr;
+static lv_obj_t *switch_sunset_mode = nullptr;
+static lv_obj_t *dropdown_night_start = nullptr;
+static lv_obj_t *dropdown_night_end = nullptr;
+static lv_obj_t *label_deye_blocks = nullptr;
 static lv_timer_t *wifi_scan_timer = nullptr;
 static lv_obj_t *keyboard_wifi = nullptr;
 static lv_obj_t *keyboard_ntp = nullptr;
 static lv_obj_t *keyboard_deye = nullptr;
 
 static void ui_settings_create();
+static void ui_settings_update_deye_status();
 
 static UiThemeId selected_ui_theme = UI_THEME_DEFAULT;
 
@@ -229,8 +240,20 @@ void ui_show_registers(lv_event_t *e) {
   }
 }
 
+static void ui_wifi_update_ip() {
+  if (label_wifi_ip == nullptr) return;
+  const String address = WiFi.status() == WL_CONNECTED
+    ? WiFi.localIP().toString() : String("Non connecte");
+  const String text = String("IP Serveur Web/Ecran : ") + address;
+  if (strcmp(lv_label_get_text(label_wifi_ip), text.c_str()) != 0) {
+    lv_label_set_text(label_wifi_ip, text.c_str());
+  }
+}
+
 static void ui_show_wifi_screen(lv_event_t *e) {
   (void)e;
+  ui_wifi_update_ip();
+  if (checkbox_web_auth_reset) lv_obj_clear_state(checkbox_web_auth_reset, LV_STATE_CHECKED);
   deye_solarman_set_ui_active(true);
   lv_scr_load(screen_wifi);
 }
@@ -244,6 +267,7 @@ static void ui_show_ntp_screen(lv_event_t *e) {
 static void ui_show_deye_screen(lv_event_t *e) {
   (void)e;
   deye_solarman_set_ui_active(true);
+  ui_settings_update_deye_status();
   lv_scr_load(screen_deye);
 }
 
@@ -261,6 +285,14 @@ static void ui_show_theme_screen(lv_event_t *e) {
     if (i == selected_ui_theme) lv_btnmatrix_set_btn_ctrl(theme_btnmatrix, i, LV_BTNMATRIX_CTRL_CHECKED);
     else lv_btnmatrix_clear_btn_ctrl(theme_btnmatrix, i, LV_BTNMATRIX_CTRL_CHECKED);
   }
+  lv_slider_set_value(slider_day_brightness, cfg_display.day_brightness, LV_ANIM_OFF);
+  lv_slider_set_value(slider_night_brightness, cfg_display.night_brightness, LV_ANIM_OFF);
+  if (cfg_display.night_enabled) lv_obj_add_state(switch_night_mode, LV_STATE_CHECKED);
+  else lv_obj_clear_state(switch_night_mode, LV_STATE_CHECKED);
+  lv_dropdown_set_selected(dropdown_night_start, cfg_display.night_start_hour);
+  lv_dropdown_set_selected(dropdown_night_end, cfg_display.night_end_hour);
+  if (cfg_display.sunset_mode) lv_obj_add_state(switch_sunset_mode, LV_STATE_CHECKED);
+  else lv_obj_clear_state(switch_sunset_mode, LV_STATE_CHECKED);
   lv_scr_load(screen_theme);
 }
 
@@ -346,6 +378,14 @@ static void ui_scan_wifi(lv_event_t *e) {
 
 static void ui_save_wifi(lv_event_t *e) {
   (void)e;
+  if (checkbox_web_auth_reset && lv_obj_has_state(checkbox_web_auth_reset, LV_STATE_CHECKED)) {
+    if (!settings_reset_web_auth()) {
+      ui_settings_show_error("Reset authentification Web echoue.");
+      return;
+    }
+    ui_settings_restart_message();
+    return;
+  }
   uint16_t selected = lv_dropdown_get_selected(dropdown_wifi);
   if (selected >= wifi_ssid_count) {
     DBG.println("Erreur: selection invalide");
@@ -371,11 +411,14 @@ static void ui_save_ntp(lv_event_t *e) {
   const size_t count = sizeof(timezone_rules) / sizeof(timezone_rules[0]);
   if (selected >= count) selected = 0;
 
-  settings_save_ntp(
+  if (!settings_save_ntp(
     timezone_rules[selected],
     lv_textarea_get_text(textarea_ntp_primary),
     lv_textarea_get_text(textarea_ntp_secondary)
-  );
+  )) {
+    ui_settings_show_error("Sauvegarde NTP impossible.");
+    return;
+  }
   ui_settings_restart_message();
 }
 
@@ -390,7 +433,10 @@ static void ui_save_deye(lv_event_t *e) {
     ui_settings_show_error("Verifier l'hote et le serial du logger.");
     return;
   }
-  settings_save_deye(host, serial);
+  if (!settings_save_deye(host, serial)) {
+    ui_settings_show_error("Sauvegarde Deye impossible.");
+    return;
+  }
   ui_settings_restart_message();
 }
 
@@ -409,8 +455,37 @@ static void ui_save_tempo(lv_event_t *e) {
 
 static void ui_save_theme(lv_event_t *e) {
   (void)e;
-  settings_set_ui_theme(selected_ui_theme);
+  DisplayConfig display = cfg_display;
+  display.day_brightness = lv_slider_get_value(slider_day_brightness);
+  display.night_brightness = lv_slider_get_value(slider_night_brightness);
+  display.night_enabled = lv_obj_has_state(switch_night_mode, LV_STATE_CHECKED);
+  display.sunset_mode = lv_obj_has_state(switch_sunset_mode, LV_STATE_CHECKED);
+  display.night_start_hour = lv_dropdown_get_selected(dropdown_night_start);
+  display.night_end_hour = lv_dropdown_get_selected(dropdown_night_end);
+  if (!settings_save_display(display) || !settings_set_ui_theme(selected_ui_theme)) {
+    ui_settings_show_error("Sauvegarde affichage impossible.");
+    return;
+  }
   ui_settings_restart_message();
+}
+
+static void ui_settings_update_deye_status() {
+  if (label_deye_blocks == nullptr) return;
+  DeyeDiagnostics diagnostic = {};
+  if (!deye_copy_diagnostics(&diagnostic)) return;
+  char text[180], age1_text[20], age2_text[20], age3_text[20];
+  const uint32_t now = millis();
+  const uint32_t age1 = diagnostic.block_last_success_ms[0] ? (now - diagnostic.block_last_success_ms[0]) / 1000 : UINT32_MAX;
+  const uint32_t age2 = diagnostic.block_last_success_ms[1] ? (now - diagnostic.block_last_success_ms[1]) / 1000 : UINT32_MAX;
+  const uint32_t age3 = diagnostic.block_last_success_ms[2] ? (now - diagnostic.block_last_success_ms[2]) / 1000 : UINT32_MAX;
+  if (age1 == UINT32_MAX) strcpy(age1_text, "jamais"); else snprintf(age1_text, sizeof(age1_text), "%lu s", (unsigned long)age1);
+  if (age2 == UINT32_MAX) strcpy(age2_text, "jamais"); else snprintf(age2_text, sizeof(age2_text), "%lu s", (unsigned long)age2);
+  if (age3 == UINT32_MAX) strcpy(age3_text, "jamais"); else snprintf(age3_text, sizeof(age3_text), "%lu s", (unsigned long)age3);
+  snprintf(text, sizeof(text), "Dernieres lectures : B1 %s | B2 %s | B3 %s\nOK : %lu / %lu / %lu   Echecs : %lu / %lu / %lu",
+    age1_text, age2_text, age3_text,
+    (unsigned long)diagnostic.block_success[0], (unsigned long)diagnostic.block_success[1], (unsigned long)diagnostic.block_success[2],
+    (unsigned long)diagnostic.block_failure[0], (unsigned long)diagnostic.block_failure[1], (unsigned long)diagnostic.block_failure[2]);
+  lv_label_set_text(label_deye_blocks, text);
 }
 
 // ==================== CRÉATION DES ÉCRANS ====================
@@ -430,12 +505,12 @@ static void ui_settings_create() {
   int start_y = 55;
   int step_y = btn_h + spacing;
 
-  ui_settings_make_button(screen_settings, "WIFI", col_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_wifi_screen);
+  ui_settings_make_button(screen_settings, "WIFI / RESEAU", col_x, start_y + 0 * step_y, btn_w, btn_h, ui_show_wifi_screen);
   ui_settings_make_button(screen_settings, "HEURE / NTP", col_x, start_y + 1 * step_y, btn_w, btn_h, ui_show_ntp_screen);
   ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", col_x, start_y + 2 * step_y, btn_w, btn_h, ui_show_deye_screen);
   ui_settings_make_button(screen_settings, "REGISTRES PERSO", col_x, start_y + 3 * step_y, btn_w, btn_h, ui_show_registers);
   ui_settings_make_button(screen_settings, "TEMPO / VE", col_x, start_y + 4 * step_y, btn_w, btn_h, ui_show_tempo_screen);
-  ui_settings_make_button(screen_settings, "THEME", col_x, start_y + 5 * step_y, btn_w, btn_h, ui_show_theme_screen);
+  ui_settings_make_button(screen_settings, "THEME / ECRAN", col_x, start_y + 5 * step_y, btn_w, btn_h, ui_show_theme_screen);
 
   ui_settings_make_button(screen_settings, "RETOUR", col_x, 415, btn_w, 50, ui_show_dashboard);
 
@@ -524,21 +599,22 @@ static void ui_settings_create() {
   lv_obj_set_style_bg_color(screen_theme, ui_settings_color(ui_settings_theme().screen_bg), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_theme, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_theme, LV_OBJ_FLAG_SCROLLABLE);
-  ui_settings_make_title(screen_theme, "THEME");
+  ui_settings_make_title(screen_theme, "THEME / ECRAN");
 
   lv_obj_t *theme_label = lv_label_create(screen_theme);
   lv_label_set_text(theme_label, "Choisissez l'apparence de l'interface");
-  lv_obj_set_pos(theme_label, 0, 62);
+  lv_obj_set_pos(theme_label, 0, 48);
   lv_obj_set_width(theme_label, LCD_W);
   lv_obj_set_style_text_align(theme_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
   lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
 
-  static const char *theme_options[] = {"SOMBRE", "\n", "CLAIR", ""};
+  // Deux choix larges sur une seule ligne : plus faciles a viser au doigt.
+  static const char *theme_options[] = {"SOMBRE", "CLAIR", ""};
   theme_btnmatrix = lv_btnmatrix_create(screen_theme);
   lv_btnmatrix_set_map(theme_btnmatrix, theme_options);
-  lv_obj_set_pos(theme_btnmatrix, 90, 100);
-  lv_obj_set_size(theme_btnmatrix, 300, 130);
+  lv_obj_set_pos(theme_btnmatrix, 50, 76);
+  lv_obj_set_size(theme_btnmatrix, 380, 70);
   lv_obj_set_style_bg_color(theme_btnmatrix, ui_settings_color(ui_settings_theme().control_bg), LV_PART_MAIN);
   lv_obj_set_style_text_color(theme_btnmatrix, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
   lv_obj_set_style_border_color(theme_btnmatrix, ui_settings_color(ui_settings_theme().control_border), LV_PART_MAIN);
@@ -581,11 +657,70 @@ static void ui_settings_create() {
   }, LV_EVENT_VALUE_CHANGED, nullptr);
 
   theme_label = lv_label_create(screen_theme);
-  lv_label_set_text(theme_label, "Le changement est applique au prochain redemarrage.");
-  lv_obj_set_pos(theme_label, 0, 315);
+  lv_label_set_text(theme_label, "Luminosite jour");
+  lv_obj_set_pos(theme_label, 25, 162);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  slider_day_brightness = lv_slider_create(screen_theme);
+  lv_slider_set_range(slider_day_brightness, 10, 255);
+  lv_slider_set_value(slider_day_brightness, cfg_display.day_brightness, LV_ANIM_OFF);
+  lv_obj_set_pos(slider_day_brightness, 190, 164);
+  lv_obj_set_size(slider_day_brightness, 250, 18);
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "Luminosite nuit");
+  lv_obj_set_pos(theme_label, 25, 205);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  slider_night_brightness = lv_slider_create(screen_theme);
+  lv_slider_set_range(slider_night_brightness, 1, 255);
+  lv_slider_set_value(slider_night_brightness, cfg_display.night_brightness, LV_ANIM_OFF);
+  lv_obj_set_pos(slider_night_brightness, 190, 207);
+  lv_obj_set_size(slider_night_brightness, 250, 18);
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "Mode nuit programme");
+  lv_obj_set_pos(theme_label, 25, 248);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  switch_night_mode = lv_switch_create(screen_theme);
+  lv_obj_set_pos(switch_night_mode, 370, 240);
+  lv_obj_set_size(switch_night_mode, 64, 34);
+  if (cfg_display.night_enabled) lv_obj_add_state(switch_night_mode, LV_STATE_CHECKED);
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "Suivre coucher / lever du soleil");
+  lv_obj_set_pos(theme_label, 25, 285);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  switch_sunset_mode = lv_switch_create(screen_theme);
+  lv_obj_set_pos(switch_sunset_mode, 370, 277);
+  lv_obj_set_size(switch_sunset_mode, 64, 34);
+  if (cfg_display.sunset_mode) lv_obj_add_state(switch_sunset_mode, LV_STATE_CHECKED);
+  static const char *hours = "00\n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23";
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "De");
+  lv_obj_set_pos(theme_label, 25, 338);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  dropdown_night_start = lv_dropdown_create(screen_theme);
+  lv_dropdown_set_options(dropdown_night_start, hours);
+  lv_dropdown_set_selected(dropdown_night_start, cfg_display.night_start_hour);
+  lv_obj_set_pos(dropdown_night_start, 70, 325);
+  lv_obj_set_size(dropdown_night_start, 100, 40);
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "a");
+  lv_obj_set_pos(theme_label, 200, 338);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  dropdown_night_end = lv_dropdown_create(screen_theme);
+  lv_dropdown_set_options(dropdown_night_end, hours);
+  lv_dropdown_set_selected(dropdown_night_end, cfg_display.night_end_hour);
+  lv_obj_set_pos(dropdown_night_end, 230, 325);
+  lv_obj_set_size(dropdown_night_end, 100, 40);
+  theme_label = lv_label_create(screen_theme);
+  lv_label_set_text(theme_label, "Coordonnees solaires reglables sur la page Web.");
+  lv_obj_set_pos(theme_label, 0, 365);
   lv_obj_set_width(theme_label, LCD_W);
   lv_obj_set_style_text_align(theme_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_12, LV_PART_MAIN);
   lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
 
   ui_settings_make_button(screen_theme, "RETOUR", 20, 390, 190, 55, ui_show_settings_screen);
@@ -596,7 +731,7 @@ static void ui_settings_create() {
   lv_obj_set_style_bg_color(screen_wifi, ui_settings_color(ui_settings_theme().screen_bg), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(screen_wifi, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_clear_flag(screen_wifi, LV_OBJ_FLAG_SCROLLABLE);
-  ui_settings_make_title(screen_wifi, "CONFIGURATION WIFI");
+  ui_settings_make_title(screen_wifi, "WIFI / RESEAU");
 
   lv_obj_t *label = lv_label_create(screen_wifi);
   lv_label_set_text(label, "Reseau Wi-Fi");
@@ -639,7 +774,19 @@ static void ui_settings_create() {
   wifi_scan_timer = lv_timer_create(ui_wifi_scan_timer_cb, 200, nullptr);
   lv_timer_pause(wifi_scan_timer);
 
+  label_wifi_ip = lv_label_create(screen_wifi);
+  lv_obj_set_pos(label_wifi_ip, 20, 270);
+  lv_obj_set_width(label_wifi_ip, 430);
+  lv_obj_set_style_text_color(label_wifi_ip, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_text_font(label_wifi_ip, &lv_font_montserrat_14, LV_PART_MAIN);
+  ui_wifi_update_ip();
+
   ui_settings_make_button(screen_wifi, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
+  checkbox_web_auth_reset = lv_checkbox_create(screen_wifi);
+  lv_checkbox_set_text(checkbox_web_auth_reset, "Reset authentification serveur Web");
+  lv_obj_set_pos(checkbox_web_auth_reset, 20, 300);
+  lv_obj_set_style_text_font(checkbox_web_auth_reset, &lv_font_montserrat_16, LV_PART_MAIN);
+  lv_obj_set_style_text_color(checkbox_web_auth_reset, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
   ui_settings_make_button(screen_wifi, "SAUVEGARDER", 250, 370, 200, 55, ui_save_wifi);
 
   // ÉCRAN NTP
@@ -738,6 +885,13 @@ static void ui_settings_create() {
     &keyboard_deye
   );
 
-  ui_settings_make_button(screen_deye, "RETOUR", 20, 370, 190, 55, ui_show_settings_screen);
-  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 370, 200, 55, ui_save_deye);
+  label_deye_blocks = lv_label_create(screen_deye);
+  lv_obj_set_pos(label_deye_blocks, 20, 275);
+  lv_obj_set_width(label_deye_blocks, 440);
+  lv_obj_set_style_text_font(label_deye_blocks, &lv_font_montserrat_12, LV_PART_MAIN);
+  lv_obj_set_style_text_color(label_deye_blocks, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
+  ui_settings_update_deye_status();
+
+  ui_settings_make_button(screen_deye, "RETOUR", 20, 390, 190, 55, ui_show_settings_screen);
+  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 390, 200, 55, ui_save_deye);
 }

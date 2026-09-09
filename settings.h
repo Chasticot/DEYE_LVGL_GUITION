@@ -6,8 +6,74 @@
 #include <Preferences.h>
 #include "config.h"
 #include "ui_theme.h"
+#include "network_config.h"
+
+static NetworkConfig cfg_network;
+
+static bool settings_save_network(const NetworkConfig &cfg) {
+  if (!network_config_valid(cfg)) return false;
+  Preferences storage;
+  if (!storage.begin("deye-network", false)) return false;
+  NetworkConfig check;
+  bool ok = storage.putBytes("config", &cfg, sizeof(cfg)) == sizeof(cfg);
+  ok = ok && storage.getBytes("config", &check, sizeof(check)) == sizeof(check) &&
+    memcmp(&cfg, &check, sizeof(cfg)) == 0;
+  storage.end();
+  if (ok) cfg_network = cfg;
+  return ok;
+}
+
+static void settings_load_network() {
+  cfg_network = NetworkConfig{};
+  Preferences storage;
+  if (!storage.begin("deye-network", true)) return;
+  NetworkConfig saved;
+  if (storage.getBytesLength("config") == sizeof(saved) &&
+      storage.getBytes("config", &saved, sizeof(saved)) == sizeof(saved) &&
+      network_config_valid(saved)) cfg_network = saved;
+  storage.end();
+}
 
 static Preferences preferences;
+
+static bool cfg_web_auth = false;
+static String cfg_web_user;
+static String cfg_web_password;
+
+// One NVS record keeps enabled state and credentials together.
+static bool settings_save_web_auth(bool enabled, const String &user, const String &password) {
+  if (enabled && (user.isEmpty() || password.isEmpty())) return false;
+  Preferences web;
+  if (!web.begin("deye-web", false)) return false;
+  String record = String(enabled ? "1" : "0") + "\n" + user + "\n" + password;
+  bool ok = web.putString("auth", record) == record.length();
+  ok = ok && web.getString("auth", "") == record;
+  web.end();
+  if (ok) { cfg_web_auth = enabled; cfg_web_user = user; cfg_web_password = password; }
+  return ok;
+}
+
+static bool settings_reset_web_auth() {
+  Preferences web;
+  if (!web.begin("deye-web", false)) return false;
+  bool ok = !web.isKey("auth") || web.remove("auth");
+  ok = ok && !web.isKey("auth");
+  web.end();
+  if (ok) { cfg_web_auth = false; cfg_web_user = ""; cfg_web_password = ""; }
+  return ok;
+}
+
+static void settings_load_web_auth() {
+  Preferences web;
+  if (!web.begin("deye-web", true)) return;
+  String record = web.getString("auth", "");
+  web.end();
+  int separator = record.indexOf('\n', 2);
+  if (separator < 0) return;
+  cfg_web_user = record.substring(2, separator);
+  cfg_web_password = record.substring(separator + 1);
+  cfg_web_auth = record.startsWith("1\n");
+}
 
 static String cfg_wifi_ssid;
 static String cfg_wifi_password;
@@ -29,6 +95,52 @@ static_assert(sizeof(SETTINGS_KEY_TEMPO_COLORBLIND) <= 16, "Cle NVS trop longue"
 static_assert(sizeof(SETTINGS_KEY_EV_CHARGER) <= 16, "Cle NVS trop longue");
 // Le thème historique est explicitement le thème par défaut.
 static UiThemeId cfg_ui_theme = UI_THEME_DEFAULT;
+
+struct DisplayConfig {
+  uint32_t version = 2;
+  uint8_t day_brightness = 220;
+  uint8_t night_brightness = 35;
+  uint8_t night_start_hour = 22;
+  uint8_t night_end_hour = 7;
+  bool night_enabled = true;
+  bool sunset_mode = false;
+  // Valeur de depart pour la France metropolitaine. A ajuster depuis le Web
+  // pour que les horaires solaires correspondent exactement a l'installation.
+  float latitude = 46.5f;
+  float longitude = 2.5f;
+};
+static DisplayConfig cfg_display;
+
+static bool settings_display_valid(const DisplayConfig &cfg) {
+  return cfg.version == 2 && cfg.day_brightness >= 10 && cfg.night_brightness >= 1 &&
+    cfg.night_start_hour < 24 && cfg.night_end_hour < 24 && isfinite(cfg.latitude) && isfinite(cfg.longitude) &&
+    cfg.latitude >= -89.0f && cfg.latitude <= 89.0f && cfg.longitude >= -180.0f && cfg.longitude <= 180.0f;
+}
+
+static bool settings_save_display(const DisplayConfig &cfg) {
+  if (!settings_display_valid(cfg)) return false;
+  Preferences storage;
+  if (!storage.begin("deye-display", false)) return false;
+  DisplayConfig verify;
+  bool ok = storage.putBytes("config", &cfg, sizeof(cfg)) == sizeof(cfg);
+  ok = ok && storage.getBytes("config", &verify, sizeof(verify)) == sizeof(verify) &&
+    memcmp(&cfg, &verify, sizeof(cfg)) == 0;
+  storage.end();
+  if (ok) cfg_display = cfg;
+  return ok;
+}
+
+static void settings_load_display() {
+  cfg_display = DisplayConfig{};
+  Preferences storage;
+  if (!storage.begin("deye-display", true)) return;
+  DisplayConfig saved;
+  if (storage.getBytesLength("config") == sizeof(saved) &&
+      storage.getBytes("config", &saved, sizeof(saved)) == sizeof(saved) && settings_display_valid(saved)) {
+    cfg_display = saved;
+  }
+  storage.end();
+}
 
 // ==================== STRUCTURE POUR LES REGISTRES PERSONNALISÉS ====================
 struct CustomRegisters {
@@ -61,10 +173,32 @@ struct CustomRegisters {
   float coeff_smartload;
 };
 
+static bool settings_registers_valid(const CustomRegisters &regs) {
+  const uint16_t block1[] = { regs.grid_buy_daily, regs.grid_sell_daily, regs.load_daily,
+    regs.dc_temp, regs.ac_temp, regs.pv_daily };
+  const uint16_t block2[] = { regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+    regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power, regs.pv3_power,
+    regs.battery_power, regs.grid_status, regs.smartload };
+  uint16_t min1 = block1[0], max1 = block1[0], min2 = block2[0], max2 = block2[0];
+  for (uint8_t i = 1; i < sizeof(block1) / sizeof(block1[0]); ++i) { min1 = min(min1, block1[i]); max1 = max(max1, block1[i]); }
+  for (uint8_t i = 1; i < sizeof(block2) / sizeof(block2[0]); ++i) { min2 = min(min2, block2[i]); max2 = max(max2, block2[i]); }
+  const bool timeouts = regs.connect_timeout >= 50 && regs.connect_timeout <= 60000 &&
+    regs.response_window >= 50 && regs.response_window <= 60000 && regs.frame_timeout >= 50 &&
+    regs.frame_timeout <= 60000 && regs.block_interval >= 50 && regs.block_interval <= 60000;
+  const bool coefficients = isfinite(regs.coeff_grid_power) && isfinite(regs.coeff_load_power) &&
+    isfinite(regs.coeff_ups_power) && isfinite(regs.coeff_smartload) &&
+    regs.coeff_grid_power >= -100.0f && regs.coeff_grid_power <= 100.0f &&
+    regs.coeff_load_power >= -100.0f && regs.coeff_load_power <= 100.0f &&
+    regs.coeff_ups_power >= -100.0f && regs.coeff_ups_power <= 100.0f &&
+    regs.coeff_smartload >= -100.0f && regs.coeff_smartload <= 100.0f;
+  return timeouts && coefficients && uint32_t(max1) - min1 + 1 <= 125 && uint32_t(max2) - min2 + 1 <= 125;
+}
+
 // ==================== FONCTIONS DE SAUVEGARDE DES REGISTRES ====================
 
-static void settings_save_registers(const CustomRegisters &regs) {
-  preferences.begin("deye-ui", false);
+static bool settings_save_registers(const CustomRegisters &regs) {
+  if (!settings_registers_valid(regs) || !preferences.begin("deye-ui", false)) return false;
+  CustomRegisters verify;
   
   preferences.putUShort("reg_pv1", regs.pv1_power);
   preferences.putUShort("reg_pv2", regs.pv2_power);
@@ -93,13 +227,21 @@ static void settings_save_registers(const CustomRegisters &regs) {
   preferences.putFloat("coeff_load", regs.coeff_load_power);
   preferences.putFloat("coeff_ups", regs.coeff_ups_power);
   preferences.putFloat("coeff_smart", regs.coeff_smartload);
-  
+  const bool ok = preferences.putBytes("regs_v2", &regs, sizeof(regs)) == sizeof(regs) &&
+    preferences.getBytes("regs_v2", &verify, sizeof(verify)) == sizeof(verify) &&
+    memcmp(&regs, &verify, sizeof(regs)) == 0;
   preferences.end();
+  return ok;
 }
 
 static CustomRegisters settings_load_registers() {
   CustomRegisters regs;
   preferences.begin("deye-ui", true);
+  if (preferences.getBytesLength("regs_v2") == sizeof(regs) &&
+      preferences.getBytes("regs_v2", &regs, sizeof(regs)) == sizeof(regs) && settings_registers_valid(regs)) {
+    preferences.end();
+    return regs;
+  }
   
   regs.pv1_power = preferences.getUShort("reg_pv1", 186);
   regs.pv2_power = preferences.getUShort("reg_pv2", 187);
@@ -122,7 +264,7 @@ static CustomRegisters settings_load_registers() {
   regs.connect_timeout = preferences.getUInt("reg_conn_t", 10000);
   regs.response_window = preferences.getUInt("reg_resp_t", 10000);
   regs.frame_timeout = preferences.getUInt("reg_frame_t", 7000);
-  regs.block_interval = preferences.getUInt("reg_block_i", 100);
+  regs.block_interval = preferences.getUInt("reg_block_i", 3000);
   // Coefficients
   regs.coeff_grid_power = preferences.getFloat("coeff_grid", 1.0f);
   regs.coeff_load_power = preferences.getFloat("coeff_load", 1.0f);
@@ -130,6 +272,10 @@ static CustomRegisters settings_load_registers() {
   regs.coeff_smartload = preferences.getFloat("coeff_smart", 1.0f);
   
   preferences.end();
+  if (!settings_registers_valid(regs)) {
+    return CustomRegisters{186,187,188,108,184,183,190,182,169,194,76,77,178,172,84,90,91,195,
+      10000,10000,7000,3000,1.0f,1.0f,1.0f,1.0f};
+  }
   return regs;
 }
 
@@ -156,23 +302,30 @@ static bool settings_save_wifi(const String &ssid, const String &password) {
   return true;
 }
 
-static void settings_save_ntp(
+static bool settings_save_ntp(
   const String &tz_rule,
   const String &server_primary,
   const String &server_secondary
 ) {
-  preferences.begin("deye-ui", false);
-  preferences.putString("tz_rule", tz_rule);
-  preferences.putString("ntp_1", server_primary);
-  preferences.putString("ntp_2", server_secondary);
+  if (!preferences.begin("deye-ui", false)) return false;
+  const bool ok = preferences.putString("tz_rule", tz_rule) == tz_rule.length() &&
+    preferences.putString("ntp_1", server_primary) == server_primary.length() &&
+    preferences.putString("ntp_2", server_secondary) == server_secondary.length() &&
+    preferences.getString("tz_rule", "") == tz_rule && preferences.getString("ntp_1", "") == server_primary &&
+    preferences.getString("ntp_2", "") == server_secondary;
   preferences.end();
+  if (ok) { cfg_tz_rule = tz_rule; cfg_ntp_primary = server_primary; cfg_ntp_secondary = server_secondary; }
+  return ok;
 }
 
-static void settings_save_deye(const String &host, uint32_t logger_serial) {
-  preferences.begin("deye-ui", false);
-  preferences.putString("deye_host", host);
-  preferences.putUInt("logger", logger_serial);
+static bool settings_save_deye(const String &host, uint32_t logger_serial) {
+  if (host.isEmpty() || !logger_serial || !preferences.begin("deye-ui", false)) return false;
+  const bool ok = preferences.putString("deye_host", host) == host.length() &&
+    preferences.putUInt("logger", logger_serial) == sizeof(logger_serial) &&
+    preferences.getString("deye_host", "") == host && preferences.getUInt("logger", 0) == logger_serial;
   preferences.end();
+  if (ok) { cfg_deye_host = host; cfg_logger_serial = logger_serial; }
+  return ok;
 }
 
 static bool settings_save_tempo(bool enabled, bool colorblind, bool ev_charger) {
@@ -198,18 +351,23 @@ static bool settings_save_tempo(bool enabled, bool colorblind, bool ev_charger) 
   return true;
 }
 
-static void settings_set_ui_theme(UiThemeId theme) {
+static bool settings_set_ui_theme(UiThemeId theme) {
   theme = ui_theme_from_value(static_cast<uint8_t>(theme));
-  preferences.begin("deye-ui", false);
-  preferences.putUChar("ui_theme", static_cast<uint8_t>(theme));
-  preferences.putBool("ui_theme_v2", true);
+  if (!preferences.begin("deye-ui", false)) return false;
+  const bool ok = preferences.putUChar("ui_theme", static_cast<uint8_t>(theme)) == 1 &&
+    preferences.putBool("ui_theme_v2", true) == 1 &&
+    preferences.getUChar("ui_theme", 255) == static_cast<uint8_t>(theme) && preferences.getBool("ui_theme_v2", false);
   preferences.end();
-  cfg_ui_theme = theme;
+  if (ok) cfg_ui_theme = theme;
+  return ok;
 }
 
 // ==================== CHARGEMENT GLOBAL ====================
 
 static void settings_load() {
+  settings_load_network();
+  settings_load_display();
+  settings_load_web_auth();
   preferences.begin("deye-ui", true);
 
   cfg_wifi_ssid = preferences.getString("wifi_ssid", DEFAULT_WIFI_SSID);
@@ -258,8 +416,10 @@ static bool settings_get_gen_mode() {
   return mode;
 }
 
-static void settings_set_gen_mode(bool smartload) {
-  preferences.begin("deye-ui", false);
-  preferences.putBool("gen_smartload", smartload);
+static bool settings_set_gen_mode(bool smartload) {
+  if (!preferences.begin("deye-ui", false)) return false;
+  const bool ok = preferences.putBool("gen_smartload", smartload) == 1 &&
+    preferences.getBool("gen_smartload", !smartload) == smartload;
   preferences.end();
+  return ok;
 }

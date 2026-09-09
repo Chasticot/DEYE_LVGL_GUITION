@@ -14,6 +14,7 @@
 #include "app_data.h"
 #include "settings.h"
 #include "ve_deye.h"
+#include "history.h"
 
 // ==================== CONSTANTES ====================
 #define DEYE_PORT 8899
@@ -85,6 +86,16 @@ struct MainData {
   uint16_t daily_solar;
 };
 
+struct DeyeDiagnostics {
+  uint32_t block_success[3];
+  uint32_t block_failure[3];
+  uint32_t block_last_success_ms[3];
+  uint32_t block_last_failure_ms[3];
+  uint16_t last_reg;
+  uint16_t last_count;
+  uint8_t last_exception;
+};
+
 // ==================== DONNÉES PARTAGÉES ====================
 static MainData main_data;
 static bool main_data_valid = false;
@@ -101,6 +112,7 @@ static bool daily_grid_sell_valid = false;
 static uint16_t pv_daily_yield = 0;
 static bool pv_daily_yield_valid = false;
 static EvDeyeData ev_deye_data = {};
+static DeyeDiagnostics deye_diagnostics = {};
 static QueueHandle_t ev_command_queue = nullptr;
 
 // ==================== SYNCHRONISATION ====================
@@ -431,6 +443,13 @@ static bool deye_copy_snapshot(
   return true;
 }
 
+bool deye_copy_diagnostics(DeyeDiagnostics *out) {
+  if (out == nullptr || data_mutex == nullptr || xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return false;
+  *out = deye_diagnostics;
+  xSemaphoreGive(data_mutex);
+  return true;
+}
+
 // Copie atomique des donnees VE. Lorsque le chargeur est desactive dans les
 // reglages, cette fonction reste volontairement inutilisable.
 bool deye_copy_ev_snapshot(EvDeyeData *out) {
@@ -598,11 +617,22 @@ static void solarman_reader_task(void *pvParameters) {
     last_read_time = millis(); // Temporisation aussi apres un echec.
     xSemaphoreTake(data_mutex, portMAX_DELAY);
     if (ok) {
+      ++deye_diagnostics.block_success[current_block];
+      deye_diagnostics.block_last_success_ms[current_block] = last_read_time;
+      deye_diagnostics.last_reg = start;
+      deye_diagnostics.last_count = count;
+      deye_diagnostics.last_exception = 0;
       if (current_block == 0) decode_block1(rtu);
       else if (current_block == 1) { decode_block2(rtu); last_data_success_ms = last_read_time; }
       else decode_block3(rtu);
       update_dashboard_from_data();
+      if (current_block == 1) history_add_snapshot(dashboard_data);
     } else {
+      ++deye_diagnostics.block_failure[current_block];
+      deye_diagnostics.block_last_failure_ms[current_block] = last_read_time;
+      deye_diagnostics.last_reg = start;
+      deye_diagnostics.last_count = count;
+      deye_diagnostics.last_exception = exception;
       if (current_block == 1) ev_deye_data.valid = false;
       if (current_block == 2) ev_deye_data.requested_power_valid = false;
     }
@@ -639,6 +669,7 @@ void deye_solarman_begin() {
   dashboard_data.valid = false;
   pv_daily_yield_valid = false;
   ev_deye_data = {};
+  deye_diagnostics = {};
   last_data_success_ms = 0;
 
   data_mutex = xSemaphoreCreateMutex();

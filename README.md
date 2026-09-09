@@ -60,9 +60,15 @@ Les broches du panneau RGB dépendent du modèle d'écran. Vérifiez toujours le
 | --- | --- |
 | USB CDC On Boot | Enabled |
 | CPU Frequency | 240 MHz (WiFi) |
+| Core Debug Level | None |
+| Flash Mode | QIO 80MHz |
+| Flash Size | 16MB (128Mb) |
+| Partition Scheme | 16M Flash (3MB APP/9.9MB FATFS) |
 | PSRAM | OPI PSRAM |
-| Partition Scheme | Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS) |
+| Upload Mode | UART0 / Hardware CDC |
 | Upload Speed | 921600 |
+
+Cette configuration a été validée sur l'écran GUITION ESP32-S3 480 × 480. En particulier, **USB CDC On Boot = Enabled** est requis par ce projet : il rend `Serial0` disponible pour les messages de diagnostic. Le schéma `16M Flash (3MB APP/9.9MB FATFS)` réserve deux partitions applicatives de 3 Mio pour les mises à jour OTA, ainsi qu'environ 9,9 Mio de stockage FATFS. Cet espace est disponible pour de futurs historiques, journaux ou fichiers de configuration.
 
 ## Configuration
 

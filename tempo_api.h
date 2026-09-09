@@ -16,12 +16,16 @@ struct TempoNow {
 #include <WiFiClientSecure.h>
 
 static constexpr uint32_t TEMPO_REFRESH_INTERVAL_MS = 5UL * 60UL * 1000UL;
+// Une couleur Tempo reste valable toute sa journee tarifaire. Une coupure
+// reseau transitoire ne doit donc pas effacer l'information utile.
+static constexpr uint32_t TEMPO_STALE_AFTER_MS = 24UL * 60UL * 60UL * 1000UL;
 static const char *const TEMPO_NOW_URL = "https://www.api-couleur-tempo.fr/api/now";
 
 static TempoNow tempo_now = {false, 0, 0, 0};
 static portMUX_TYPE tempo_now_mutex = portMUX_INITIALIZER_UNLOCKED;
 static volatile bool tempo_fetch_running = false;
 static uint32_t tempo_last_request_ms = 0;
+static uint32_t tempo_last_success_ms = 0;
 
 static int tempo_json_int(const String &json, const char *key) {
   const String needle = String('"') + key + '"';
@@ -73,6 +77,7 @@ static void tempo_fetch_task(void *parameter) {
 
   portENTER_CRITICAL(&tempo_now_mutex);
   tempo_now = next;
+  if (next.valid) tempo_last_success_ms = millis();
   tempo_fetch_running = false;
   portEXIT_CRITICAL(&tempo_now_mutex);
   vTaskDelete(nullptr);
@@ -84,6 +89,7 @@ static void tempo_api_process(bool enabled) {
     tempo_now.valid = false;
     // Une réactivation déclenche donc immédiatement une lecture fraîche.
     tempo_last_request_ms = 0;
+    tempo_last_success_ms = 0;
     portEXIT_CRITICAL(&tempo_now_mutex);
     return;
   }
@@ -113,6 +119,10 @@ static TempoNow tempo_api_get_now() {
   TempoNow copy;
   portENTER_CRITICAL(&tempo_now_mutex);
   copy = tempo_now;
+  if (copy.valid && (!tempo_last_success_ms || uint32_t(millis() - tempo_last_success_ms) > TEMPO_STALE_AFTER_MS)) {
+    copy.valid = false;
+    copy.tomorrow_color_code = 0;
+  }
   portEXIT_CRITICAL(&tempo_now_mutex);
   return copy;
 }

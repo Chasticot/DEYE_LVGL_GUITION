@@ -23,3 +23,6 @@
 #define DEFAULT_NTP_PRIMARY "pool.ntp.org"
 #define DEFAULT_NTP_SECONDARY "time.google.com"
 #define DEFAULT_TZ_RULE "CET-1CEST,M3.5.0,M10.5.0/3"
+
+// Version visible dans les diagnostics et l'export de configuration.
+#define FIRMWARE_VERSION "4.0-ameliore"

@@ -40,6 +40,8 @@ Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
 
 #include "app_data.h"
 #include "settings.h"
+#include "display_manager.h"
+#include "history.h"
 #include "touch_gt911.h"
 #include "wifi_manager.h"
 #include "ntp_manager.h"
@@ -91,8 +93,7 @@ void setup() {
 
   settings_load();
 
-  pinMode(GFX_BL, OUTPUT);
-  digitalWrite(GFX_BL, HIGH);
+  display_manager_begin();
 
   if (!gfx->begin()) {
     DBG.println("ERREUR : initialisation LCD");
@@ -150,6 +151,7 @@ void setup() {
 
   wifi_manager_begin();
   ntp_manager_begin();
+  history_begin();
   deye_solarman_begin();
   web_server_begin();
 
@@ -161,20 +163,24 @@ void setup() {
 // =============================================
 void loop() {
   static uint32_t last_display_update = 0;
-  
-  // LVGL Timer Handler - PRIORITAIRE
-  lv_tick_inc(1);
+  static uint32_t last_lv_tick = millis();
+  const uint32_t now = millis();
+  const uint32_t elapsed = now - last_lv_tick;
+  last_lv_tick = now;
+  // LVGL doit recevoir le temps reel ecoule, pas le nombre de tours de boucle.
+  if (elapsed) lv_tick_inc(elapsed);
   lv_timer_handler();
   wifi_manager_process();
   web_server_process();
+  display_manager_apply();
   
   // Mise à jour de l'affichage - toutes les 500ms
-  uint32_t now = millis();
   if (now - last_display_update >= 500) {
     last_display_update = now;
     ui_main_update();
     ui_wifi_update_ip();
     ui_ve_deye_update();
+    ui_settings_update_deye_status();
   }
 
   delay(1);

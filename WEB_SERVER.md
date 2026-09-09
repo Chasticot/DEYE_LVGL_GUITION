@@ -3,6 +3,24 @@
 Ouvrir http://ADRESSE_IP_DE_LECRAN/ depuis le reseau local.
 Le serveur demarre avec le firmware. Aucun service externe n'est requis.
 
+## Tableau de bord et diagnostic
+
+- `/dashboard` affiche les mesures Deye actuelles en lecture seule, avec un rafraichissement toutes les cinq secondes.
+- `/history` trace les 24 dernieres heures : un echantillon est conserve toutes les cinq minutes. Le tampon contient 288 points et remplace automatiquement le plus ancien lorsqu'il est plein. Il est volontairement en RAM, donc redemarrer l'ecran repart d'un historique vide sans user la flash.
+- `/diagnostic` affiche l'age de chaque bloc Solarman, les lectures reussies, les echecs et la derniere exception Modbus.
+
+## Export et import JSON
+
+Le menu Web propose un export `deye-guition-config.json` lisible et importable. Il contient le logger, NTP, Tempo/VE, affichage et registres. Les mots de passe Wi-Fi et les identifiants Web ne sont jamais exportes ni modifies par un import. L'import verifie tous les registres, coefficients, temporisations et horaires avant d'enregistrer puis redemarre l'ecran.
+
+## Luminosite
+
+Le menu Theme / Ecran et la page Web reglent la luminosite jour, nuit, ainsi que les heures de debut et de fin du mode nuit. L'heure NTP doit etre disponible pour que la bascule planifiee s'applique ; sinon la luminosite jour est conservee.
+
+L'activation est choisie directement dans **Configuration > Theme / Ecran** avec le bouton « Mode nuit programme ». Le meme bouton est disponible dans la page Web. Quand il est desactive, l'ecran conserve la luminosite jour en permanence.
+
+Le second bouton « Suivre coucher / lever du soleil » remplace les horaires fixes par les heures solaires calculees localement. La luminosite evolue progressivement pendant une heure centree sur le lever puis le coucher. Renseigner latitude et longitude dans la page Web pour obtenir des horaires precis ; la valeur initiale est le centre de la France.
+
 ## Authentification
 
 - Desactivee par defaut lorsque la configuration Web est absente.
