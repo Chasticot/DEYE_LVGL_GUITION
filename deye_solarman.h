@@ -44,6 +44,10 @@ uint16_t BLOCK1_START = 76;
 uint16_t BLOCK1_COUNT = 37;
 uint16_t BLOCK2_START = 169;
 uint16_t BLOCK2_COUNT = 27;
+// Les adresses VE sont configurees uniquement depuis la page Web. Elles
+// demarrent sur la cartographie SG02LP1 validee (R489/R490).
+uint16_t REG_EV_CHARGE_MODE = DEYE_REG_EV_CHARGE_MODE;
+uint16_t REG_EV_MAX_CHARGE_POWER = DEYE_REG_EV_MAX_CHARGE_POWER;
 uint16_t BLOCK3_START = DEYE_EV_BLOCK3_START;
 uint16_t BLOCK3_COUNT = DEYE_EV_BLOCK3_COUNT;
 static uint16_t block2_base_start = 169;
@@ -114,6 +118,31 @@ static bool pv_daily_yield_valid = false;
 static EvDeyeData ev_deye_data = {};
 static DeyeDiagnostics deye_diagnostics = {};
 static QueueHandle_t ev_command_queue = nullptr;
+
+// Sonde de cartographie VE : deux instantanes FC03 de R0 a R1023. Elle est
+// independante de l'UI VE et ne contient aucune ecriture.
+static constexpr uint16_t DEYE_PROBE_FIRST_REGISTER = 0;
+static constexpr uint16_t DEYE_PROBE_REGISTER_COUNT = 1024;
+static constexpr uint16_t DEYE_PROBE_BLOCK_COUNT = 125;
+static constexpr uint8_t DEYE_PROBE_SNAPSHOT_BLOCKS =
+  (DEYE_PROBE_REGISTER_COUNT + DEYE_PROBE_BLOCK_COUNT - 1) / DEYE_PROBE_BLOCK_COUNT;
+enum DeyeProbeState : uint8_t { DEYE_PROBE_IDLE, DEYE_PROBE_QUEUED, DEYE_PROBE_RUNNING, DEYE_PROBE_READY, DEYE_PROBE_ERROR };
+struct DeyeProbeSnapshot {
+  uint16_t values[DEYE_PROBE_REGISTER_COUNT];
+  uint8_t readable[DEYE_PROBE_REGISTER_COUNT / 8];
+  bool complete;
+  uint16_t failed_blocks;
+  uint32_t captured_ms;
+  bool block_ok[DEYE_PROBE_SNAPSHOT_BLOCKS];
+  uint8_t block_exception[DEYE_PROBE_SNAPSHOT_BLOCKS];
+};
+static DeyeProbeSnapshot deye_probe_before = {};
+static DeyeProbeSnapshot deye_probe_reference = {};
+static DeyeProbeSnapshot deye_probe_after = {};
+static DeyeProbeState deye_probe_state = DEYE_PROBE_IDLE;
+static uint8_t deye_probe_requested_slot = 0;
+static uint8_t deye_probe_active_slot = 0;
+static String deye_probe_report;
 
 // ==================== SYNCHRONISATION ====================
 static SemaphoreHandle_t data_mutex = nullptr;
@@ -243,38 +272,37 @@ static bool solarman_read_block(uint16_t first_reg, uint16_t count, uint8_t *rtu
 }
 
 static bool solarman_write_register(uint16_t reg, uint16_t value, uint8_t *exception) {
-  // Liste fermee : aucun acces en ecriture aux autres reglages de l'onduleur.
-  if (reg != DEYE_REG_EV_CHARGE_MODE && reg != DEYE_REG_EV_MAX_CHARGE_POWER) return false;
+  // Liste fermee : seules les deux adresses VE configurees et explicitement
+  // debloquees depuis le Web peuvent etre ecrites.
+  if (!cfg_ev_registers.write_enabled ||
+      (reg != REG_EV_CHARGE_MODE && reg != REG_EV_MAX_CHARGE_POWER)) return false;
   uint8_t request[11], response[8];
   deye_modbus_write_one(DEYE_MODBUS_SLAVE_ID, reg, value, request);
   return solarman_exchange(request, sizeof(request), reg, 1, response, sizeof(response), exception);
 }
 
-// Base historique conservee hors VE ; extension jusqu'a R260 quand VE est actif.
+// Base historique conservee hors VE. Les deux registres VE sont lus dans le
+// bloc dedie R489-R490 pour ne pas etirer ce bloc au-dela de 125 registres.
 static void deye_configure_block2(bool enabled) {
   BLOCK2_START = block2_base_start;
   BLOCK2_COUNT = block2_base_count;
   block2_has_ev = false;
   if (!enabled || !deye_modbus_range_valid(BLOCK2_START, BLOCK2_COUNT)) return;
-  const uint16_t first = min(BLOCK2_START, DEYE_REG_EV_CHARGE_MODE);
-  const uint32_t last = max(uint32_t(BLOCK2_START) + BLOCK2_COUNT - 1,
-    uint32_t(DEYE_REG_EV_MAX_CHARGE_POWER));
-  const uint32_t count = last - first + 1;
-  if (count > MODBUS_MAX_READ_REGISTERS) {
-    DBG.println("VE : bloc2 etendu depasse 125 registres, base seule conservee.");
-    return;
-  }
-  BLOCK2_START = first;
-  BLOCK2_COUNT = uint16_t(count);
   block2_has_ev = true;
-  DBG.printf("VE bloc2 R%u-R%u (%u), bloc3 R%u (%u)\n", BLOCK2_START,
-    BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT, BLOCK3_START, BLOCK3_COUNT);
+  DBG.printf("VE bloc2 R%u-R%u (%u), bloc3 R%u-R%u (%u)\n", BLOCK2_START,
+    BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT, BLOCK3_START,
+    BLOCK3_START + BLOCK3_COUNT - 1, BLOCK3_COUNT);
 }
 
 // ==================== CHARGEMENT DES REGISTRES ====================
 
 static void load_custom_registers() {
   CustomRegisters regs = get_custom_registers();
+  REG_EV_CHARGE_MODE = cfg_ev_registers.mode_register;
+  REG_EV_MAX_CHARGE_POWER = cfg_ev_registers.max_power_register;
+  BLOCK3_START = REG_EV_CHARGE_MODE < REG_EV_MAX_CHARGE_POWER ? REG_EV_CHARGE_MODE : REG_EV_MAX_CHARGE_POWER;
+  const uint16_t block3_last = REG_EV_CHARGE_MODE < REG_EV_MAX_CHARGE_POWER ? REG_EV_MAX_CHARGE_POWER : REG_EV_CHARGE_MODE;
+  BLOCK3_COUNT = block3_last - BLOCK3_START + 1;
   REG_PV1_POWER = regs.pv1_power;
   REG_PV2_POWER = regs.pv2_power;
   REG_PV3_POWER = regs.pv3_power;
@@ -328,6 +356,8 @@ static void load_custom_registers() {
   DBG.printf("PV1=%d PV2=%d PV3=%d\n", REG_PV1_POWER, REG_PV2_POWER, REG_PV3_POWER);
   DBG.printf("Bloc1: %d-%d (%d regs)\n", BLOCK1_START, BLOCK1_START + BLOCK1_COUNT - 1, BLOCK1_COUNT);
   DBG.printf("Bloc2: %d-%d (%d regs)\n", BLOCK2_START, BLOCK2_START + BLOCK2_COUNT - 1, BLOCK2_COUNT);
+  DBG.printf("VE: R%u (mode), R%u (puissance), ecriture=%s\n", REG_EV_CHARGE_MODE,
+    REG_EV_MAX_CHARGE_POWER, cfg_ev_registers.write_enabled ? "DEBLOQUEE" : "verrouillee");
   DBG.printf("Timeouts: C=%lu R=%lu F=%lu I=%lu\n",
              (unsigned long)TCP_CONNECT_TIMEOUT_MS,
              (unsigned long)RESPONSE_WINDOW_MS,
@@ -369,19 +399,15 @@ static void decode_block2(const uint8_t *rtu) {
   main_data.bat_power = (int16_t)modbus_get_u16_be(rtu, REG_BATTERY_POWER - offset);
   main_data.grid_status_raw = modbus_get_u16_be(rtu, REG_GRID_STATUS - offset);
   main_data.smartload_status_raw = modbus_get_u16_be(rtu, REG_SMARTLOAD - offset);
-  if (cfg_ev_charger_enabled && block2_has_ev) {
-    ev_deye_data.mode_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_CHARGE_MODE - offset);
-    ev_deye_data.max_charge_power_raw = modbus_get_u16_be(rtu, DEYE_REG_EV_MAX_CHARGE_POWER - offset);
-    ev_deye_data.valid = true;
-    ev_deye_data.settings_updated_ms = millis();
-  }
   main_data_valid = true;
 }
 
 static void decode_block3(const uint8_t *rtu) {
-  ev_deye_data.requested_power_w = modbus_get_u16_be(rtu, DEYE_REG_EV_REQUESTED_POWER - BLOCK3_START);
-  ev_deye_data.requested_power_valid = true;
-  ev_deye_data.requested_updated_ms = millis();
+  if (!cfg_ev_charger_enabled || !block2_has_ev) return;
+  ev_deye_data.mode_raw = modbus_get_u16_be(rtu, REG_EV_CHARGE_MODE - BLOCK3_START);
+  ev_deye_data.max_charge_power_raw = modbus_get_u16_be(rtu, REG_EV_MAX_CHARGE_POWER - BLOCK3_START);
+  ev_deye_data.valid = true;
+  ev_deye_data.settings_updated_ms = millis();
 }
 
 static int16_t scaled_power(int16_t raw, float coefficient, float scale) {
@@ -460,8 +486,6 @@ bool deye_copy_ev_snapshot(EvDeyeData *out) {
 
   *out = ev_deye_data;
   out->valid = out->valid && (uint32_t)(millis() - out->settings_updated_ms) <= DEYE_EV_FRESH_MS;
-  out->requested_power_valid = out->requested_power_valid &&
-    (uint32_t)(millis() - out->requested_updated_ms) <= DEYE_EV_FRESH_MS;
   xSemaphoreGive(data_mutex);
   return true;
 }
@@ -477,15 +501,19 @@ static void deye_ev_command_result(EvDeyeCommandState state, const char *message
 }
 
 bool deye_submit_ev_command(EvDeyeCommand command) {
+  // Les seules ecritures autorisees sont les deux adresses VE configurees sur
+  // le Web, apres confirmation explicite de l'utilisateur.
+  if (!DEYE_EV_INVERTER_PROFILE_VERIFIED || !cfg_ev_registers.write_enabled) return false;
   if (!cfg_ev_charger_enabled || ev_command_queue == nullptr || WiFi.status() != WL_CONNECTED ||
       (!command.set_power && !command.set_mode) ||
-      (command.set_mode && command.mode != 1 && command.mode != 2) ||
+      (command.set_mode && command.mode > 2) ||
       (command.set_power && (deye_ev_max_power_w(command.power_raw) < 1400 ||
        deye_ev_max_power_w(command.power_raw) > DEYE_EV_INSTALLATION_MAX_POWER_W))) return false;
   if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return false;
   const bool ready = ev_deye_data.valid &&
     uint32_t(millis() - ev_deye_data.settings_updated_ms) <= DEYE_EV_FRESH_MS &&
-    !deye_ev_command_busy(ev_deye_data.command_state);
+    !deye_ev_command_busy(ev_deye_data.command_state) &&
+    (!command.set_mode || deye_ev_mode_transition_supported(ev_deye_data.mode_raw));
   command.queued_ms = millis();
   const bool queued = ready && xQueueSend(ev_command_queue, &command, 0) == pdTRUE;
   if (queued) {
@@ -497,22 +525,182 @@ bool deye_submit_ev_command(EvDeyeCommand command) {
   return queued;
 }
 
-// Relecture du bloc2 entier : meme taille que la supervision, y compris apres ecriture.
+static inline void deye_probe_set_readable(DeyeProbeSnapshot &snapshot, uint16_t reg, bool readable) {
+  const uint16_t index = reg - DEYE_PROBE_FIRST_REGISTER;
+  const uint8_t mask = uint8_t(1U << (index & 7));
+  if (readable) snapshot.readable[index >> 3] |= mask;
+  else snapshot.readable[index >> 3] &= uint8_t(~mask);
+}
+
+static inline bool deye_probe_is_readable(const DeyeProbeSnapshot &snapshot, uint16_t reg) {
+  const uint16_t index = reg - DEYE_PROBE_FIRST_REGISTER;
+  return (snapshot.readable[index >> 3] & uint8_t(1U << (index & 7))) != 0;
+}
+
+// Appelee mutex tenu. Le texte reproduit les informations utiles de la console
+// et reste telechargeable apres la fin d'une sonde.
+static void deye_probe_build_report_locked() {
+  String report;
+  report.reserve(8192);
+  report += F("RAPPORT SONDE VE SG02LP1\n");
+  report += F("Lecture seule FC03, R0-R1023. Aucun registre n'a ete ecrit.\n\n");
+  const DeyeProbeSnapshot *snapshots[] = {&deye_probe_before, &deye_probe_reference, &deye_probe_after};
+  const char *labels[] = {"AVANT", "TEMOIN", "APRES"};
+  for (uint8_t slot = 0; slot < 3; ++slot) {
+    const DeyeProbeSnapshot &snapshot = *snapshots[slot];
+    report += F("VE sonde "); report += labels[slot]; report += F(" : ");
+    if (!snapshot.captured_ms) {
+      report += F("non realisee\n");
+      continue;
+    }
+    report += F("millis="); report += String(snapshot.captured_ms);
+    report += F(", "); report += String(snapshot.failed_blocks);
+    report += F(" bloc(s) illisible(s).\n");
+    for (uint8_t block = 0; block < DEYE_PROBE_SNAPSHOT_BLOCKS; ++block) {
+      if (snapshot.block_ok[block]) continue;
+      const uint16_t start = DEYE_PROBE_FIRST_REGISTER + uint16_t(block) * DEYE_PROBE_BLOCK_COUNT;
+      const uint16_t remaining = DEYE_PROBE_FIRST_REGISTER + DEYE_PROBE_REGISTER_COUNT - start;
+      const uint16_t count = remaining < DEYE_PROBE_BLOCK_COUNT ? remaining : DEYE_PROBE_BLOCK_COUNT;
+      report += F("VE sonde R"); report += String(start); report += '+'; report += String(count);
+      report += F(" echec (exception "); report += String(snapshot.block_exception[block]); report += F(")\n");
+    }
+  }
+  if (!deye_probe_before.captured_ms || !deye_probe_reference.captured_ms || !deye_probe_after.captured_ms) {
+    report += F("\nComparaison indisponible : realiser AVANT, TEMOIN et APRES.\n");
+    deye_probe_report = report;
+    return;
+  }
+  uint16_t dynamic = 0;
+  uint16_t candidates = 0;
+  String dynamic_lines;
+  dynamic_lines.reserve(4096);
+  const uint16_t end = DEYE_PROBE_FIRST_REGISTER + DEYE_PROBE_REGISTER_COUNT;
+  report += F("\nCOMPARAISON\n");
+  for (uint16_t reg = DEYE_PROBE_FIRST_REGISTER; reg < end; ++reg) {
+    if (!deye_probe_is_readable(deye_probe_before, reg) ||
+        !deye_probe_is_readable(deye_probe_reference, reg) ||
+        !deye_probe_is_readable(deye_probe_after, reg)) continue;
+    const uint16_t before = deye_probe_before.values[reg - DEYE_PROBE_FIRST_REGISTER];
+    const uint16_t reference = deye_probe_reference.values[reg - DEYE_PROBE_FIRST_REGISTER];
+    const uint16_t after = deye_probe_after.values[reg - DEYE_PROBE_FIRST_REGISTER];
+    if (before != reference) {
+      // Une mesure instantanee peut etre la puissance VE recherchee. Elle ne
+      // doit pas devenir un candidat de reglages, mais ses trois echantillons
+      // sont indispensables pour la confronter a la valeur vue sur le LCD.
+      ++dynamic;
+      char line[128];
+      snprintf(line, sizeof(line),
+        "VE sonde DYNAMIQUE R%u : AVANT=%u (0x%04X) TEMOIN=%u (0x%04X) APRES=%u (0x%04X)\\n",
+        reg, before, before, reference, reference, after, after);
+      dynamic_lines += line;
+      continue;
+    }
+    if (reference == after) continue;
+    ++candidates;
+    char line[96];
+    snprintf(line, sizeof(line), "VE sonde CANDIDAT R%u : %u (0x%04X) -> %u (0x%04X)\n",
+      reg, reference, reference, after, after);
+    report += line;
+  }
+  report += F("VE sonde comparaison : "); report += String(candidates);
+  report += F(" candidat(s), "); report += String(dynamic);
+  report += F(" registre(s) dynamiques exclus des candidats.\n");
+  if (dynamic) {
+    report += F("\nREGISTRES DYNAMIQUES (telemetrie a comparer a la puissance LCD)\n");
+    report += dynamic_lines;
+  }
+  deye_probe_report = report;
+}
+
+// Executee uniquement par SolarmanReader. Elle n'emploie que FC03, sans
+// mutex conserve pendant le reseau et sans aucune commande de registre.
+static bool deye_process_probe_snapshot() {
+  uint8_t slot = 0;
+  if (data_mutex == nullptr || xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return false;
+  if (deye_probe_state != DEYE_PROBE_QUEUED) {
+    xSemaphoreGive(data_mutex);
+    return false;
+  }
+  slot = deye_probe_requested_slot;
+  deye_probe_active_slot = slot;
+  deye_probe_state = DEYE_PROBE_RUNNING;
+  xSemaphoreGive(data_mutex);
+
+  DeyeProbeSnapshot snapshot = {};
+  uint16_t start = DEYE_PROBE_FIRST_REGISTER;
+  const uint16_t end = DEYE_PROBE_FIRST_REGISTER + DEYE_PROBE_REGISTER_COUNT;
+  while (start < end) {
+    const uint16_t remaining = end - start;
+    const uint16_t count = remaining < DEYE_PROBE_BLOCK_COUNT ? remaining : DEYE_PROBE_BLOCK_COUNT;
+    uint8_t rtu[255] = {};
+    uint8_t exception = 0;
+    const bool ok = solarman_read_block(start, count, rtu, &exception);
+    const uint8_t block = (start - DEYE_PROBE_FIRST_REGISTER) / DEYE_PROBE_BLOCK_COUNT;
+    snapshot.block_ok[block] = ok;
+    snapshot.block_exception[block] = exception;
+    if (!ok) {
+      ++snapshot.failed_blocks;
+      DBG.printf("VE sonde R%u+%u echec (exception %u)\n", start, count, exception);
+    } else {
+      for (uint16_t i = 0; i < count; ++i) {
+        const uint16_t reg = start + i;
+        snapshot.values[reg - DEYE_PROBE_FIRST_REGISTER] = modbus_get_u16_be(rtu, i);
+        deye_probe_set_readable(snapshot, reg, true);
+      }
+    }
+    start += count;
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+  snapshot.complete = snapshot.failed_blocks == 0;
+  snapshot.captured_ms = millis();
+
+  xSemaphoreTake(data_mutex, portMAX_DELAY);
+  if (slot == 1) deye_probe_before = snapshot;
+  else if (slot == 2) deye_probe_reference = snapshot;
+  else deye_probe_after = snapshot;
+  deye_probe_build_report_locked();
+  deye_probe_state = snapshot.complete ? DEYE_PROBE_READY : DEYE_PROBE_ERROR;
+  xSemaphoreGive(data_mutex);
+
+  const char *label = slot == 1 ? "AVANT" : slot == 2 ? "TEMOIN" : "APRES";
+  DBG.printf("VE sonde %s terminee : %u bloc(s) illisible(s).\n", label, snapshot.failed_blocks);
+  // La capture TEMOIN est faite sans modifier le LCD. Un registre qui varie
+  // deja entre AVANT et TEMOIN est une mesure dynamique et ne sera jamais
+  // presente comme candidat VE lors de la capture APRES.
+  if (slot == 3 && deye_probe_before.captured_ms && deye_probe_reference.captured_ms) {
+    uint16_t dynamic = 0;
+    uint16_t candidates = 0;
+    for (uint16_t reg = DEYE_PROBE_FIRST_REGISTER; reg < end; ++reg) {
+      if (!deye_probe_is_readable(deye_probe_before, reg) ||
+          !deye_probe_is_readable(deye_probe_reference, reg) ||
+          !deye_probe_is_readable(snapshot, reg)) continue;
+      const uint16_t before = deye_probe_before.values[reg - DEYE_PROBE_FIRST_REGISTER];
+      const uint16_t reference = deye_probe_reference.values[reg - DEYE_PROBE_FIRST_REGISTER];
+      const uint16_t after = snapshot.values[reg - DEYE_PROBE_FIRST_REGISTER];
+      if (before != reference) { ++dynamic; continue; }
+      if (reference == after) continue;
+      ++candidates;
+      DBG.printf("VE sonde CANDIDAT R%u : %u (0x%04X) -> %u (0x%04X)\n", reg, reference, reference, after, after);
+    }
+    DBG.printf("VE sonde comparaison : %u candidat(s), %u registre(s) dynamiques ignores.\n", candidates, dynamic);
+  }
+  return true;
+}
+
+// Relecture du bloc VE R489-R490 avant et apres ecriture.
 static bool deye_ev_refresh_settings(uint16_t *mode, uint16_t *power, uint8_t *exception) {
   if (!block2_has_ev) return false;
   uint8_t rtu[255];
-  if (!solarman_read_block(BLOCK2_START, BLOCK2_COUNT, rtu, exception)) {
+  if (!solarman_read_block(BLOCK3_START, BLOCK3_COUNT, rtu, exception)) {
     xSemaphoreTake(data_mutex, portMAX_DELAY);
     ev_deye_data.valid = false;
     xSemaphoreGive(data_mutex);
     return false;
   }
-  *mode = modbus_get_u16_be(rtu, DEYE_REG_EV_CHARGE_MODE - BLOCK2_START);
-  *power = modbus_get_u16_be(rtu, DEYE_REG_EV_MAX_CHARGE_POWER - BLOCK2_START);
+  *mode = modbus_get_u16_be(rtu, REG_EV_CHARGE_MODE - BLOCK3_START);
+  *power = modbus_get_u16_be(rtu, REG_EV_MAX_CHARGE_POWER - BLOCK3_START);
   xSemaphoreTake(data_mutex, portMAX_DELAY);
-  decode_block2(rtu);
-  last_data_success_ms = millis();
-  update_dashboard_from_data();
+  decode_block3(rtu);
   xSemaphoreGive(data_mutex);
   return true;
 }
@@ -532,10 +720,16 @@ static bool deye_process_ev_command() {
     deye_ev_command_result(EV_COMMAND_FAILED, "Lecture prealable impossible. Aucune ecriture.", exception);
     return true;
   }
+  uint16_t target_mode = mode;
+  if (command.set_mode && !deye_ev_mode_target(mode, command.mode, &target_mode)) {
+    deye_ev_command_result(EV_COMMAND_FAILED,
+      "Mode desactive/non reconnu : aucune ecriture de mode.");
+    return true;
+  }
   bool power_confirmed = false;
   if (command.set_power) {
     if (power != command.power_raw) {
-      const bool ack = solarman_write_register(DEYE_REG_EV_MAX_CHARGE_POWER, command.power_raw, &exception);
+      const bool ack = solarman_write_register(REG_EV_MAX_CHARGE_POWER, command.power_raw, &exception);
       const uint8_t write_exception = exception;
       const bool read_back = deye_ev_refresh_settings(&mode, &power, &exception);
       // Un ACK perdu n'autorise jamais une repetition automatique de l'ecriture.
@@ -555,12 +749,11 @@ static bool deye_process_ev_command() {
         "Mode non applique : lecture impossible.", exception);
       return true;
     }
-    const uint16_t new_mode = deye_ev_replace_mode(mode, command.mode);
-    if (new_mode != mode) {
-      solarman_write_register(DEYE_REG_EV_CHARGE_MODE, new_mode, &exception);
+    if (target_mode != mode) {
+      solarman_write_register(REG_EV_CHARGE_MODE, target_mode, &exception);
       const uint8_t write_exception = exception;
       const bool read_back = deye_ev_refresh_settings(&mode, &power, &exception);
-      if (write_exception || !read_back || (mode & 3) != command.mode) {
+      if (write_exception || !read_back || mode != target_mode) {
         deye_ev_command_result(power_confirmed ? EV_COMMAND_PARTIAL : EV_COMMAND_FAILED,
           "Mode non confirme. Verifier les valeurs lues.", write_exception ? write_exception : exception);
         return true;
@@ -591,11 +784,11 @@ static void solarman_reader_task(void *pvParameters) {
       current_block = 0;
       xSemaphoreTake(data_mutex, portMAX_DELAY);
       ev_deye_data.valid = false;
-      ev_deye_data.requested_power_valid = false;
       xSemaphoreGive(data_mutex);
     }
     // Une commande en attente expire meme hors ligne ou dans les reglages.
     if (deye_process_ev_command()) { last_read_time = millis(); continue; }
+    if (deye_process_probe_snapshot()) { last_read_time = millis(); continue; }
     if (ui_active || WiFi.status() != WL_CONNECTED) {
       vTaskDelay(pdMS_TO_TICKS(100));
       continue;
@@ -633,15 +826,13 @@ static void solarman_reader_task(void *pvParameters) {
       deye_diagnostics.last_reg = start;
       deye_diagnostics.last_count = count;
       deye_diagnostics.last_exception = exception;
-      if (current_block == 1) ev_deye_data.valid = false;
-      if (current_block == 2) ev_deye_data.requested_power_valid = false;
+      if (current_block == 2) ev_deye_data.valid = false;
     }
-    if (ok && current_block == 1 && block2_has_ev) {
-      DBG.printf("VE R259=0x%04X mode=%s R260=%u (%lu W)\n", ev_deye_data.mode_raw,
+    if (ok && current_block == 2 && block2_has_ev) {
+      DBG.printf("VE R489=0x%04X mode=%s R490=%u (%lu W)\n", ev_deye_data.mode_raw,
         deye_ev_mode_name(ev_deye_data.mode_raw), ev_deye_data.max_charge_power_raw,
         (unsigned long)deye_ev_max_power_w(ev_deye_data.max_charge_power_raw));
     }
-    if (ok && current_block == 2) DBG.printf("VE R709 consigne=%u W\n", ev_deye_data.requested_power_w);
     xSemaphoreGive(data_mutex);
     DBG.printf("BLOC%u R%u+%u %s (exception %u)\n", current_block + 1, start, count, ok ? "OK" : "echec", exception);
     current_block = (current_block + 1) % (cfg_ev_charger_enabled ? 3 : 2);
@@ -659,6 +850,55 @@ void deye_solarman_set_touch_active(bool active) {
   // Compatibilite avec le pilote tactile actuel : le lecteur historique LSW
   // ne suspendait pas ses lectures sur cet indicateur distinct.
   (void)active;
+}
+
+bool deye_ev_inverter_profile_verified() {
+  return DEYE_EV_INVERTER_PROFILE_VERIFIED && cfg_ev_registers.write_enabled;
+}
+
+bool deye_probe_queue_snapshot(uint8_t slot) {
+  if (slot < 1 || slot > 3) return false;
+  if (data_mutex == nullptr || WiFi.status() != WL_CONNECTED ||
+      xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return false;
+  const bool available = deye_probe_state != DEYE_PROBE_QUEUED && deye_probe_state != DEYE_PROBE_RUNNING;
+  if (available) {
+    deye_probe_requested_slot = slot;
+    deye_probe_state = DEYE_PROBE_QUEUED;
+  }
+  xSemaphoreGive(data_mutex);
+  return available;
+}
+
+String deye_probe_status_text() {
+  if (data_mutex == nullptr || xSemaphoreTake(data_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return "Sonde indisponible";
+  const DeyeProbeState state = deye_probe_state;
+  const uint8_t active = deye_probe_active_slot;
+  const uint32_t before_ms = deye_probe_before.captured_ms;
+  const uint32_t reference_ms = deye_probe_reference.captured_ms;
+  const uint32_t after_ms = deye_probe_after.captured_ms;
+  const uint16_t failures = active == 1 ? deye_probe_before.failed_blocks :
+    active == 2 ? deye_probe_reference.failed_blocks : deye_probe_after.failed_blocks;
+  xSemaphoreGive(data_mutex);
+  switch (state) {
+    case DEYE_PROBE_QUEUED: return "Sonde en attente dans la tache Solarman...";
+    case DEYE_PROBE_RUNNING: return "Lecture FC03 R0-R1023 en cours...";
+    case DEYE_PROBE_ERROR: return String("Lecture terminee avec ") + failures + " bloc(s) illisible(s).";
+    case DEYE_PROBE_READY:
+      if (after_ms) return "Comparaison terminee : rapport .txt disponible au telechargement.";
+      if (reference_ms) return "Instantane TEMOIN termine : modifier un reglage au LCD, puis lancer APRES.";
+      return before_ms ? "Instantane AVANT termine : lancer TEMOIN sans modifier le LCD." : "Aucun instantane.";
+    default: return before_ms ? "Instantane AVANT disponible : lancer TEMOIN sans modifier le LCD." : "Aucun instantane.";
+  }
+}
+
+String deye_probe_report_text() {
+  if (data_mutex == nullptr || xSemaphoreTake(data_mutex, pdMS_TO_TICKS(20)) != pdTRUE)
+    return "Rapport indisponible : sonde en cours.\n";
+  const String report = deye_probe_report.isEmpty()
+    ? String("RAPPORT SONDE VE SG02LP1\nAucun instantane disponible.\n")
+    : deye_probe_report;
+  xSemaphoreGive(data_mutex);
+  return report;
 }
 
 void deye_solarman_begin() {

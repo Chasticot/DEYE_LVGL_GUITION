@@ -374,62 +374,55 @@ void ui_registers_create() {
   add_reg_line(cont, "Frame", &ta_frame_timeout, 7000, nullptr, 1.0f, y); y += step;
   add_reg_line(cont, "Block Interval", &ta_block_interval, 100, nullptr, 1.0f, y); y += step;
 
-  // Mode GEN (SmartLoad / MO) - Version avec LV_BTNMATRIX_CTRL_CHECKED
+  // Mode GEN : meme selecteur large a deux choix que celui du theme.
   y += 10;
   lv_obj_t *gen_label = lv_label_create(cont);
-  lv_label_set_text(gen_label, "Mode GEN :");
-  lv_obj_set_pos(gen_label, 5, y);
-  lv_obj_set_style_text_color(gen_label, ui_registers_color(ui_registers_theme().muted_text), LV_PART_MAIN);
-  lv_obj_set_style_text_font(gen_label, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_label_set_text(gen_label, "CHOISIR LE MODE GEN");
+  lv_obj_set_pos(gen_label, 0, y);
+  lv_obj_set_width(gen_label, LCD_W);
+  lv_obj_set_style_text_align(gen_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+  lv_obj_set_style_text_color(gen_label, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
+  lv_obj_set_style_text_font(gen_label, &lv_font_montserrat_16, LV_PART_MAIN);
+  y += 28;
 
-  // Créer une ligne avec deux boutons radio (btnmatrix)
-  static const char *gen_opts[] = {"SmartLoad", "GEN MO", ""};
+  static const char *gen_opts[] = {"SMARTLOAD", "GEN MO", ""};
   lv_obj_t *gen_btnmatrix = lv_btnmatrix_create(cont);
   lv_btnmatrix_set_map(gen_btnmatrix, gen_opts);
-  // Rendre les boutons cliquables et coché
-  lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKABLE | LV_BTNMATRIX_CTRL_CHECKED);
-  lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKABLE);
-  // Aucun flag "CHECK_STATE" n'existe, on utilise CHECKED pour marquer le bouton sélectionné
-  lv_obj_set_pos(gen_btnmatrix, 130, y - 4);
-  lv_obj_set_size(gen_btnmatrix, 200, 34);
+  lv_obj_set_pos(gen_btnmatrix, 50, y);
+  lv_obj_set_size(gen_btnmatrix, 380, 70);
   lv_obj_set_style_bg_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
   lv_obj_set_style_text_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().text), LV_PART_MAIN);
   lv_obj_set_style_border_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_border), LV_PART_MAIN);
   lv_obj_set_style_border_width(gen_btnmatrix, 1, LV_PART_MAIN);
-  lv_obj_set_style_radius(gen_btnmatrix, 6, LV_PART_MAIN);
-  lv_obj_set_style_pad_all(gen_btnmatrix, 2, LV_PART_MAIN);
-
-  // Récupérer l'état actuel et cocher le bon bouton
-  bool is_smartload = settings_get_gen_mode();
-  // Par défaut le premier bouton est coché, on ajuste
-  if (!is_smartload) {
-    // Si mode GEN MO, on décoche le premier et on coche le second
-    lv_btnmatrix_clear_btn_ctrl(gen_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
-  } else {
-    // Sinon on s'assure que le premier est coché et le second non
-    lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, 0, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_clear_btn_ctrl(gen_btnmatrix, 1, LV_BTNMATRIX_CTRL_CHECKED);
+  lv_obj_set_style_radius(gen_btnmatrix, 8, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_bg), LV_PART_ITEMS);
+  lv_obj_set_style_bg_opa(gen_btnmatrix, LV_OPA_COVER, LV_PART_ITEMS);
+  lv_obj_set_style_text_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().text), LV_PART_ITEMS);
+  lv_obj_set_style_border_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().control_border), LV_PART_ITEMS);
+  lv_obj_set_style_border_width(gen_btnmatrix, 1, LV_PART_ITEMS);
+  lv_obj_set_style_radius(gen_btnmatrix, 6, LV_PART_ITEMS);
+  lv_obj_set_style_bg_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().accent), LV_PART_ITEMS | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(gen_btnmatrix, LV_OPA_COVER, LV_PART_ITEMS | LV_STATE_CHECKED);
+  lv_obj_set_style_text_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().accent_text), LV_PART_ITEMS | LV_STATE_CHECKED);
+  lv_obj_set_style_border_color(gen_btnmatrix, ui_registers_color(ui_registers_theme().accent), LV_PART_ITEMS | LV_STATE_CHECKED);
+  lv_obj_set_style_border_width(gen_btnmatrix, 2, LV_PART_ITEMS | LV_STATE_CHECKED);
+  for (uint8_t i = 0; i < 2; ++i) {
+    lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, i, LV_BTNMATRIX_CTRL_CHECKABLE);
   }
+  lv_btnmatrix_set_one_checked(gen_btnmatrix, true);
+  lv_btnmatrix_set_btn_ctrl(gen_btnmatrix, settings_get_gen_mode() ? 0 : 1, LV_BTNMATRIX_CTRL_CHECKED);
 
-  // Callback lors du clic sur un bouton
   lv_obj_add_event_cb(gen_btnmatrix, [](lv_event_t *e) {
     lv_obj_t *btnm = lv_event_get_target(e);
-    uint32_t idx = lv_btnmatrix_get_selected_btn(btnm);
+    const uint32_t idx = lv_btnmatrix_get_selected_btn(btnm);
     if (idx == 0) {
-      settings_set_gen_mode(true);   // SmartLoad
-      // Coche le premier, décoche le second
-      lv_btnmatrix_set_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
-      lv_btnmatrix_clear_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
+      settings_set_gen_mode(true);
     } else if (idx == 1) {
-      settings_set_gen_mode(false);  // GEN MO
-      // Coche le second, décoche le premier
-      lv_btnmatrix_set_btn_ctrl(btnm, 1, LV_BTNMATRIX_CTRL_CHECKED);
-      lv_btnmatrix_clear_btn_ctrl(btnm, 0, LV_BTNMATRIX_CTRL_CHECKED);
+      settings_set_gen_mode(false);
     }
-  }, LV_EVENT_CLICKED, NULL);
+  }, LV_EVENT_VALUE_CHANGED, NULL);
 
-  y += 40; // passer à la ligne suivante
+  y += 82;
 
   // Espace pour le défilement
   lv_obj_t *spacer = lv_obj_create(cont);
@@ -446,10 +439,11 @@ void ui_registers_create() {
   lv_obj_add_flag(global_keyboard, LV_OBJ_FLAG_HIDDEN);
   lv_obj_set_style_bg_color(global_keyboard, ui_registers_color(ui_registers_theme().control_bg), LV_PART_MAIN);
 
-  // Boutons en bas
-  lv_obj_t *default_btn = lv_btn_create(screen_registers);
-  lv_obj_set_size(default_btn, 110, 40);
-  lv_obj_set_pos(default_btn, 20, 432);
+  // La reinitialisation fait partie du contenu defilant. Les actions de
+  // navigation en bas restent ainsi identiques aux autres ecrans.
+  lv_obj_t *default_btn = lv_btn_create(cont);
+  lv_obj_set_size(default_btn, 220, 42);
+  lv_obj_set_pos(default_btn, 130, y + 20);
   lv_obj_set_style_bg_color(default_btn, ui_registers_color(ui_registers_theme().accent_dark), LV_PART_MAIN);
   lv_obj_set_style_radius(default_btn, 8, LV_PART_MAIN);
   lv_obj_add_event_cb(default_btn, [](lv_event_t *e) {
@@ -484,31 +478,33 @@ void ui_registers_create() {
     lv_textarea_set_text(ta_coeff_smartload, "1.0");
   }, LV_EVENT_CLICKED, NULL);
   lv_obj_t *dl = lv_label_create(default_btn);
-  lv_label_set_text(dl, "DEFAULT");
+  lv_label_set_text(dl, "REINITIALISER");
   lv_obj_center(dl);
   lv_obj_set_style_text_color(dl, lv_color_white(), LV_PART_MAIN);
 
   lv_obj_t *save_btn = lv_btn_create(screen_registers);
-  lv_obj_set_size(save_btn, 130, 40);
-  lv_obj_set_pos(save_btn, 160, 432);
-  lv_obj_set_style_bg_color(save_btn, lv_color_hex(0x22C55E), LV_PART_MAIN);
+  lv_obj_set_size(save_btn, 200, 55);
+  lv_obj_set_pos(save_btn, 250, 390);
+  lv_obj_set_style_bg_color(save_btn, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_radius(save_btn, 8, LV_PART_MAIN);
   lv_obj_add_event_cb(save_btn, ui_registers_save, LV_EVENT_CLICKED, NULL);
   lv_obj_t *sl = lv_label_create(save_btn);
   lv_label_set_text(sl, "SAUVEGARDER");
   lv_obj_center(sl);
-  lv_obj_set_style_text_color(sl, lv_color_white(), LV_PART_MAIN);
+  lv_obj_set_style_text_color(sl, ui_registers_color(ui_registers_theme().accent_text), LV_PART_MAIN);
+  lv_obj_set_style_text_font(sl, &lv_font_montserrat_16, LV_PART_MAIN);
 
   lv_obj_t *retour_btn = lv_btn_create(screen_registers);
-  lv_obj_set_size(retour_btn, 120, 40);
-  lv_obj_set_pos(retour_btn, 320, 432);
-  lv_obj_set_style_bg_color(retour_btn, lv_color_hex(0xEF4444), LV_PART_MAIN);
+  lv_obj_set_size(retour_btn, 190, 55);
+  lv_obj_set_pos(retour_btn, 20, 390);
+  lv_obj_set_style_bg_color(retour_btn, ui_registers_color(ui_registers_theme().accent), LV_PART_MAIN);
   lv_obj_set_style_radius(retour_btn, 8, LV_PART_MAIN);
   lv_obj_add_event_cb(retour_btn, ui_show_settings_screen, LV_EVENT_CLICKED, NULL);
   lv_obj_t *rl = lv_label_create(retour_btn);
   lv_label_set_text(rl, "RETOUR");
   lv_obj_center(rl);
-  lv_obj_set_style_text_color(rl, lv_color_white(), LV_PART_MAIN);
+  lv_obj_set_style_text_color(rl, ui_registers_color(ui_registers_theme().accent_text), LV_PART_MAIN);
+  lv_obj_set_style_text_font(rl, &lv_font_montserrat_16, LV_PART_MAIN);
 
   // Charger les valeurs sauvegardées
   ui_registers_load_values();

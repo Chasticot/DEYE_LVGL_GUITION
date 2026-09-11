@@ -21,6 +21,8 @@ L'activation est choisie directement dans **Configuration > Theme / Ecran** avec
 
 Le second bouton « Suivre coucher / lever du soleil » remplace les horaires fixes par les heures solaires calculees localement. La luminosite evolue progressivement pendant une heure centree sur le lever puis le coucher. Renseigner latitude et longitude dans la page Web pour obtenir des horaires precis ; la valeur initiale est le centre de la France.
 
+La luminosite est bornee a 180/255 : sur cet ecran, cette valeur correspond environ a 10 % visuel et des valeurs inferieures peuvent eteindre le retroeclairage. La valeur 255 correspond a 100 %.
+
 ## Authentification
 
 - Desactivee par defaut lorsque la configuration Web est absente.

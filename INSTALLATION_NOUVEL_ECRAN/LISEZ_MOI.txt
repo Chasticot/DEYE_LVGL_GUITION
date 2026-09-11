@@ -1,0 +1,28 @@
+INSTALLATION D'UN NOUVEL ECRAN
+================================
+
+1. Branchez l'ecran au PC avec un cable USB de donnees.
+2. Double-cliquez sur INSTALLER_NOUVEL_ECRAN.bat.
+3. Le programme choisit automatiquement le port dont la description contient
+   CH340. S'il n'en trouve pas un seul, il liste les ports serie : saisissez
+   alors celui de l'ecran, par exemple COM5, puis appuyez sur Entree.
+4. Attendez le message "SUCCES" et le redemarrage de l'ecran.
+
+Pour trouver le bon port : debranchez puis rebranchez l'ecran. Le port COM
+qui apparait apres le rebranchement est celui a utiliser.
+
+Ne debranchez pas l'ecran pendant l'installation. Le dossier contient deja
+le programme necessaire : aucune installation d'Arduino IDE n'est requise.
+
+En cas d'echec de connexion : verifiez que le cable USB transmet les donnees
+(un cable de charge seul ne fonctionne pas). Si l'ecran a des boutons BOOT et
+RESET, maintenez BOOT, appuyez brievement sur RESET, relachez BOOT, puis
+relancez le programme.
+
+Le programme demande si toute la memoire flash doit etre effacee avant
+l'installation :
+- Repondre O pour un ecran neuf ou pour repartir entierement a zero. Cela
+  supprime le Wi-Fi et tous les reglages locaux.
+- Repondre N (choix par defaut) pour conserver ces reglages sur un ecran deja
+  utilise. Le programme installe alors le bootloader, la table de partitions
+  et le firmware, sans effacement complet.

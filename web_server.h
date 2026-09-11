@@ -70,6 +70,30 @@ static const WebRegisterField web_register_fields[] = {
 };
 #undef WEB_REG
 
+static String web_timezone_select() {
+  struct TimezoneChoice { const char *name; const char *rule; };
+  static const TimezoneChoice choices[] = {
+    {"Europe / Paris", "CET-1CEST,M3.5.0,M10.5.0/3"},
+    {"Europe / Londres", "GMT0BST,M3.5.0/1,M10.5.0/2"},
+    {"Europe / Athenes", "EET-2EEST,M3.5.0/3,M10.5.0/4"},
+    {"America / New York", "EST5EDT,M3.2.0,M11.1.0"},
+    {"America / Chicago", "CST6CDT,M3.2.0,M11.1.0"},
+    {"America / Denver", "MST7MDT,M3.2.0,M11.1.0"},
+    {"America / Los Angeles", "PST8PDT,M3.2.0,M11.1.0"},
+    {"UTC", "UTC0"}
+  };
+  String select = "<label>Fuseau horaire<select name='tz'>";
+  bool selected = false;
+  for (const auto &choice : choices) {
+    const bool active = cfg_tz_rule == choice.rule;
+    select += "<option value='" + String(choice.rule) + "'" + (active ? " selected" : "") + ">" + choice.name + "</option>";
+    selected = selected || active;
+  }
+  // Une ancienne regle personnalisee reste selectionnable et n'est jamais perdue.
+  if (!selected) select += "<option value='" + web_escape(cfg_tz_rule) + "' selected>Regle personnalisee existante</option>";
+  return select + "</select></label>";
+}
+
 static String web_json_escape(String value) {
   value.replace("\\", "\\\\");
   value.replace("\"", "\\\"");
@@ -168,9 +192,9 @@ static bool web_apply_config_json(const String &json) {
   if (!web_json_number(json, "theme", value) || value < 0 || value > 1 || floor(value) != value) return false;
   const UiThemeId theme = static_cast<UiThemeId>(uint8_t(value));
   DisplayConfig display = cfg_display;
-  if (!web_json_number(json, "day_brightness", value) || value < 10 || value > 255 || floor(value) != value) return false;
+  if (!web_json_number(json, "day_brightness", value) || value < DISPLAY_BRIGHTNESS_MIN || value > 255 || floor(value) != value) return false;
   display.day_brightness = uint8_t(value);
-  if (!web_json_number(json, "night_brightness", value) || value < 1 || value > 255 || floor(value) != value) return false;
+  if (!web_json_number(json, "night_brightness", value) || value < DISPLAY_BRIGHTNESS_MIN || value > 255 || floor(value) != value) return false;
   display.night_brightness = uint8_t(value);
   if (!web_json_number(json, "night_start_hour", value) || value < 0 || value > 23 || floor(value) != value) return false;
   display.night_start_hour = uint8_t(value);
@@ -212,7 +236,16 @@ static void web_diagnostic_page() {
   DeyeDiagnostics d = {}; deye_copy_diagnostics(&d);
   String page = "<!doctype html><meta charset=utf-8><title>Diagnostic Deye</title><style>body{font:17px system-ui;background:#101b29;color:#eef4fb;max-width:760px;margin:24px auto;padding:16px}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #7990a5}a{color:#77d5b4}</style><h1>Diagnostic Deye / Solarman</h1><p><a href='/dashboard'>Tableau de bord</a> · <a href='/'>Configuration</a></p><p>Firmware : " + String(FIRMWARE_VERSION) + "<br>Derniere transaction : R" + String(d.last_reg) + " + " + String(d.last_count) + " | exception Modbus : " + String(d.last_exception) + "</p><table><tr><th>Bloc</th><th>OK</th><th>Echecs</th><th>Age derniere lecture</th></tr>";
   for (uint8_t i = 0; i < 3; ++i) page += "<tr><td>B" + String(i + 1) + "</td><td>" + String(d.block_success[i]) + "</td><td>" + String(d.block_failure[i]) + "</td><td>" + (d.block_last_success_ms[i] ? String((millis() - d.block_last_success_ms[i]) / 1000) + " s" : String("jamais")) + "</td></tr>";
-  page += "</table><p>Les ages sont des horodatages depuis la derniere lecture reussie. Rafraichir la page pour actualiser.</p>";
+  page += "</table><p><a href='/ve-probe'>Sonde VE (lecture seule)</a></p><p>Les ages sont des horodatages depuis la derniere lecture reussie. Rafraichir la page pour actualiser.</p>";
+  config_web.send(200, "text/html; charset=utf-8", page);
+}
+
+// Cartographie des registres VE du SG02LP1. Les boutons n'envoient qu'une
+// demande de lecture FC03 a SolarmanReader ; aucune ecriture Modbus n'existe
+// dans ce parcours.
+static void web_ve_probe_page() {
+  if (!web_authorized()) return;
+  String page = "<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Sonde VE</title><style>body{font:17px system-ui;background:#101b29;color:#eef4fb;max-width:760px;margin:24px auto;padding:16px}button{padding:12px;margin:6px 6px 6px 0;background:#77d5b4;color:#102030;border:0;border-radius:7px;font-weight:bold}a{color:#77d5b4}code{background:#1e3044;padding:2px 4px}</style><h1>Sonde VE SG02LP1</h1><p><a href='/diagnostic'>Diagnostic</a> · lecture seule <code>FC03</code> de R0 a R1023.</p><ol><li>Ne modifie rien, puis lancer <b>1. AVANT</b> et attendre la fin.</li><li>Sans modifier le LCD, lancer <b>2. TEMOIN</b>. Les mesures variables seront ecartees.</li><li>Modifier <em>un seul</em> reglage VE au LCD ou dans DeyeCloud.</li><li>Lancer <b>3. APRES</b>, puis telecharger le rapport.</li></ol><p id=status>" + web_escape(deye_probe_status_text()) + "</p><button onclick=go('/ve-probe/before')>1. Instantane AVANT</button><button onclick=go('/ve-probe/reference')>2. Instantane TEMOIN</button><button onclick=go('/ve-probe/after')>3. Instantane APRES</button><p><a href='/ve-probe/report.txt' download>Telecharger le rapport sonde (.txt)</a></p><script>const token='" + web_csrf + "';async function go(p){let r=await fetch(p,{method:'POST',headers:{'X-CSRF-Token':token}});status.textContent=await r.text();setTimeout(()=>location.reload(),2500)}if(/attente|en cours/.test(status.textContent))setTimeout(()=>location.reload(),2500)</script>";
   config_web.send(200, "text/html; charset=utf-8", page);
 }
 
@@ -242,25 +275,32 @@ static void web_home() {
   page += web_input("serial", "Numero de serie", String(cfg_logger_serial), "number");
   page += WEB_FORM_END;
   page += web_form("/ntp", "Heure / NTP");
-  page += web_input("tz", "Regle du fuseau horaire", cfg_tz_rule);
+  page += web_timezone_select();
   page += web_input("primary", "Serveur principal", cfg_ntp_primary);
   page += web_input("secondary", "Serveur secondaire", cfg_ntp_secondary);
   page += WEB_FORM_END;
   page += web_form("/display", "Tempo / VE / Theme / Ecran");
   page += web_check("tempo", "Activer Tempo", cfg_tempo_enabled);
   page += web_check("colorblind", "Mode daltonien", cfg_tempo_colorblind_mode);
-  page += web_check("ev", "Activer la page VE", cfg_ev_charger_enabled);
+  page += web_check("ev", "Activer la page VE (developpement en cours)", cfg_ev_charger_enabled);
   page += "<label>Theme<select name='theme'><option value='0'>Sombre</option><option value='1'";
   page += cfg_ui_theme == UI_THEME_LIGHT ? " selected" : "";
   page += ">Clair</option></select></label>";
-  page += web_input("day_brightness", "Luminosite jour (10 a 255)", String(cfg_display.day_brightness), "number");
-  page += web_input("night_brightness", "Luminosite nuit (1 a 255)", String(cfg_display.night_brightness), "number");
+  page += web_input("day_brightness", "Luminosite jour (220 min, 255 = 100 %)", String(cfg_display.day_brightness), "number");
+  page += web_input("night_brightness", "Luminosite nuit (220 min, 255 = 100 %)", String(cfg_display.night_brightness), "number");
   page += web_check("night_enabled", "Activer le mode nuit programme", cfg_display.night_enabled);
   page += web_check("sunset_mode", "Suivre coucher / lever du soleil", cfg_display.sunset_mode);
   page += web_input("latitude", "Latitude installation (ex. 48.8566)", String(cfg_display.latitude, 5), "number");
   page += web_input("longitude", "Longitude installation (ex. 2.3522)", String(cfg_display.longitude, 5), "number");
   page += web_input("night_start", "Debut nuit, heure 0 a 23", String(cfg_display.night_start_hour), "number");
   page += web_input("night_end", "Fin nuit, heure 0 a 23", String(cfg_display.night_end_hour), "number");
+  page += WEB_FORM_END;
+  page += F("<details><summary>VE / registres d'ecriture</summary><form action='/ve'><p><b>DANGER :</b> ces adresses recoivent des ecritures Modbus vers l'onduleur. Une adresse, un bit ou une valeur incorrects peuvent causer des dommages importants. Ne les modifiez que si leur cartographie est confirmee pour votre onduleur.</p>");
+  page += web_input("mode_register", "Registre mode VE (defaut R489)", String(cfg_ev_registers.mode_register), "number");
+  page += web_input("max_power_register", "Registre puissance VE (defaut R490)", String(cfg_ev_registers.max_power_register), "number");
+  page += F("<p>Les registres doivent etre distincts et ecartes de 125 positions maximum.</p>");
+  page += web_check("write_enabled", "Debloquer les ecritures VE vers l'onduleur", cfg_ev_registers.write_enabled);
+  page += web_check("write_confirm", "Je confirme connaitre ces registres et les risques materiels", false);
   page += WEB_FORM_END;
   page += F("<details><summary>Export / import de configuration JSON</summary><p>L'export est lisible et ne contient ni mot de passe Wi-Fi ni identifiants Web.</p><p><a href='/config/export'>Telecharger la configuration JSON</a></p><form action='/config/import'><label>Fichier JSON<input type='file' name='config' accept='.json,application/json' required></label><button>Importer et redemarrer</button></form></details>");
   page += web_form("/registers", "Registres / Coefficients / Temporisations (ms)");
@@ -281,7 +321,7 @@ static void web_home() {
   page += WEB_FORM_END;
   page += F("<details><summary>Mise a jour OTA</summary><form action='/update'><p>Selectionner le firmware applicatif .bin de cet ecran.</p><input type='file' name='firmware' accept='.bin' required><button>Installer la mise a jour</button></form><progress id='progress' max='100' value='0'></progress></details><p id='status' role='status'></p><script>const token='");
   page += web_csrf;
-  page += F("';document.querySelectorAll('form').forEach(form=>form.addEventListener('submit',event=>{event.preventDefault();const buttons=document.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);const status=document.getElementById('status');status.textContent='Envoi en cours...';const request=new XMLHttpRequest();request.open('POST',form.action);request.setRequestHeader('X-CSRF-Token',token);request.upload.onprogress=e=>{if(e.lengthComputable)document.getElementById('progress').value=e.loaded/e.total*100};request.onload=()=>{status.textContent=request.responseText;buttons.forEach(b=>b.disabled=false)};request.onerror=()=>{status.textContent='Connexion interrompue. Rechargez la page pour verifier.';buttons.forEach(b=>b.disabled=false)};request.send(new FormData(form))}));</script></html>");
+  page += F("';document.querySelectorAll('form').forEach(form=>form.addEventListener('submit',event=>{event.preventDefault();if(form.action.endsWith('/ve')&&form.querySelector('[name=write_enabled]').checked&&!confirm(\"DANGER : vous allez debloquer des ecritures vers l'onduleur. Confirmer uniquement si les registres et leurs valeurs sont verifies.\"))return;const buttons=document.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);const status=document.getElementById('status');status.textContent='Envoi en cours...';const request=new XMLHttpRequest();request.open('POST',form.action);request.setRequestHeader('X-CSRF-Token',token);request.upload.onprogress=e=>{if(e.lengthComputable)document.getElementById('progress').value=e.loaded/e.total*100};request.onload=()=>{status.textContent=request.responseText;buttons.forEach(b=>b.disabled=false)};request.onerror=()=>{status.textContent='Connexion interrompue. Rechargez la page pour verifier.';buttons.forEach(b=>b.disabled=false)};request.send(new FormData(form))}));</script></html>");
   config_web.send(200, "text/html; charset=utf-8", page);
 }
 static bool web_number(const String &text, uint32_t maximum, uint32_t &value) {
@@ -305,6 +345,25 @@ static void web_server_begin() {
   config_web.on("/dashboard", HTTP_GET, web_dashboard_page);
   config_web.on("/history", HTTP_GET, web_history_page);
   config_web.on("/diagnostic", HTTP_GET, web_diagnostic_page);
+  config_web.on("/ve-probe", HTTP_GET, web_ve_probe_page);
+  config_web.on("/ve-probe/report.txt", HTTP_GET, []() {
+    if (!web_authorized()) return;
+    config_web.sendHeader("Content-Disposition", "attachment; filename=sonde-ve-sg02lp1.txt");
+    config_web.sendHeader("Cache-Control", "no-store");
+    config_web.send(200, "text/plain; charset=utf-8", deye_probe_report_text());
+  });
+  config_web.on("/ve-probe/before", HTTP_POST, []() {
+    if (!web_write_allowed()) return;
+    web_reply(deye_probe_queue_snapshot(1), "Instantane AVANT programme. Attendre la fin dans le moniteur serie.");
+  });
+  config_web.on("/ve-probe/reference", HTTP_POST, []() {
+    if (!web_write_allowed()) return;
+    web_reply(deye_probe_queue_snapshot(2), "Instantane TEMOIN programme. Ne modifier aucun reglage avant la fin.");
+  });
+  config_web.on("/ve-probe/after", HTTP_POST, []() {
+    if (!web_write_allowed()) return;
+    web_reply(deye_probe_queue_snapshot(3), "Instantane APRES programme. Attendre la fin dans le moniteur serie.");
+  });
   config_web.on("/api/dashboard", HTTP_GET, []() { if (web_authorized()) config_web.send(200, "application/json", web_dashboard_json()); });
   config_web.on("/api/history", HTTP_GET, []() {
     if (!web_authorized()) return;
@@ -426,8 +485,8 @@ static void web_server_begin() {
     char *latitude_end = nullptr, *longitude_end = nullptr;
     const float latitude = strtof(latitude_text.c_str(), &latitude_end);
     const float longitude = strtof(longitude_text.c_str(), &longitude_end);
-    if (!web_number(config_web.arg("day_brightness"), 255, day) || day < 10 ||
-        !web_number(config_web.arg("night_brightness"), 255, night) || night < 1 ||
+    if (!web_number(config_web.arg("day_brightness"), 255, day) || day < DISPLAY_BRIGHTNESS_MIN ||
+        !web_number(config_web.arg("night_brightness"), 255, night) || night < DISPLAY_BRIGHTNESS_MIN ||
         !web_number(config_web.arg("night_start"), 23, night_start) || !web_number(config_web.arg("night_end"), 23, night_end) ||
         latitude_end == latitude_text.c_str() || *latitude_end || !isfinite(latitude) || latitude < -89 || latitude > 89 ||
         longitude_end == longitude_text.c_str() || *longitude_end || !isfinite(longitude) || longitude < -180 || longitude > 180) {
@@ -440,6 +499,28 @@ static void web_server_begin() {
     bool ok = settings_save_tempo(config_web.hasArg("tempo"), config_web.hasArg("colorblind"), config_web.hasArg("ev"));
     ok = ok && settings_set_ui_theme(static_cast<UiThemeId>(theme)) && settings_save_display(display);
     web_reply(ok, ok ? "Affichage sauvegarde. Redemarrage..." : "Sauvegarde impossible.", ok);
+  });
+  config_web.on("/ve", HTTP_POST, []() {
+    if (!web_write_allowed()) return;
+    uint32_t mode_register = 0, max_power_register = 0;
+    const bool write_enabled = config_web.hasArg("write_enabled");
+    if (!web_number(config_web.arg("mode_register"), UINT16_MAX, mode_register) ||
+        !web_number(config_web.arg("max_power_register"), UINT16_MAX, max_power_register) ||
+        mode_register == max_power_register ||
+        (mode_register > max_power_register ? mode_register - max_power_register : max_power_register - mode_register) >= 125) {
+      web_reply(false, "Registres VE invalides : ils doivent etre distincts et espaces de 125 positions maximum.");
+      return;
+    }
+    if (write_enabled && !config_web.hasArg("write_confirm")) {
+      web_reply(false, "Confirmation obligatoire avant de debloquer les ecritures VE.");
+      return;
+    }
+    EvRegisterConfig cfg = cfg_ev_registers;
+    cfg.mode_register = uint16_t(mode_register);
+    cfg.max_power_register = uint16_t(max_power_register);
+    cfg.write_enabled = write_enabled;
+    const bool ok = settings_save_ev_registers(cfg);
+    web_reply(ok, ok ? (write_enabled ? "Ecritures VE debloquees. Redemarrage..." : "Ecritures VE verrouillees. Redemarrage...") : "Sauvegarde VE impossible.", ok);
   });
   config_web.on("/registers", HTTP_POST, []() {
     if (!web_write_allowed()) return;

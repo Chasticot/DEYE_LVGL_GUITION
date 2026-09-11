@@ -285,8 +285,10 @@ static void ui_show_theme_screen(lv_event_t *e) {
     if (i == selected_ui_theme) lv_btnmatrix_set_btn_ctrl(theme_btnmatrix, i, LV_BTNMATRIX_CTRL_CHECKED);
     else lv_btnmatrix_clear_btn_ctrl(theme_btnmatrix, i, LV_BTNMATRIX_CTRL_CHECKED);
   }
-  lv_slider_set_value(slider_day_brightness, cfg_display.day_brightness, LV_ANIM_OFF);
-  lv_slider_set_value(slider_night_brightness, cfg_display.night_brightness, LV_ANIM_OFF);
+  lv_slider_set_value(slider_day_brightness,
+    cfg_display.day_brightness < DISPLAY_BRIGHTNESS_MIN ? DISPLAY_BRIGHTNESS_MIN : cfg_display.day_brightness, LV_ANIM_OFF);
+  lv_slider_set_value(slider_night_brightness,
+    cfg_display.night_brightness < DISPLAY_BRIGHTNESS_MIN ? DISPLAY_BRIGHTNESS_MIN : cfg_display.night_brightness, LV_ANIM_OFF);
   if (cfg_display.night_enabled) lv_obj_add_state(switch_night_mode, LV_STATE_CHECKED);
   else lv_obj_clear_state(switch_night_mode, LV_STATE_CHECKED);
   lv_dropdown_set_selected(dropdown_night_start, cfg_display.night_start_hour);
@@ -509,7 +511,7 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_settings, "HEURE / NTP", col_x, start_y + 1 * step_y, btn_w, btn_h, ui_show_ntp_screen);
   ui_settings_make_button(screen_settings, "DEYE / SOLARMAN", col_x, start_y + 2 * step_y, btn_w, btn_h, ui_show_deye_screen);
   ui_settings_make_button(screen_settings, "REGISTRES PERSO", col_x, start_y + 3 * step_y, btn_w, btn_h, ui_show_registers);
-  ui_settings_make_button(screen_settings, "TEMPO / VE", col_x, start_y + 4 * step_y, btn_w, btn_h, ui_show_tempo_screen);
+  ui_settings_make_button(screen_settings, "TEMPO / VE (DEV)", col_x, start_y + 4 * step_y, btn_w, btn_h, ui_show_tempo_screen);
   ui_settings_make_button(screen_settings, "THEME / ECRAN", col_x, start_y + 5 * step_y, btn_w, btn_h, ui_show_theme_screen);
 
   ui_settings_make_button(screen_settings, "RETOUR", col_x, 415, btn_w, 50, ui_show_dashboard);
@@ -568,7 +570,7 @@ static void ui_settings_create() {
   lv_obj_set_style_text_color(tempo_label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
 
   tempo_label = lv_label_create(screen_tempo);
-  lv_label_set_text(tempo_label, "Activer la page VE");
+  lv_label_set_text(tempo_label, "Activer la page VE (Dev en cours)");
   lv_obj_set_pos(tempo_label, 35, 270);
   lv_obj_set_width(tempo_label, 300);
   lv_obj_set_style_text_font(tempo_label, &lv_font_montserrat_16, LV_PART_MAIN);
@@ -584,7 +586,7 @@ static void ui_settings_create() {
   if (cfg_ev_charger_enabled) lv_obj_add_state(switch_ev_charger, LV_STATE_CHECKED);
 
   tempo_label = lv_label_create(screen_tempo);
-  lv_label_set_text(tempo_label, "Lit les reglages VE de l'onduleur, meme sans borne.");
+  lv_label_set_text(tempo_label, "Dev en cours : lit les reglages VE de l'onduleur.");
   lv_obj_set_pos(tempo_label, 35, 325);
   lv_obj_set_width(tempo_label, 410);
   lv_obj_set_style_text_font(tempo_label, &lv_font_montserrat_14, LV_PART_MAIN);
@@ -662,8 +664,9 @@ static void ui_settings_create() {
   lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
   lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
   slider_day_brightness = lv_slider_create(screen_theme);
-  lv_slider_set_range(slider_day_brightness, 10, 255);
-  lv_slider_set_value(slider_day_brightness, cfg_display.day_brightness, LV_ANIM_OFF);
+  lv_slider_set_range(slider_day_brightness, DISPLAY_BRIGHTNESS_MIN, 255);
+  lv_slider_set_value(slider_day_brightness,
+    cfg_display.day_brightness < DISPLAY_BRIGHTNESS_MIN ? DISPLAY_BRIGHTNESS_MIN : cfg_display.day_brightness, LV_ANIM_OFF);
   lv_obj_set_pos(slider_day_brightness, 190, 164);
   lv_obj_set_size(slider_day_brightness, 250, 18);
   theme_label = lv_label_create(screen_theme);
@@ -672,8 +675,9 @@ static void ui_settings_create() {
   lv_obj_set_style_text_font(theme_label, &lv_font_montserrat_14, LV_PART_MAIN);
   lv_obj_set_style_text_color(theme_label, ui_settings_color(ui_settings_theme().text), LV_PART_MAIN);
   slider_night_brightness = lv_slider_create(screen_theme);
-  lv_slider_set_range(slider_night_brightness, 1, 255);
-  lv_slider_set_value(slider_night_brightness, cfg_display.night_brightness, LV_ANIM_OFF);
+  lv_slider_set_range(slider_night_brightness, DISPLAY_BRIGHTNESS_MIN, 255);
+  lv_slider_set_value(slider_night_brightness,
+    cfg_display.night_brightness < DISPLAY_BRIGHTNESS_MIN ? DISPLAY_BRIGHTNESS_MIN : cfg_display.night_brightness, LV_ANIM_OFF);
   lv_obj_set_pos(slider_night_brightness, 190, 207);
   lv_obj_set_size(slider_night_brightness, 250, 18);
   theme_label = lv_label_create(screen_theme);

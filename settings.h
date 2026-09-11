@@ -82,7 +82,10 @@ static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
 static String cfg_tz_rule;
-static bool cfg_tempo_enabled = true;
+// Les fonctions optionnelles restent inactives tant que l'utilisateur ne les
+// active pas explicitement dans le menu. Cela evite les requetes Tempo et les
+// lectures VE inutiles lors de la premiere mise en service.
+static bool cfg_tempo_enabled = false;
 static bool cfg_tempo_colorblind_mode = false;
 static bool cfg_ev_charger_enabled = false;
 // NVS limite les cles a 15 caracteres. Les anciennes cles
@@ -95,14 +98,17 @@ static_assert(sizeof(SETTINGS_KEY_TEMPO_COLORBLIND) <= 16, "Cle NVS trop longue"
 static_assert(sizeof(SETTINGS_KEY_EV_CHARGER) <= 16, "Cle NVS trop longue");
 // Le thème historique est explicitement le thème par défaut.
 static UiThemeId cfg_ui_theme = UI_THEME_DEFAULT;
+static constexpr uint8_t DISPLAY_BRIGHTNESS_MIN = 220;
 
 struct DisplayConfig {
   uint32_t version = 2;
-  uint8_t day_brightness = 220;
-  uint8_t night_brightness = 35;
+  uint8_t day_brightness = 255;
+  // Sur ce panneau, DISPLAY_BRIGHTNESS_MIN est le seuil visuel utile minimum.
+  uint8_t night_brightness = 255;
   uint8_t night_start_hour = 22;
   uint8_t night_end_hour = 7;
-  bool night_enabled = true;
+  // Les deux modes nuit sont des choix explicites de l'utilisateur.
+  bool night_enabled = false;
   bool sunset_mode = false;
   // Valeur de depart pour la France metropolitaine. A ajuster depuis le Web
   // pour que les horaires solaires correspondent exactement a l'installation.
@@ -112,7 +118,8 @@ struct DisplayConfig {
 static DisplayConfig cfg_display;
 
 static bool settings_display_valid(const DisplayConfig &cfg) {
-  return cfg.version == 2 && cfg.day_brightness >= 10 && cfg.night_brightness >= 1 &&
+  return cfg.version == 2 && cfg.day_brightness >= DISPLAY_BRIGHTNESS_MIN &&
+    cfg.night_brightness >= DISPLAY_BRIGHTNESS_MIN &&
     cfg.night_start_hour < 24 && cfg.night_end_hour < 24 && isfinite(cfg.latitude) && isfinite(cfg.longitude) &&
     cfg.latitude >= -89.0f && cfg.latitude <= 89.0f && cfg.longitude >= -180.0f && cfg.longitude <= 180.0f;
 }
@@ -139,6 +146,51 @@ static void settings_load_display() {
       storage.getBytes("config", &saved, sizeof(saved)) == sizeof(saved) && settings_display_valid(saved)) {
     cfg_display = saved;
   }
+  storage.end();
+}
+
+// ==================== CONFIGURATION DES REGISTRES VE ====================
+// Cette configuration est separee des registres de mesure : ses deux adresses
+// peuvent etre la cible d'ecritures Modbus lorsque l'utilisateur les debloque
+// explicitement depuis la page Web.
+struct EvRegisterConfig {
+  uint32_t version = 1;
+  uint16_t mode_register = 489;
+  uint16_t max_power_register = 490;
+  bool write_enabled = false;
+};
+static EvRegisterConfig cfg_ev_registers;
+
+static bool settings_ev_registers_valid(const EvRegisterConfig &cfg) {
+  // Les deux adresses peuvent etre separees, mais doivent rester lisibles
+  // dans un meme bloc Modbus FC03 (maximum 125 registres).
+  const uint16_t first = cfg.mode_register < cfg.max_power_register ? cfg.mode_register : cfg.max_power_register;
+  const uint16_t last = cfg.mode_register < cfg.max_power_register ? cfg.max_power_register : cfg.mode_register;
+  return cfg.version == 1 && cfg.mode_register != cfg.max_power_register &&
+    uint32_t(last) - first + 1 <= 125;
+}
+
+static bool settings_save_ev_registers(const EvRegisterConfig &cfg) {
+  if (!settings_ev_registers_valid(cfg)) return false;
+  Preferences storage;
+  if (!storage.begin("deye-ev", false)) return false;
+  EvRegisterConfig verify;
+  bool ok = storage.putBytes("config", &cfg, sizeof(cfg)) == sizeof(cfg);
+  ok = ok && storage.getBytes("config", &verify, sizeof(verify)) == sizeof(verify) &&
+    memcmp(&cfg, &verify, sizeof(cfg)) == 0;
+  storage.end();
+  if (ok) cfg_ev_registers = cfg;
+  return ok;
+}
+
+static void settings_load_ev_registers() {
+  cfg_ev_registers = EvRegisterConfig{};
+  Preferences storage;
+  if (!storage.begin("deye-ev", true)) return;
+  EvRegisterConfig saved;
+  if (storage.getBytesLength("config") == sizeof(saved) &&
+      storage.getBytes("config", &saved, sizeof(saved)) == sizeof(saved) &&
+      settings_ev_registers_valid(saved)) cfg_ev_registers = saved;
   storage.end();
 }
 
@@ -367,6 +419,7 @@ static bool settings_set_ui_theme(UiThemeId theme) {
 static void settings_load() {
   settings_load_network();
   settings_load_display();
+  settings_load_ev_registers();
   settings_load_web_auth();
   preferences.begin("deye-ui", true);
 
@@ -384,7 +437,7 @@ static void settings_load() {
   cfg_ntp_primary = preferences.getString("ntp_1", DEFAULT_NTP_PRIMARY);
   cfg_ntp_secondary = preferences.getString("ntp_2", DEFAULT_NTP_SECONDARY);
   cfg_tz_rule = preferences.getString("tz_rule", DEFAULT_TZ_RULE);
-  cfg_tempo_enabled = preferences.getBool(SETTINGS_KEY_TEMPO, true);
+  cfg_tempo_enabled = preferences.getBool(SETTINGS_KEY_TEMPO, false);
   cfg_tempo_colorblind_mode = preferences.getBool(SETTINGS_KEY_TEMPO_COLORBLIND, false);
   cfg_ev_charger_enabled = preferences.getBool(SETTINGS_KEY_EV_CHARGER, false);
   const uint8_t stored_theme = preferences.getUChar(

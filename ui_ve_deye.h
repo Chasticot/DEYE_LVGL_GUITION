@@ -11,10 +11,10 @@
 extern void deye_solarman_set_ui_active(bool active);
 extern bool deye_copy_ev_snapshot(EvDeyeData *out);
 extern bool deye_submit_ev_command(EvDeyeCommand command);
+extern bool deye_ev_inverter_profile_verified();
 extern void ui_show_dashboard(lv_event_t *e);
 
 static lv_obj_t *screen_ve_deye = nullptr;
-static lv_obj_t *label_ve_requested = nullptr;
 static lv_obj_t *label_ve_max_power = nullptr;
 static lv_obj_t *label_ve_grid_power = nullptr;
 static lv_obj_t *label_ve_load_power = nullptr;
@@ -115,13 +115,17 @@ static void ui_ve_mode_changed(lv_event_t *e) {
 static void ui_ve_apply(lv_event_t *e) {
   (void)e;
   if (ve_submitted || (!ve_power_dirty && !ve_mode_dirty)) return;
+  if (!deye_ev_inverter_profile_verified()) {
+    ui_ve_error("Ecriture VE verrouillee : confirmer depuis le Web.");
+    return;
+  }
   uint32_t watts = ve_draft_w;
   if (ve_power_dirty && !ui_ve_parse_power(&watts)) {
     ui_ve_error("Puissance hors plage. Corriger la saisie.");
     return;
   }
-  if (ve_mode_dirty && ve_draft_mode != 1 && ve_draft_mode != 2) {
-    ui_ve_error("Choisir Solaire uniquement ou Libre.");
+  if (ve_mode_dirty && ve_draft_mode > 2) {
+    ui_ve_error("Choisir Desactive, Solaire uniquement ou Libre.");
     return;
   }
   EvDeyeCommand command = {};
@@ -171,15 +175,15 @@ static void ui_ve_deye_create() {
   lv_obj_clear_flag(screen_ve_deye, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_t *title = ui_ve_deye_label("VE / ONDULEUR DEYE", 0, 12, LCD_W, &lv_font_montserrat_20, t.accent);
   lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-  ui_ve_deye_label("CONSIGNE VERS BORNE", 20, 53, 220, &lv_font_montserrat_14, t.muted_text);
-  label_ve_requested = ui_ve_deye_label("-- W", 20, 75, 210, &lv_font_montserrat_20, t.text);
-  ui_ve_deye_label("PLAFOND REGLE", 250, 53, 210, &lv_font_montserrat_14, t.muted_text);
-  label_ve_max_power = ui_ve_deye_label("-- W", 250, 75, 210, &lv_font_montserrat_20, t.text);
+  lv_obj_t *development = ui_ve_deye_label("DEV EN COURS", 0, 38, LCD_W, &lv_font_montserrat_12, t.muted_text);
+  lv_obj_set_style_text_align(development, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+  ui_ve_deye_label("PLAFOND VE (LoRa)", 20, 53, 440, &lv_font_montserrat_14, t.muted_text);
+  label_ve_max_power = ui_ve_deye_label("-- W", 20, 75, 440, &lv_font_montserrat_20, t.text);
   ui_ve_deye_label("RESEAU", 20, 111, 210, &lv_font_montserrat_14, t.muted_text);
   label_ve_grid_power = ui_ve_deye_label("-- W", 20, 131, 210, &lv_font_montserrat_20, t.text);
   ui_ve_deye_label("CONSOMMATION", 250, 111, 210, &lv_font_montserrat_14, t.muted_text);
   label_ve_load_power = ui_ve_deye_label("-- W", 250, 131, 210, &lv_font_montserrat_20, t.text);
-  label_ve_diagnostic = ui_ve_deye_label("R259/260 : en attente\nR709 : en attente", 20, 164, 440, &lv_font_montserrat_12, t.muted_text);
+  label_ve_diagnostic = ui_ve_deye_label("Registres VE : en attente", 20, 164, 440, &lv_font_montserrat_12, t.muted_text);
   char range[80];
   snprintf(range, sizeof(range), "Plafond : 1400 - %lu W (mono)", (unsigned long)DEYE_EV_INSTALLATION_MAX_POWER_W);
   ui_ve_deye_label(range, 20, 212, 440, &lv_font_montserrat_16, t.accent);
@@ -201,14 +205,17 @@ static void ui_ve_deye_create() {
   dropdown_ve_mode = lv_dropdown_create(screen_ve_deye);
   lv_obj_set_pos(dropdown_ve_mode, 20, 289);
   lv_obj_set_size(dropdown_ve_mode, 440, 39);
-  lv_dropdown_set_options(dropdown_ve_mode, "Mode non reconnu\nSolaire uniquement\nLibre");
+  lv_dropdown_set_options(dropdown_ve_mode, "Desactive\nSolaire uniquement\nLibre");
   lv_obj_set_style_bg_color(dropdown_ve_mode, lv_color_hex(t.control_bg), LV_PART_MAIN);
   lv_obj_set_style_text_color(dropdown_ve_mode, lv_color_hex(t.text), LV_PART_MAIN);
   lv_obj_set_style_text_font(dropdown_ve_mode, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_add_event_cb(dropdown_ve_mode, ui_ve_mode_changed, LV_EVENT_VALUE_CHANGED, nullptr);
   label_ve_mode_read = ui_ve_deye_label("Mode lu : --", 20, 337, 440, &lv_font_montserrat_14, t.text);
   label_ve_result = ui_ve_deye_label("En attente des parametres de l'onduleur.", 20, 360, 440, &lv_font_montserrat_14, t.accent);
-  ui_ve_deye_label("Mesure / etat de la borne : indisponibles", 20, 400, 440, &lv_font_montserrat_12, t.muted_text);
+  // Les ecritures R489/R490 pilotent directement le chargeur via l'onduleur.
+  // Cet avertissement reste affiche avant le bouton APPLIQUER.
+  ui_ve_deye_label("ATTENTION : une mauvaise valeur VE peut endommager l'onduleur.",
+    20, 400, 440, &lv_font_montserrat_12, 0xEF4444);
   ui_ve_button("RETOUR", 20, ui_ve_return);
   button_ve_apply = ui_ve_button("APPLIQUER", 255, ui_ve_apply);
   lv_obj_add_state(button_ve_apply, LV_STATE_DISABLED);
@@ -235,14 +242,12 @@ static void ui_ve_deye_update() {
     return;
   }
   char text[160];
-  if (ev.requested_power_valid) snprintf(text, sizeof(text), "%u W", ev.requested_power_w);
-  else snprintf(text, sizeof(text), "-- W");
-  lv_label_set_text(label_ve_requested, text);
   if (ev.valid) snprintf(text, sizeof(text), "%lu W", (unsigned long)deye_ev_max_power_w(ev.max_charge_power_raw));
   else snprintf(text, sizeof(text), "-- W");
   lv_label_set_text(label_ve_max_power, text);
-  snprintf(text, sizeof(text), "R259=0x%04X R260=%u [%s]\nR709=%u [%s]", ev.mode_raw, ev.max_charge_power_raw,
-    ev.valid ? "OK" : "indisponible", ev.requested_power_w, ev.requested_power_valid ? "OK" : "indisponible");
+  snprintf(text, sizeof(text), "R%u=0x%04X R%u=%u W [%s]", cfg_ev_registers.mode_register,
+    ev.mode_raw, cfg_ev_registers.max_power_register, ev.max_charge_power_raw,
+    ev.valid ? "OK" : "indisponible");
   lv_label_set_text(label_ve_diagnostic, text);
   snprintf(text, sizeof(text), "Mode lu : %s", ev.valid ? deye_ev_mode_name(ev.mode_raw) : "--");
   lv_label_set_text(label_ve_mode_read, text);
@@ -274,18 +279,25 @@ static void ui_ve_deye_update() {
       ve_syncing = false;
     }
   }
-  const bool controls_enabled = ev.valid && !busy;
-  lv_obj_t *controls[] = {slider_ve_max_power, textarea_ve_max_power, dropdown_ve_mode};
-  for (lv_obj_t *control : controls) {
-    if (controls_enabled) lv_obj_clear_state(control, LV_STATE_DISABLED);
+  const bool power_controls_enabled = deye_ev_inverter_profile_verified() && ev.valid && !busy;
+  // La liste doit toujours rester consultable. Les adresses VE sont validees
+  // au clic APPLIQUER dans la tache Modbus, juste avant toute ecriture.
+  const bool mode_controls_enabled = deye_ev_inverter_profile_verified() && !busy;
+  lv_obj_t *power_controls[] = {slider_ve_max_power, textarea_ve_max_power};
+  for (lv_obj_t *control : power_controls) {
+    if (power_controls_enabled) lv_obj_clear_state(control, LV_STATE_DISABLED);
     else lv_obj_add_state(control, LV_STATE_DISABLED);
   }
-  if (controls_enabled && (ve_power_dirty || ve_mode_dirty) && !ve_local_error)
+  if (mode_controls_enabled) lv_obj_clear_state(dropdown_ve_mode, LV_STATE_DISABLED);
+  else lv_obj_add_state(dropdown_ve_mode, LV_STATE_DISABLED);
+  if (power_controls_enabled && (ve_power_dirty || (ve_mode_dirty && mode_controls_enabled)) && !ve_local_error)
     lv_obj_clear_state(button_ve_apply, LV_STATE_DISABLED);
   else lv_obj_add_state(button_ve_apply, LV_STATE_DISABLED);
   if (!ve_local_error) {
     if (busy || ve_show_command_result) lv_label_set_text(label_ve_result, ev.command_message);
     else if (!ev.valid) lv_label_set_text(label_ve_result, "Parametres indisponibles : verifier la liaison.");
+    else if (!mode_controls_enabled && !ve_power_dirty)
+      lv_label_set_text(label_ve_result, "Mode VE non reconnu : changement de mode verrouille.");
     else if (ve_power_dirty || ve_mode_dirty) lv_label_set_text(label_ve_result, "Modification locale : appuyer sur APPLIQUER.");
     else lv_label_set_text(label_ve_result, "Valeurs lues. Aucun changement envoye.");
   }

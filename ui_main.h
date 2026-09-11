@@ -593,7 +593,7 @@ static void ui_main_create() {
     lv_obj_clear_flag(hub, LV_OBJ_FLAG_CLICKABLE);
   }
   label_ev_charge_power = ui_main_label(
-    ev_charge_group, "Lim: --", 86, &lv_font_montserrat_14,
+    ev_charge_group, "VE: --", 86, &lv_font_montserrat_14,
     ui_main_theme_color(theme.muted_text), LV_TEXT_ALIGN_LEFT
   );
   lv_obj_align(label_ev_charge_power, LV_ALIGN_LEFT_MID, 40, 0);
@@ -936,12 +936,9 @@ static void ui_main_update() {
 
   if (cfg_ev_charger_enabled) {
     EvDeyeData ev = {};
-    if (deye_copy_ev_snapshot(&ev) && ev.requested_power_valid) {
-      snprintf(text, sizeof(text), "Lim:%u.%ukW", ev.requested_power_w / 1000,
-        (ev.requested_power_w % 1000) / 100);
-    } else {
-      snprintf(text, sizeof(text), "Lim: --");
-    }
+    // R490 est un plafond de charge. Ne jamais le presenter comme une mesure.
+    // La puissance instantanee sera affichee ici apres sa cartographie.
+    snprintf(text, sizeof(text), "VE: --");
     lv_label_set_text(label_ev_charge_power, text);
   }
 

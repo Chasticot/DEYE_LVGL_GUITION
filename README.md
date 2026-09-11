@@ -1,127 +1,64 @@
-# DEYE LVGL GUITION
+# DEYE LVGL GUITION — LSW amélioré
 
-Interface tactile autonome pour écran GUITION 480 x 480 basé sur ESP32-S3, destinée au suivi d'un onduleur Deye via logger Solarman.
+Firmware autonome pour écran GUITION ESP32-S3 480 × 480, destiné au suivi d’un onduleur Deye via logger Solarman LSW.
 
-![Écran DEYE LVGL GUITION](https://github.com/user-attachments/assets/73ff4867-a7e3-4e30-a7ba-2dfac98bcd35)
+Cette version propose une interface tactile LVGL, le suivi photovoltaïque et batterie, l’intégration VE/TEMPO, une configuration complète par page Web et des mises à jour OTA. Les réglages sont conservés dans la mémoire de l’écran.
 
-Le projet affiche localement les principales mesures de l'installation photovoltaïque et permet de consulter les informations de l'onduleur sans dépendre d'un ordinateur ou d'un serveur domotique.
+## Ce que fait le projet
 
-## État du projet
+- Affiche la production solaire, la batterie, la consommation, le réseau, l’import/export et les bilans d’énergie.
+- Communique avec l’onduleur Deye via le logger Solarman LSW.
+- Intègre les informations VE et la couleur Tempo.
+- Permet de régler l’écran, le Wi-Fi, le réseau DHCP/IP fixe, le logger, l’onduleur, le NTP et les registres personnalisés.
+- Fournit un tableau de bord Web, un historique, un diagnostic et l’export/import de configuration JSON.
+- Permet de mettre à jour le firmware par OTA sans câble USB après la première installation.
 
-La branche `main` contient le développement actuel avec l'intégration VE. Le reste de l'interface est opérationnel, mais les commandes VE doivent encore être confirmées sur l'onduleur avant d'être considérées comme définitives.
+## Installation simple — public non technique
 
-La base stable sans TEMPO ni VE est conservée dans le tag [`V1_base_LSW`](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/V1_base_LSW). Elle sert de référence pour les installations LSW classiques.
+Cette méthode ne demande pas Arduino IDE.
 
-## Fonctions principales
+1. Téléchargez le dépôt avec **Code → Download ZIP**, puis décompressez-le.
+2. Ouvrez le dossier `INSTALLATION_NOUVEL_ECRAN`.
+3. Branchez l’écran au PC avec un câble USB qui transporte les données.
+4. Double-cliquez sur `INSTALLER_NOUVEL_ECRAN.bat`.
+5. Le programme détecte automatiquement le port de l’écran. Si nécessaire, saisissez le numéro COM affiché par Windows.
+6. Pour un écran neuf, répondez `O` à la question d’effacement complet. Pour conserver une configuration existante, répondez `N`.
+7. Attendez le message **SUCCES** et le redémarrage de l’écran.
 
-- Affichage en temps réel de la production PV, de la batterie, de la consommation et du réseau.
-- Indication de l'import et de l'export réseau avec distinction des puissances positives et négatives.
-- Suivi de l'état de charge, des tensions, puissances et températures.
-- Bilans journaliers de production, consommation, achat et vente d'énergie.
-- Écran de configuration Wi-Fi avec scan des réseaux et indicateur de qualité.
-- Configuration de l'adresse IP, du port, du mode de communication et du numéro de série du logger.
-- Synchronisation NTP et réglage du fuseau horaire.
-- Interface tactile LVGL fluide avec indicateurs de connexion Wi-Fi et Deye.
-- Sauvegarde des paramètres dans la mémoire non volatile de l'ESP32.
-- Communication Solarman V5 via logger LSW.
-- Intégration VE en cours de validation dans `main`.
-- Page Web locale pour faciliter la configuration du Wi-Fi, du réseau, du logger, de l'onduleur, du NTP et de l'affichage.
-- Mise à jour du firmware par OTA depuis cette page Web.
+Le dossier contient déjà `esptool.exe`, le firmware, le bootloader et la table de partitions : aucune installation supplémentaire n’est nécessaire. En cas d’échec, utilisez un câble USB de données et, si votre carte possède ces boutons, maintenez `BOOT`, appuyez brièvement sur `RESET`, relâchez `BOOT`, puis relancez le BAT.
 
-## Matériel
+Les détails sont disponibles dans [`INSTALLATION_NOUVEL_ECRAN/LISEZ_MOI.txt`](INSTALLATION_NOUVEL_ECRAN/LISEZ_MOI.txt).
 
-- Écran GUITION ESP32-S3 480 x 480, par exemple ESP32-4848S040.
-- PSRAM OPI activée.
-- Logger Solarman LSW3 relié au même réseau que l'écran.
-- Onduleur Deye compatible avec le profil de registres utilisé par le projet.
+## Configuration par page Web
 
-## Câblage par défaut
+Après le démarrage et la connexion au réseau, ouvrez `http://ADRESSE_IP_DE_L_ECRAN/` depuis un appareil connecté au même réseau. La page permet de configurer l’écran sans recompiler : Wi-Fi, réseau, logger, onduleur, NTP, Tempo/VE, affichage et registres.
 
-Les broches principales sont définies dans `config.h` :
+## Mise à jour OTA
 
-| Fonction | GPIO |
-| --- | ---: |
-| GT911 SDA | 19 |
-| GT911 SCL | 45 |
-| Rétroéclairage | 38 |
-| Adresse GT911 | `0x5D` |
+Pour faire une mise à jour OTA, il faut prendre le fichier firmware applicatif `.ino.bin` de la release. Dans la page Web, ouvrez **Mise à jour OTA**, sélectionnez ce `.bin`, puis lancez l’installation.
 
-Les broches du panneau RGB dépendent du modèle d'écran. Vérifiez toujours le brochage de votre carte avant le premier flash.
+N’utilisez pas le `bootloader.bin`, le fichier `partitions.bin` ni une image fusionnée pour une mise à jour OTA. Ces fichiers servent uniquement à l’installation USB complète. Les paramètres enregistrés sont conservés après l’OTA.
 
-## Préparer Arduino IDE
+## Installation et développement avec Arduino IDE
 
-1. Installer le support de cartes ESP32 depuis l'URL officielle Espressif :
-   `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-2. Sélectionner `ESP32S3 Dev Module` ou le modèle correspondant à votre carte.
-3. Installer `lvgl` version 8.4.0 et `Arduino_GFX` version 1.4.7.
-4. Utiliser les réglages suivants :
+Cette méthode s’adresse aux personnes qui souhaitent compiler, modifier ou développer le projet.
 
-| Réglage | Valeur recommandée |
-| --- | --- |
-| USB CDC On Boot | Enabled |
-| CPU Frequency | 240 MHz (WiFi) |
-| Core Debug Level | None |
-| Flash Mode | QIO 80MHz |
-| Flash Size | 16MB (128Mb) |
-| Partition Scheme | 16M Flash (3MB APP/9.9MB FATFS) |
-| PSRAM | OPI PSRAM |
-| Upload Mode | UART0 / Hardware CDC |
-| Upload Speed | 921600 |
+1. Installez le support de cartes ESP32 depuis `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`.
+2. Ouvrez `DEYE_LVGL_UI_2x2_menu_avance_coef_LSW_ameliore.ino` dans Arduino IDE.
+3. Installez `lvgl` 8.4.0 et `Arduino_GFX` 1.4.7.
+4. Sélectionnez une carte `ESP32S3 Dev Module` correspondant à votre écran.
+5. Utilisez : USB CDC On Boot = Enabled, CPU = 240 MHz (WiFi), PSRAM = OPI PSRAM, Partition Scheme = Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS), Upload Speed = 921600.
+6. Compilez puis téléversez par USB.
 
-Cette configuration a été validée sur l'écran GUITION ESP32-S3 480 × 480. En particulier, **USB CDC On Boot = Enabled** est requis par ce projet : il rend `Serial0` disponible pour les messages de diagnostic. Le schéma `16M Flash (3MB APP/9.9MB FATFS)` réserve deux partitions applicatives de 3 Mio pour les mises à jour OTA, ainsi qu'environ 9,9 Mio de stockage FATFS. Cet espace est disponible pour de futurs historiques, journaux ou fichiers de configuration.
+Le partitionnement OTA est indispensable pour utiliser ensuite la mise à jour depuis la page Web. Un effacement complet de la flash supprime les paramètres Wi-Fi et les réglages enregistrés.
 
-## Configuration
+## Matériel et documentation
 
-Les paramètres par défaut se trouvent dans `config.h`. Pour éviter de publier des identifiants personnels, les valeurs Wi-Fi et le numéro de série peuvent rester génériques dans le dépôt public. Après le premier démarrage, configurez-les depuis l'écran de réglages ; ils sont ensuite conservés dans la mémoire de l'ESP32.
+- Écran GUITION ESP32-S3 480 × 480, par exemple ESP32-4848S040.
+- PSRAM OPI, logger Solarman LSW3 et onduleur Deye compatible.
+- Broches GT911 par défaut : SDA GPIO 19, SCL GPIO 45, rétroéclairage GPIO 38, adresse `0x5D`.
+- [`WEB_SERVER.md`](WEB_SERVER.md) : configuration Web, authentification, réseau et OTA.
+- [`VE_INTEGRATION.md`](VE_INTEGRATION.md) : intégration VE et limites connues.
+- [`INSTALLATION_NOUVEL_ECRAN/`](INSTALLATION_NOUVEL_ECRAN/) : installation USB autonome.
 
-Ne partagez jamais un vrai mot de passe Wi-Fi dans un dépôt public.
-
-### Configuration par page Web
-
-Une fois l'écran connecté au réseau, ouvrez `http://ADRESSE_IP_DE_L_ECRAN/` depuis un appareil présent sur le même réseau. La page Web permet de modifier les paramètres principaux sans devoir recompiler le firmware. L'accès est protégé par l'authentification configurée par le firmware ; consultez [`WEB_SERVER.md`](WEB_SERVER.md) pour les détails.
-
-### Mise à jour OTA
-
-Pour faire une mise à jour OTA, il faut prendre le fichier firmware applicatif `.bin` de la release, c'est-à-dire le fichier qui se termine par `.ino.bin`. Dans la page Web, ouvrez **Mise à jour OTA**, sélectionnez ce `.bin`, puis lancez l'installation. N'utilisez pas le `.bootloader.bin`, le `.partitions.bin` ni une image fusionnée pour une mise à jour OTA. L'écran redémarre automatiquement lorsque la mise à jour est terminée et les paramètres enregistrés sont conservés.
-
-## Compiler et flasher
-
-Ouvrir le sketch correspondant à la branche utilisée :
-
-- `DEYE_LVGL_UI_2x2_menu_avance_coef.ino` pour le tag `V1_base_LSW`.
-- `DEYE_LVGL_UI_2x2_menu_avance_coef_Tempo_VE.ino` pour `main`.
-
-Compiler puis téléverser avec les réglages ESP32-S3 ci-dessus. Un effacement complet de la flash n'est pas recommandé si les paramètres sauvegardés doivent être conservés.
-
-Les fichiers `.bin` de flash sont publiés dans les releases GitHub après validation de la compilation de chaque version. Un flash complet utilise le firmware applicatif, le bootloader et le fichier de partitions correspondant à la même version. Pour une mise à jour OTA, utilisez uniquement le `.ino.bin` indiqué dans la section précédente.
-
-## Organisation
-
-```text
-.
-├── DEYE_LVGL_UI_2x2_menu_avance_coef_Tempo_VE.ino
-├── config.h
-├── app_data.h
-├── deye_solarman.h
-├── settings.h
-├── wifi_manager.h
-├── ui_main.h
-├── ui_settings.h
-├── ui_ve_deye.h
-├── ve_deye.h
-├── ve_modbus_codec.h
-├── VE_INTEGRATION.md
-└── pc_simulator/
-```
-
-## Documentation VE
-
-Les détails techniques, les limites connues et les points restant à valider sont regroupés dans [`VE_INTEGRATION.md`](VE_INTEGRATION.md).
-
-## Remerciements
-
-Le projet s'appuie notamment sur LVGL, Arduino_GFX, les travaux pySolarmanV5 et les échanges de la communauté Jeedom et Home Assistant autour du protocole Solarman V5.
-
-## Licence
-
-Ce projet est distribué sous licence MIT. Utilisez-le à vos propres risques.
+Vérifiez toujours le brochage exact de votre écran avant tout flash. Projet distribué sous licence MIT.

@@ -93,12 +93,14 @@ void setup() {
 
   settings_load();
 
-  display_manager_begin();
-
   if (!gfx->begin()) {
     DBG.println("ERREUR : initialisation LCD");
     while (true) delay(1000);
   }
+
+  // Attache le PWM du retroeclairage apres l'initialisation du panneau RGB,
+  // puis force la luminosite configuree des le premier affichage.
+  display_manager_begin();
 
   gfx->setRotation(0);
   gfx->fillScreen(0x0000);

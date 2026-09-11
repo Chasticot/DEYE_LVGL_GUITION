@@ -7,8 +7,14 @@
 #include "settings.h"
 
 static constexpr uint8_t DISPLAY_PWM_CHANNEL = 7;
+// Frequence validee sur ce firmware pour le retroeclairage GPIO38.
 static constexpr uint32_t DISPLAY_PWM_FREQUENCY = 5000;
-static uint8_t display_applied_brightness = 255;
+// Sous ce seuil, le driver du panneau GUITION peut couper visuellement le
+// retroeclairage. Il protege aussi une ancienne preference trop faible.
+static constexpr uint8_t DISPLAY_BACKLIGHT_MIN_DUTY = DISPLAY_BRIGHTNESS_MIN;
+// -1 est un etat invalide : la premiere ecriture PWM doit toujours avoir
+// lieu, y compris lorsque la luminosite demandee est deja 255.
+static int16_t display_applied_brightness = -1;
 static constexpr float DISPLAY_PI = 3.14159265358979323846f;
 static constexpr int DISPLAY_SOLAR_TRANSITION_MINUTES = 60;
 
@@ -72,12 +78,14 @@ static void display_manager_apply() {
   const uint8_t brightness = display_effective_brightness();
   if (brightness == display_applied_brightness) return;
   display_applied_brightness = brightness;
-  ledcWrite(DISPLAY_PWM_CHANNEL, brightness);
+  ledcWrite(DISPLAY_PWM_CHANNEL, max(brightness, DISPLAY_BACKLIGHT_MIN_DUTY));
 }
 
 static void display_manager_begin() {
   ledcSetup(DISPLAY_PWM_CHANNEL, DISPLAY_PWM_FREQUENCY, 8);
   ledcAttachPin(GFX_BL, DISPLAY_PWM_CHANNEL);
-  display_applied_brightness = 255;
+  // Le pilote RGB peut reinitialiser la broche pendant son demarrage. Cette
+  // fonction est appelee juste apres gfx->begin(), puis force le premier PWM.
+  display_applied_brightness = -1;
   display_manager_apply();
 }
