@@ -1,64 +1,68 @@
-# DEYE LVGL GUITION — LSW amélioré
+# DEYE LVGL GUITION
 
-Firmware autonome pour écran GUITION ESP32-S3 480 × 480, destiné au suivi d’un onduleur Deye via logger Solarman LSW.
+Firmware pour écran tactile GUITION ESP32-S3 480 × 480, destiné au suivi et au pilotage d'installations équipées d'un onduleur Deye.
 
-Cette version propose une interface tactile LVGL, le suivi photovoltaïque et batterie, l’intégration VE/TEMPO, une configuration complète par page Web et des mises à jour OTA. Les réglages sont conservés dans la mémoire de l’écran.
+Le dépôt contient plusieurs variantes. Il est important de choisir le dossier correspondant exactement au modèle d'onduleur ou à l'intégration utilisée.
 
-## Ce que fait le projet
+## Choisir la bonne variante
 
-- Affiche la production solaire, la batterie, la consommation, le réseau, l’import/export et les bilans d’énergie.
-- Communique avec l’onduleur Deye via le logger Solarman LSW.
-- Intègre les informations VE et la couleur Tempo.
-- Permet de régler l’écran, le Wi-Fi, le réseau DHCP/IP fixe, le logger, l’onduleur, le NTP et les registres personnalisés.
-- Fournit un tableau de bord Web, un historique, un diagnostic et l’export/import de configuration JSON.
-- Permet de mettre à jour le firmware par OTA sans câble USB après la première installation.
+| Variante | Utilisation |
+| --- | --- |
+| [`DEYE_LVGL_GUITION_12KSG02LP1`](firmware/DEYE_LVGL_GUITION_12KSG02LP1/) | Onduleur Deye 12K SG02 LP1 |
+| [`DEYE_LVGL_GUITION_12KSG05LP3`](firmware/DEYE_LVGL_GUITION_12KSG05LP3/) | Onduleur Deye 12K SG05 LP3 |
+| [`DEYE_LVGL_GUITION_25KSG01HP3`](firmware/DEYE_LVGL_GUITION_25KSG01HP3/) | Onduleur Deye 25K SG01 HP3 |
+| [`DEYE_LVGL_GUITION_VETRONIC`](firmware/DEYE_LVGL_GUITION_VETRONIC/) | Version intégrant la gestion VETRONIC |
 
-## Installation simple — public non technique
+Ne flashez pas une variante prévue pour un autre modèle d'onduleur.
 
-Cette méthode ne demande pas Arduino IDE.
+## Installation simple — recommandée aux débutants
 
-1. Téléchargez le dépôt avec **Code → Download ZIP**, puis décompressez-le.
-2. Ouvrez le dossier `INSTALLATION_NOUVEL_ECRAN`.
-3. Branchez l’écran au PC avec un câble USB qui transporte les données.
-4. Double-cliquez sur `INSTALLER_NOUVEL_ECRAN.bat`.
-5. Le programme détecte automatiquement le port de l’écran. Si nécessaire, saisissez le numéro COM affiché par Windows.
-6. Pour un écran neuf, répondez `O` à la question d’effacement complet. Pour conserver une configuration existante, répondez `N`.
-7. Attendez le message **SUCCES** et le redémarrage de l’écran.
+Cette méthode ne nécessite ni Arduino IDE ni compilation.
 
-Le dossier contient déjà `esptool.exe`, le firmware, le bootloader et la table de partitions : aucune installation supplémentaire n’est nécessaire. En cas d’échec, utilisez un câble USB de données et, si votre carte possède ces boutons, maintenez `BOOT`, appuyez brièvement sur `RESET`, relâchez `BOOT`, puis relancez le BAT.
+1. Cliquez sur **Code**, puis **Download ZIP** sur cette page GitHub.
+2. Décompressez le fichier téléchargé.
+3. Ouvrez `firmware`, puis le dossier correspondant à votre onduleur.
+4. Ouvrez le dossier `INSTALLATION_NOUVEL_ECRAN`.
+5. Branchez l'écran au PC avec un câble USB qui transporte les données.
+6. Double-cliquez sur `INSTALLER_NOUVEL_ECRAN.bat`.
+7. Suivez les indications affichées et attendez le message `SUCCES`.
 
-Les détails sont disponibles dans [`INSTALLATION_NOUVEL_ECRAN/LISEZ_MOI.txt`](INSTALLATION_NOUVEL_ECRAN/LISEZ_MOI.txt).
+Le dossier contient déjà le programme d'installation, le firmware, le bootloader et la table de partitions. Aucun logiciel supplémentaire n'est nécessaire sous Windows.
 
-## Configuration par page Web
+Pour un écran neuf, acceptez l'effacement complet de la mémoire. Sur un écran déjà configuré, refusez l'effacement pour conserver le Wi-Fi et les réglages locaux.
 
-Après le démarrage et la connexion au réseau, ouvrez `http://ADRESSE_IP_DE_L_ECRAN/` depuis un appareil connecté au même réseau. La page permet de configurer l’écran sans recompiler : Wi-Fi, réseau, logger, onduleur, NTP, Tempo/VE, affichage et registres.
-
-## Mise à jour OTA
-
-Pour faire une mise à jour OTA, il faut prendre le fichier firmware applicatif `.ino.bin` de la release. Dans la page Web, ouvrez **Mise à jour OTA**, sélectionnez ce `.bin`, puis lancez l’installation.
-
-N’utilisez pas le `bootloader.bin`, le fichier `partitions.bin` ni une image fusionnée pour une mise à jour OTA. Ces fichiers servent uniquement à l’installation USB complète. Les paramètres enregistrés sont conservés après l’OTA.
+En cas d'échec, vérifiez que le câble USB transmet bien les données. Si la carte possède des boutons `BOOT` et `RESET`, maintenez `BOOT`, appuyez brièvement sur `RESET`, relâchez `BOOT`, puis relancez l'installateur.
 
 ## Installation et développement avec Arduino IDE
 
-Cette méthode s’adresse aux personnes qui souhaitent compiler, modifier ou développer le projet.
+Cette méthode est destinée aux personnes qui souhaitent modifier ou recompiler le firmware.
 
-1. Installez le support de cartes ESP32 depuis `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`.
-2. Ouvrez `DEYE_LVGL_UI_2x2_menu_avance_coef_LSW_ameliore.ino` dans Arduino IDE.
-3. Installez `lvgl` 8.4.0 et `Arduino_GFX` 1.4.7.
-4. Sélectionnez une carte `ESP32S3 Dev Module` correspondant à votre écran.
-5. Utilisez : USB CDC On Boot = Enabled, CPU = 240 MHz (WiFi), PSRAM = OPI PSRAM, Partition Scheme = Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS), Upload Speed = 921600.
+1. Ouvrez le dossier de la variante voulue dans `firmware/`.
+2. Ouvrez le fichier `.ino` portant exactement le même nom que ce dossier.
+3. Installez le support ESP32 pour Arduino ainsi que les bibliothèques `lvgl` 8.4.0 et `Arduino_GFX` 1.4.7.
+4. Sélectionnez une carte ESP32-S3 correspondant à l'écran.
+5. Utilisez notamment `USB CDC On Boot = Enabled`, `PSRAM = OPI PSRAM` et une table de partitions compatible OTA.
 6. Compilez puis téléversez par USB.
 
-Le partitionnement OTA est indispensable pour utiliser ensuite la mise à jour depuis la page Web. Un effacement complet de la flash supprime les paramètres Wi-Fi et les réglages enregistrés.
+## Fonctions principales
 
-## Matériel et documentation
+- Interface tactile LVGL pour écran 480 × 480.
+- Lecture des informations de l'onduleur Deye par le réseau.
+- Affichage solaire, batterie, consommation, réseau et bilans d'énergie.
+- Configuration Wi-Fi, réseau, NTP et onduleur depuis l'écran ou l'interface Web.
+- Intégration des informations VE et Tempo selon la variante.
+- Mise à jour OTA du firmware depuis l'interface Web.
+- Intégration VETRONIC dans la variante dédiée.
+
+## Matériel
 
 - Écran GUITION ESP32-S3 480 × 480, par exemple ESP32-4848S040.
-- PSRAM OPI, logger Solarman LSW3 et onduleur Deye compatible.
-- Broches GT911 par défaut : SDA GPIO 19, SCL GPIO 45, rétroéclairage GPIO 38, adresse `0x5D`.
-- [`WEB_SERVER.md`](WEB_SERVER.md) : configuration Web, authentification, réseau et OTA.
-- [`VE_INTEGRATION.md`](VE_INTEGRATION.md) : intégration VE et limites connues.
-- [`INSTALLATION_NOUVEL_ECRAN/`](INSTALLATION_NOUVEL_ECRAN/) : installation USB autonome.
+- PSRAM OPI.
+- Onduleur Deye compatible avec la variante choisie.
+- Logger ou interface réseau compatible avec le firmware.
 
-Vérifiez toujours le brochage exact de votre écran avant tout flash. Projet distribué sous licence MIT.
+Vérifiez toujours le modèle de l'onduleur et le brochage exact de l'écran avant le flash.
+
+## Licence
+
+Projet distribué sous licence MIT. Consultez le fichier [`LICENSE`](LICENSE).

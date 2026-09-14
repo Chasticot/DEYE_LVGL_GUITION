@@ -1,8 +1,24 @@
-pc_simulator/build/
-.vscode/
-config.local.h
+# Compilations Arduino et fichiers temporaires
+build/
 build*/
+**/build/
+**/build*/
 *.elf
 *.map
-compile_commands.json
+*.o
+*.a
+*.d
 *.cache
+compile_commands.json
+
+# Journaux et archives locales
+*.log
+*.zip
+
+# Réglages locaux
+.vscode/
+config.local.h
+
+# Les binaires des installateurs sont volontairement publiés
+*.bin
+!firmware/**/INSTALLATION_NOUVEL_ECRAN/*.bin
