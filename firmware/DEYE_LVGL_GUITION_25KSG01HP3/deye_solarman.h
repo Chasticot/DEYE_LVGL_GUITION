@@ -36,11 +36,12 @@ uint16_t REG_GRID_STATUS = 552;
 uint16_t REG_GRID_BUY_DAY = 520;
 uint16_t REG_GRID_SELL_DAY = 521;
 uint16_t REG_LOAD_POWER = 653;
-uint16_t REG_UPS_POWER = 643;
+uint16_t REG_GEN_POWER = 667;
 uint16_t REG_LOAD_DAY = 526;
 uint16_t REG_DC_TEMP = 540;
 uint16_t REG_AC_TEMP = 541;
 uint16_t REG_SMARTLOAD = 552;
+uint16_t SMARTLOAD_BIT = 3;
 
 uint16_t BLOCK1_START = 520;
 uint16_t BLOCK1_COUNT = 22;
@@ -64,8 +65,7 @@ uint32_t BLOCK_INTERVAL_MS = 3000;
 // coefficient de 0,1 restitue l'unite 1 W de la cartographie SG01HP3.
 float COEFF_GRID_POWER = 0.1f;
 float COEFF_LOAD_POWER = 0.1f;
-float COEFF_UPS_POWER = 1.0f;
-float COEFF_SMARTLOAD = 1.0f;
+float COEFF_GEN_POWER = 1.0f;
 
 #define MODBUS_MAX_READ_REGISTERS 125
 #define DATA_STALE_AFTER_MS 120000UL
@@ -82,7 +82,7 @@ struct MainData {
   int16_t bat_power;
   int16_t grid_power;
   int16_t load_power;
-  int16_t ups_load_power;
+  int16_t gen_power;
   uint16_t ups_load_voltage_raw;
   uint16_t gen_voltage_raw;
   uint16_t grid_status_raw;
@@ -322,19 +322,19 @@ static void load_custom_registers() {
   REG_GRID_BUY_DAY = regs.grid_buy_daily;
   REG_GRID_SELL_DAY = regs.grid_sell_daily;
   REG_LOAD_POWER = regs.load_power;
-  REG_UPS_POWER = regs.ups_power;
+  REG_GEN_POWER = regs.gen_power;
   REG_LOAD_DAY = regs.load_daily;
   REG_DC_TEMP = regs.dc_temp;
   REG_AC_TEMP = regs.ac_temp;
   REG_SMARTLOAD = regs.smartload;
+  SMARTLOAD_BIT = regs.smartload_bit;
   TCP_CONNECT_TIMEOUT_MS = regs.connect_timeout;
   RESPONSE_WINDOW_MS = regs.response_window;
   FRAME_TIMEOUT_MS = regs.frame_timeout;
   BLOCK_INTERVAL_MS = regs.block_interval;
   COEFF_GRID_POWER = regs.coeff_grid_power;
   COEFF_LOAD_POWER = regs.coeff_load_power;
-  COEFF_UPS_POWER = regs.coeff_ups_power;
-  COEFF_SMARTLOAD = regs.coeff_smartload;
+  COEFF_GEN_POWER = regs.coeff_gen_power;
 
   // Calcul des blocs (inchangé)
   uint16_t min_reg1 = 999, max_reg1 = 0;
@@ -347,7 +347,7 @@ static void load_custom_registers() {
   BLOCK1_COUNT = max_reg1 - min_reg1 + 1;
 
   uint16_t min_reg2 = 999, max_reg2 = 0;
-  uint16_t regs2[] = {REG_GRID_POWER, REG_UPS_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP,
+  uint16_t regs2[] = {REG_GRID_POWER, REG_GEN_POWER, REG_LOAD_POWER, REG_BATTERY_TEMP,
                       REG_BATTERY_VOLTAGE, REG_BATTERY_SOC, REG_PV1_POWER, REG_PV2_POWER,
                       REG_PV3_POWER, REG_PV4_POWER, REG_BATTERY_POWER, REG_GRID_STATUS, REG_SMARTLOAD};
   for (uint8_t i = 0; i < 13; i++) {
@@ -394,7 +394,7 @@ static void decode_block1(const uint8_t *rtu) {
 static void decode_block2(const uint8_t *rtu) {
   int offset = BLOCK2_START;
   main_data.grid_power = (int16_t)modbus_get_u16_be(rtu, REG_GRID_POWER - offset);
-  main_data.ups_load_power = (int16_t)modbus_get_u16_be(rtu, REG_UPS_POWER - offset);
+  main_data.gen_power = (int16_t)modbus_get_u16_be(rtu, REG_GEN_POWER - offset);
   main_data.load_power = (int16_t)modbus_get_u16_be(rtu, REG_LOAD_POWER - offset);
   main_data.bat_temperature_raw = (int16_t)modbus_get_u16_be(rtu, REG_BATTERY_TEMP - offset);
   main_data.bat_voltage_raw = modbus_get_u16_be(rtu, REG_BATTERY_VOLTAGE - offset);
@@ -443,11 +443,11 @@ static void update_dashboard_from_data() {
   dashboard_data.battery_temperature = (main_data.bat_temperature_raw - 1000) * 0.1f;
   dashboard_data.grid_power = scaled_power(main_data.grid_power, COEFF_GRID_POWER, 10.0f);
   dashboard_data.load_power = scaled_power(main_data.load_power, COEFF_LOAD_POWER, 10.0f);
-  dashboard_data.ups_power = scaled_power(main_data.ups_load_power, COEFF_UPS_POWER, 1.0f);
+  dashboard_data.gen_power = scaled_power(main_data.gen_power, COEFF_GEN_POWER, 1.0f);
   dashboard_data.dc_temperature = (main_data.dc_temperature_raw - 1000) * 0.1f;
   dashboard_data.ac_temperature = (main_data.ac_temperature_raw - 1000) * 0.1f;
   // R552: bit2 = relais reseau, bit3 = relais du port GEN/Smart Load.
-  dashboard_data.smartload_on = (main_data.smartload_status_raw & (1U << 3)) != 0;
+  dashboard_data.smartload_on = ((main_data.smartload_status_raw >> SMARTLOAD_BIT) & 0x01U) != 0;
   deye_on_grid_state = (main_data.grid_status_raw & (1U << 2)) != 0;
   if (daily_solar_valid) {
     pv_daily_yield = daily_solar;

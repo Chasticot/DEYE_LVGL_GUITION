@@ -16,7 +16,7 @@ struct DashboardData {
 
   int16_t grid_power;
   int16_t load_power;
-  int16_t ups_power;
+  int16_t gen_power;
   float ups_voltage;
 
   float dc_temperature;
@@ -37,7 +37,7 @@ static DashboardData dashboard_data = {
   0.0f,    // battery_temperature
   0,       // grid_power
   0,       // load_power
-  0,       // ups_power
+  0,       // gen_power
   0.0f,    // ups_voltage
   0.0f,    // dc_temperature
   0.0f,    // ac_temperature

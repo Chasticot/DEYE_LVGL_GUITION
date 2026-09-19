@@ -213,11 +213,12 @@ struct CustomRegisters {
   uint16_t grid_buy_daily;
   uint16_t grid_sell_daily;
   uint16_t load_power;
-  uint16_t ups_power;
+  uint16_t gen_power;
   uint16_t load_daily;
   uint16_t dc_temp;
   uint16_t ac_temp;
   uint16_t smartload;
+  uint16_t smartload_bit;
   uint32_t connect_timeout;
   uint32_t response_window;
   uint32_t frame_timeout;
@@ -225,14 +226,13 @@ struct CustomRegisters {
   // Coefficients
   float coeff_grid_power;
   float coeff_load_power;
-  float coeff_ups_power;
-  float coeff_smartload;
+  float coeff_gen_power;
 };
 
 static bool settings_registers_valid(const CustomRegisters &regs) {
   const uint16_t block1[] = { regs.grid_buy_daily, regs.grid_sell_daily, regs.load_daily,
     regs.dc_temp, regs.ac_temp, regs.pv_daily };
-  const uint16_t block2[] = { regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+  const uint16_t block2[] = { regs.grid_power, regs.gen_power, regs.load_power, regs.battery_temp,
     regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power, regs.pv3_power,
     regs.battery_power, regs.grid_status, regs.smartload };
   uint16_t min1 = block1[0], max1 = block1[0], min2 = block2[0], max2 = block2[0];
@@ -242,11 +242,10 @@ static bool settings_registers_valid(const CustomRegisters &regs) {
     regs.response_window >= 50 && regs.response_window <= 60000 && regs.frame_timeout >= 50 &&
     regs.frame_timeout <= 60000 && regs.block_interval >= 50 && regs.block_interval <= 60000;
   const bool coefficients = isfinite(regs.coeff_grid_power) && isfinite(regs.coeff_load_power) &&
-    isfinite(regs.coeff_ups_power) && isfinite(regs.coeff_smartload) &&
+    isfinite(regs.coeff_gen_power) && regs.smartload_bit <= 15 &&
     regs.coeff_grid_power >= -100.0f && regs.coeff_grid_power <= 100.0f &&
     regs.coeff_load_power >= -100.0f && regs.coeff_load_power <= 100.0f &&
-    regs.coeff_ups_power >= -100.0f && regs.coeff_ups_power <= 100.0f &&
-    regs.coeff_smartload >= -100.0f && regs.coeff_smartload <= 100.0f;
+    regs.coeff_gen_power >= -100.0f && regs.coeff_gen_power <= 100.0f;
   return timeouts && coefficients && uint32_t(max1) - min1 + 1 <= 125 && uint32_t(max2) - min2 + 1 <= 125;
 }
 
@@ -258,8 +257,8 @@ static bool settings_save_registers(const CustomRegisters &regs) {
   
   // Cle dediee au SG05 : ne pas ecraser les anciennes valeurs SG02 si les
   // deux firmwares sont testes successivement sur le meme ESP32.
-  const bool ok = preferences.putBytes("sg05_regs_v1", &regs, sizeof(regs)) == sizeof(regs) &&
-    preferences.getBytes("sg05_regs_v1", &verify, sizeof(verify)) == sizeof(verify) &&
+  const bool ok = preferences.putBytes("sg05_regs_v2", &regs, sizeof(regs)) == sizeof(regs) &&
+    preferences.getBytes("sg05_regs_v2", &verify, sizeof(verify)) == sizeof(verify) &&
     memcmp(&regs, &verify, sizeof(regs)) == 0;
   preferences.end();
   return ok;
@@ -268,15 +267,15 @@ static bool settings_save_registers(const CustomRegisters &regs) {
 static CustomRegisters settings_load_registers() {
   CustomRegisters regs;
   preferences.begin("deye-ui", true);
-  if (preferences.getBytesLength("sg05_regs_v1") == sizeof(regs) &&
-      preferences.getBytes("sg05_regs_v1", &regs, sizeof(regs)) == sizeof(regs) && settings_registers_valid(regs)) {
+  if (preferences.getBytesLength("sg05_regs_v2") == sizeof(regs) &&
+      preferences.getBytes("sg05_regs_v2", &regs, sizeof(regs)) == sizeof(regs) && settings_registers_valid(regs)) {
     preferences.end();
     return regs;
   }
   preferences.end();
   // Ne jamais importer implicitement les anciennes cles individuelles SG02.
-  return CustomRegisters{672,673,674,529,588,587,590,586,625,552,520,521,653,643,526,540,541,552,
-    10000,10000,7000,3000,0.1f,0.1f,1.0f,1.0f};
+  return CustomRegisters{672,673,674,529,588,587,590,586,625,552,520,521,653,667,526,540,541,552,3,
+    10000,10000,7000,3000,0.1f,0.1f,1.0f};
 }
 
 // ==================== FONCTIONS DE SAUVEGARDE DES PARAMÈTRES GÉNÉRAUX ====================

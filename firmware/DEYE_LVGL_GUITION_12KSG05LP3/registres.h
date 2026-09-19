@@ -26,7 +26,7 @@ struct InverterRegisters {
   
   // Consommation
   uint16_t load_power;
-  uint16_t ups_power;
+  uint16_t gen_power;
   uint16_t load_daily;
   
   // Températures
@@ -35,6 +35,7 @@ struct InverterRegisters {
   
   // SmartLoad
   uint16_t smartload;
+  uint16_t smartload_bit;
   
   // Plages de lecture
   uint16_t block1_start;
@@ -69,7 +70,7 @@ const InverterRegisters deye_hybrid = {
   
   // Consommation
   .load_power = 653,
-  .ups_power = 643,
+  .gen_power = 667,
   .load_daily = 526,
   
   // Températures
@@ -78,6 +79,7 @@ const InverterRegisters deye_hybrid = {
   
   // SmartLoad
   .smartload = 552,
+  .smartload_bit = 3,
   
   // Plages de lecture
   .block1_start = 520,
@@ -110,13 +112,14 @@ const InverterRegisters deye_hybrid = {
 #define REG_GRID_SELL_DAY  CURRENT_MODEL.grid_sell_daily
 
 #define REG_LOAD_POWER     CURRENT_MODEL.load_power
-#define REG_UPS_POWER      CURRENT_MODEL.ups_power
+#define REG_GEN_POWER      CURRENT_MODEL.gen_power
 #define REG_LOAD_DAY       CURRENT_MODEL.load_daily
 
 #define REG_DC_TEMP        CURRENT_MODEL.dc_temp
 #define REG_AC_TEMP        CURRENT_MODEL.ac_temp
 
 #define REG_SMARTLOAD      CURRENT_MODEL.smartload
+#define SMARTLOAD_BIT_DEFAULT CURRENT_MODEL.smartload_bit
 
 // Plages de lecture
 #define BLOCK1_START       CURRENT_MODEL.block1_start

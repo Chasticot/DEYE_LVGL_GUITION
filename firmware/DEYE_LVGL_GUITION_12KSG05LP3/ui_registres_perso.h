@@ -1,4 +1,4 @@
-// ui_registres_perso.h - Version avec colonne Coeff
+// ui_registres_perso.h - Version avec colonne Coeff/Bit
 
 #pragma once
 
@@ -19,15 +19,15 @@ lv_obj_t *screen_registers = nullptr;
 static lv_obj_t *ta_pv1_power, *ta_pv2_power, *ta_pv3_power, *ta_pv_daily;
 static lv_obj_t *ta_battery_soc, *ta_battery_voltage, *ta_battery_power, *ta_battery_temp;
 static lv_obj_t *ta_grid_power, *ta_grid_status, *ta_grid_buy_daily, *ta_grid_sell_daily;
-static lv_obj_t *ta_load_power, *ta_ups_power, *ta_load_daily;
+static lv_obj_t *ta_load_power, *ta_gen_power, *ta_load_daily;
 static lv_obj_t *ta_dc_temp, *ta_ac_temp, *ta_smartload;
 static lv_obj_t *ta_connect_timeout, *ta_response_window, *ta_frame_timeout, *ta_block_interval;
 
 // Textareas pour les coefficients (uniquement pour les 4 registres souhaités)
 static lv_obj_t *ta_coeff_grid_power;
 static lv_obj_t *ta_coeff_load_power;
-static lv_obj_t *ta_coeff_ups_power;
-static lv_obj_t *ta_coeff_smartload;
+static lv_obj_t *ta_coeff_gen_power;
+static lv_obj_t *ta_smartload_bit;
 
 // Clavier global
 static lv_obj_t *global_keyboard = nullptr;
@@ -69,7 +69,8 @@ static void add_reg_line(
   int default_val,
   lv_obj_t **textarea_coeff,
   float default_coeff,
-  int y_pos
+  int y_pos,
+  bool integer_aux = false
 ) {
   // Label (colonne 1)
   lv_obj_t *label = lv_label_create(parent);
@@ -105,9 +106,10 @@ static void add_reg_line(
   if (textarea_coeff != nullptr) {
     *textarea_coeff = lv_textarea_create(parent);
     lv_textarea_set_one_line(*textarea_coeff, true);
-    lv_textarea_set_max_length(*textarea_coeff, 6);
+    lv_textarea_set_max_length(*textarea_coeff, integer_aux ? 2 : 6);
     char cbuf[10];
-    snprintf(cbuf, sizeof(cbuf), "%.1f", default_coeff);
+    if (integer_aux) snprintf(cbuf, sizeof(cbuf), "%u", (unsigned)default_coeff);
+    else snprintf(cbuf, sizeof(cbuf), "%.1f", default_coeff);
     lv_textarea_set_text(*textarea_coeff, cbuf);
 
     lv_obj_set_pos(*textarea_coeff, 215, y_pos - 4);
@@ -169,7 +171,7 @@ static bool ui_register_blocks_valid(const CustomRegisters &regs) {
     regs.dc_temp, regs.ac_temp, regs.pv_daily
   };
   const uint16_t block2[] = {
-    regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+    regs.grid_power, regs.gen_power, regs.load_power, regs.battery_temp,
     regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power,
     regs.pv3_power, regs.battery_power, regs.grid_status, regs.smartload
   };
@@ -203,11 +205,12 @@ static void ui_registers_save(lv_event_t *e) {
   READ_REGISTER(grid_buy_daily, ta_grid_buy_daily);
   READ_REGISTER(grid_sell_daily, ta_grid_sell_daily);
   READ_REGISTER(load_power, ta_load_power);
-  READ_REGISTER(ups_power, ta_ups_power);
+  READ_REGISTER(gen_power, ta_gen_power);
   READ_REGISTER(load_daily, ta_load_daily);
   READ_REGISTER(dc_temp, ta_dc_temp);
   READ_REGISTER(ac_temp, ta_ac_temp);
   READ_REGISTER(smartload, ta_smartload);
+  READ_REGISTER(smartload_bit, ta_smartload_bit);
   #undef READ_REGISTER
 
   if (!ui_read_timeout(ta_connect_timeout, &regs.connect_timeout) ||
@@ -217,10 +220,13 @@ static void ui_registers_save(lv_event_t *e) {
     ui_registers_show_error("Les timeouts doivent etre compris entre 50 et 60000 ms.");
     return;
   }
+  if (regs.smartload_bit > 15) {
+    ui_registers_show_error("Le bit SmartLoad doit etre compris entre 0 et 15.");
+    return;
+  }
   if (!ui_read_coefficient(ta_coeff_grid_power, &regs.coeff_grid_power) ||
       !ui_read_coefficient(ta_coeff_load_power, &regs.coeff_load_power) ||
-      !ui_read_coefficient(ta_coeff_ups_power, &regs.coeff_ups_power) ||
-      !ui_read_coefficient(ta_coeff_smartload, &regs.coeff_smartload)) {
+      !ui_read_coefficient(ta_coeff_gen_power, &regs.coeff_gen_power)) {
     ui_registers_show_error("Les coefficients doivent etre entre -100 et 100.");
     return;
   }
@@ -265,11 +271,12 @@ static void ui_registers_load_values() {
   SET_TEXT(ta_grid_buy_daily, regs.grid_buy_daily);
   SET_TEXT(ta_grid_sell_daily, regs.grid_sell_daily);
   SET_TEXT(ta_load_power, regs.load_power);
-  SET_TEXT(ta_ups_power, regs.ups_power);
+  SET_TEXT(ta_gen_power, regs.gen_power);
   SET_TEXT(ta_load_daily, regs.load_daily);
   SET_TEXT(ta_dc_temp, regs.dc_temp);
   SET_TEXT(ta_ac_temp, regs.ac_temp);
   SET_TEXT(ta_smartload, regs.smartload);
+  SET_TEXT(ta_smartload_bit, regs.smartload_bit);
 
   // Timeouts
   snprintf(buf, sizeof(buf), "%lu", regs.connect_timeout);
@@ -285,8 +292,7 @@ static void ui_registers_load_values() {
   #define SET_FLOAT(ta, val) snprintf(buf, sizeof(buf), "%.1f", val); lv_textarea_set_text(ta, buf)
   SET_FLOAT(ta_coeff_grid_power, regs.coeff_grid_power);
   SET_FLOAT(ta_coeff_load_power, regs.coeff_load_power);
-  SET_FLOAT(ta_coeff_ups_power, regs.coeff_ups_power);
-  SET_FLOAT(ta_coeff_smartload, regs.coeff_smartload);
+  SET_FLOAT(ta_coeff_gen_power, regs.coeff_gen_power);
 }
 
 // ==================== CRÉATION DE L'ÉCRAN ====================
@@ -322,7 +328,7 @@ void ui_registers_create() {
   lv_obj_set_style_text_font(h2, &lv_font_montserrat_14, LV_PART_MAIN);
 
   lv_obj_t *h3 = lv_label_create(screen_registers);
-  lv_label_set_text(h3, "Coeff");
+  lv_label_set_text(h3, "Coeff/Bit");
   lv_obj_set_pos(h3, 220, 52);
   lv_obj_set_style_text_color(h3, lv_color_hex(0xFFD700), LV_PART_MAIN);
   lv_obj_set_style_text_font(h3, &lv_font_montserrat_14, LV_PART_MAIN);
@@ -356,11 +362,11 @@ void ui_registers_create() {
   add_reg_line(cont, "Grid Sell", &ta_grid_sell_daily, 521, nullptr, 1.0f, y); y += step;
 
   add_reg_line(cont, "Load Power", &ta_load_power, 653, &ta_coeff_load_power, 0.1f, y); y += step;
-  add_reg_line(cont, "UPS Power", &ta_ups_power, 643, &ta_coeff_ups_power, 1.0f, y); y += step;
+  add_reg_line(cont, "GEN Power", &ta_gen_power, 667, &ta_coeff_gen_power, 1.0f, y); y += step;
   add_reg_line(cont, "Load Daily", &ta_load_daily, 526, nullptr, 1.0f, y); y += step;
   add_reg_line(cont, "DC Temp", &ta_dc_temp, 540, nullptr, 1.0f, y); y += step;
   add_reg_line(cont, "AC Temp", &ta_ac_temp, 541, nullptr, 1.0f, y); y += step;
-  add_reg_line(cont, "GEN/SmartLoad relay", &ta_smartload, 552, &ta_coeff_smartload, 1.0f, y); y += step;
+  add_reg_line(cont, "SmartLoad", &ta_smartload, 552, &ta_smartload_bit, 3.0f, y, true); y += step;
 
   // Timeouts (sans coeff)
   y += 10;
@@ -462,7 +468,7 @@ void ui_registers_create() {
     lv_textarea_set_text(ta_grid_buy_daily, "520");
     lv_textarea_set_text(ta_grid_sell_daily, "521");
     lv_textarea_set_text(ta_load_power, "653");
-    lv_textarea_set_text(ta_ups_power, "643");
+    lv_textarea_set_text(ta_gen_power, "667");
     lv_textarea_set_text(ta_load_daily, "526");
     lv_textarea_set_text(ta_dc_temp, "540");
     lv_textarea_set_text(ta_ac_temp, "541");
@@ -474,8 +480,8 @@ void ui_registers_create() {
     // Coefficients par défaut
     lv_textarea_set_text(ta_coeff_grid_power, "0.1");
     lv_textarea_set_text(ta_coeff_load_power, "0.1");
-    lv_textarea_set_text(ta_coeff_ups_power, "1.0");
-    lv_textarea_set_text(ta_coeff_smartload, "1.0");
+    lv_textarea_set_text(ta_coeff_gen_power, "1.0");
+    lv_textarea_set_text(ta_smartload_bit, "3");
   }, LV_EVENT_CLICKED, NULL);
   lv_obj_t *dl = lv_label_create(default_btn);
   lv_label_set_text(dl, "REINITIALISER");

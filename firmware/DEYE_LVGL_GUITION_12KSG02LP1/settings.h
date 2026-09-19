@@ -209,11 +209,12 @@ struct CustomRegisters {
   uint16_t grid_buy_daily;
   uint16_t grid_sell_daily;
   uint16_t load_power;
-  uint16_t ups_power;
+  uint16_t gen_power;
   uint16_t load_daily;
   uint16_t dc_temp;
   uint16_t ac_temp;
   uint16_t smartload;
+  uint16_t smartload_bit;
   uint32_t connect_timeout;
   uint32_t response_window;
   uint32_t frame_timeout;
@@ -221,14 +222,13 @@ struct CustomRegisters {
   // Coefficients
   float coeff_grid_power;
   float coeff_load_power;
-  float coeff_ups_power;
-  float coeff_smartload;
+  float coeff_gen_power;
 };
 
 static bool settings_registers_valid(const CustomRegisters &regs) {
   const uint16_t block1[] = { regs.grid_buy_daily, regs.grid_sell_daily, regs.load_daily,
     regs.dc_temp, regs.ac_temp, regs.pv_daily };
-  const uint16_t block2[] = { regs.grid_power, regs.ups_power, regs.load_power, regs.battery_temp,
+  const uint16_t block2[] = { regs.grid_power, regs.gen_power, regs.load_power, regs.battery_temp,
     regs.battery_voltage, regs.battery_soc, regs.pv1_power, regs.pv2_power, regs.pv3_power,
     regs.battery_power, regs.grid_status, regs.smartload };
   uint16_t min1 = block1[0], max1 = block1[0], min2 = block2[0], max2 = block2[0];
@@ -238,11 +238,10 @@ static bool settings_registers_valid(const CustomRegisters &regs) {
     regs.response_window >= 50 && regs.response_window <= 60000 && regs.frame_timeout >= 50 &&
     regs.frame_timeout <= 60000 && regs.block_interval >= 50 && regs.block_interval <= 60000;
   const bool coefficients = isfinite(regs.coeff_grid_power) && isfinite(regs.coeff_load_power) &&
-    isfinite(regs.coeff_ups_power) && isfinite(regs.coeff_smartload) &&
+    isfinite(regs.coeff_gen_power) && regs.smartload_bit <= 15 &&
     regs.coeff_grid_power >= -100.0f && regs.coeff_grid_power <= 100.0f &&
     regs.coeff_load_power >= -100.0f && regs.coeff_load_power <= 100.0f &&
-    regs.coeff_ups_power >= -100.0f && regs.coeff_ups_power <= 100.0f &&
-    regs.coeff_smartload >= -100.0f && regs.coeff_smartload <= 100.0f;
+    regs.coeff_gen_power >= -100.0f && regs.coeff_gen_power <= 100.0f;
   return timeouts && coefficients && uint32_t(max1) - min1 + 1 <= 125 && uint32_t(max2) - min2 + 1 <= 125;
 }
 
@@ -265,11 +264,12 @@ static bool settings_save_registers(const CustomRegisters &regs) {
   preferences.putUShort("reg_grid_buy", regs.grid_buy_daily);
   preferences.putUShort("reg_grid_sell", regs.grid_sell_daily);
   preferences.putUShort("reg_load_p", regs.load_power);
-  preferences.putUShort("reg_ups_p", regs.ups_power);
+  preferences.putUShort("reg_gen_p", regs.gen_power);
   preferences.putUShort("reg_load_d", regs.load_daily);
   preferences.putUShort("reg_dc_t", regs.dc_temp);
   preferences.putUShort("reg_ac_t", regs.ac_temp);
   preferences.putUShort("reg_smart", regs.smartload);
+  preferences.putUShort("smart_bit", regs.smartload_bit);
   preferences.putUInt("reg_conn_t", regs.connect_timeout);
   preferences.putUInt("reg_resp_t", regs.response_window);
   preferences.putUInt("reg_frame_t", regs.frame_timeout);
@@ -277,10 +277,9 @@ static bool settings_save_registers(const CustomRegisters &regs) {
   // Coefficients
   preferences.putFloat("coeff_grid", regs.coeff_grid_power);
   preferences.putFloat("coeff_load", regs.coeff_load_power);
-  preferences.putFloat("coeff_ups", regs.coeff_ups_power);
-  preferences.putFloat("coeff_smart", regs.coeff_smartload);
-  const bool ok = preferences.putBytes("regs_v2", &regs, sizeof(regs)) == sizeof(regs) &&
-    preferences.getBytes("regs_v2", &verify, sizeof(verify)) == sizeof(verify) &&
+  preferences.putFloat("coeff_gen", regs.coeff_gen_power);
+  const bool ok = preferences.putBytes("regs_v3", &regs, sizeof(regs)) == sizeof(regs) &&
+    preferences.getBytes("regs_v3", &verify, sizeof(verify)) == sizeof(verify) &&
     memcmp(&regs, &verify, sizeof(regs)) == 0;
   preferences.end();
   return ok;
@@ -289,8 +288,8 @@ static bool settings_save_registers(const CustomRegisters &regs) {
 static CustomRegisters settings_load_registers() {
   CustomRegisters regs;
   preferences.begin("deye-ui", true);
-  if (preferences.getBytesLength("regs_v2") == sizeof(regs) &&
-      preferences.getBytes("regs_v2", &regs, sizeof(regs)) == sizeof(regs) && settings_registers_valid(regs)) {
+  if (preferences.getBytesLength("regs_v3") == sizeof(regs) &&
+      preferences.getBytes("regs_v3", &regs, sizeof(regs)) == sizeof(regs) && settings_registers_valid(regs)) {
     preferences.end();
     return regs;
   }
@@ -308,11 +307,12 @@ static CustomRegisters settings_load_registers() {
   regs.grid_buy_daily = preferences.getUShort("reg_grid_buy", 76);
   regs.grid_sell_daily = preferences.getUShort("reg_grid_sell", 77);
   regs.load_power = preferences.getUShort("reg_load_p", 178);
-  regs.ups_power = preferences.getUShort("reg_ups_p", 172);
+  regs.gen_power = preferences.getUShort("reg_gen_p", 166);
   regs.load_daily = preferences.getUShort("reg_load_d", 84);
   regs.dc_temp = preferences.getUShort("reg_dc_t", 90);
   regs.ac_temp = preferences.getUShort("reg_ac_t", 91);
   regs.smartload = preferences.getUShort("reg_smart", 195);
+  regs.smartload_bit = preferences.getUShort("smart_bit", 0);
   regs.connect_timeout = preferences.getUInt("reg_conn_t", 10000);
   regs.response_window = preferences.getUInt("reg_resp_t", 10000);
   regs.frame_timeout = preferences.getUInt("reg_frame_t", 7000);
@@ -320,13 +320,12 @@ static CustomRegisters settings_load_registers() {
   // Coefficients
   regs.coeff_grid_power = preferences.getFloat("coeff_grid", 1.0f);
   regs.coeff_load_power = preferences.getFloat("coeff_load", 1.0f);
-  regs.coeff_ups_power = preferences.getFloat("coeff_ups", 1.0f);
-  regs.coeff_smartload = preferences.getFloat("coeff_smart", 1.0f);
+  regs.coeff_gen_power = preferences.getFloat("coeff_gen", -1.0f);
   
   preferences.end();
   if (!settings_registers_valid(regs)) {
-    return CustomRegisters{186,187,188,108,184,183,190,182,169,194,76,77,178,172,84,90,91,195,
-      10000,10000,7000,3000,1.0f,1.0f,1.0f,1.0f};
+    return CustomRegisters{186,187,188,108,184,183,190,182,169,194,76,77,178,166,84,90,91,195,0,
+      10000,10000,7000,3000,1.0f,1.0f,-1.0f};
   }
   return regs;
 }

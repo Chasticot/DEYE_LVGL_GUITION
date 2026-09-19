@@ -1024,7 +1024,7 @@ static void ui_main_update() {
                                 LV_PART_MAIN);
   } else {
     // Mode GEN MO : afficher la puissance
-    snprintf(smart_text, sizeof(smart_text), "GEN : %d W", data.ups_power);
+    snprintf(smart_text, sizeof(smart_text), "GEN : %d W", data.gen_power);
     lv_obj_set_style_text_color(label_smartload, ui_main_theme_color(theme.accent), LV_PART_MAIN);
   }
   lv_label_set_text(label_smartload, smart_text);

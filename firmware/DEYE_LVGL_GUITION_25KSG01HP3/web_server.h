@@ -63,10 +63,10 @@ static const WebRegisterField web_register_fields[] = {
   WEB_REG(pv1_power, 0), WEB_REG(pv2_power, 0), WEB_REG(pv3_power, 0), WEB_REG(pv4_power, 0), WEB_REG(pv_daily, 0),
   WEB_REG(battery_soc, 0), WEB_REG(battery_voltage, 0), WEB_REG(battery_power, 0), WEB_REG(battery_temp, 0),
   WEB_REG(grid_power, 0), WEB_REG(grid_status, 0), WEB_REG(grid_buy_daily, 0), WEB_REG(grid_sell_daily, 0),
-  WEB_REG(load_power, 0), WEB_REG(ups_power, 0), WEB_REG(load_daily, 0), WEB_REG(dc_temp, 0),
-  WEB_REG(ac_temp, 0), WEB_REG(smartload, 0), WEB_REG(connect_timeout, 1), WEB_REG(response_window, 1),
+  WEB_REG(load_power, 0), WEB_REG(gen_power, 0), WEB_REG(load_daily, 0), WEB_REG(dc_temp, 0),
+  WEB_REG(ac_temp, 0), WEB_REG(smartload, 0), WEB_REG(smartload_bit, 3), WEB_REG(connect_timeout, 1), WEB_REG(response_window, 1),
   WEB_REG(frame_timeout, 1), WEB_REG(block_interval, 1), WEB_REG(coeff_grid_power, 2),
-  WEB_REG(coeff_load_power, 2), WEB_REG(coeff_ups_power, 2), WEB_REG(coeff_smartload, 2)
+  WEB_REG(coeff_load_power, 2), WEB_REG(coeff_gen_power, 2)
 };
 #undef WEB_REG
 
@@ -209,7 +209,7 @@ static bool web_apply_config_json(const String &json) {
     if (!web_json_number(json, field.name, value) || !isfinite(value)) return false;
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&regs) + field.offset;
     if (field.kind == 2) *reinterpret_cast<float *>(ptr) = float(value);
-    else if (value < 0 || value > (field.kind == 1 ? 60000 : 65535) || floor(value) != value) return false;
+    else if (value < 0 || value > (field.kind == 1 ? 60000 : field.kind == 3 ? 15 : 65535) || floor(value) != value) return false;
     else if (field.kind == 1) *reinterpret_cast<uint32_t *>(ptr) = uint32_t(value);
     else *reinterpret_cast<uint16_t *>(ptr) = uint16_t(value);
   }
@@ -514,8 +514,8 @@ static void web_server_begin() {
         *reinterpret_cast<float *>(ptr) = value;
       } else {
         uint32_t value;
-        if (!web_number(input, field.kind == 1 ? 60000 : 65535, value)) {
-          web_reply(false, "Registre ou temporisation invalide.");
+        if (!web_number(input, field.kind == 1 ? 60000 : field.kind == 3 ? 15 : 65535, value)) {
+          web_reply(false, "Registre, bit ou temporisation invalide.");
           return;
         }
         if (field.kind == 1) *reinterpret_cast<uint32_t *>(ptr) = value;
