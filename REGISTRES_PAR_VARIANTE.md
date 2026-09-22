@@ -1,34 +1,34 @@
 # Registres Deye par variante
 
-Ce tableau compare les **adresses configurées par défaut dans le code**, pas les éventuelles valeurs personnalisées enregistrées dans l'écran. *L'italique signifie que l'adresse reste à confirmer sur le modèle concerné.* Le tiret signifie que la fonction n'est pas prévue dans cette variante.
+Ce tableau compare les **adresses configurées par défaut dans le code**, pas les éventuelles valeurs personnalisées enregistrées dans l'écran. *L'italique signifie que la valeur n'a pas encore été validée en conditions réelles, ou que son usage est particulier (PV3 du SG05LP3).* Le tiret signifie que la fonction n'est pas prévue dans cette variante.
 
 | Mesure ou fonction | 12K-SG02LP1 | 12K-SG05LP3 | 25K-SG01HP3 | AI-W5.1 ESS¹ | VETRONIC² |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Puissance PV1 | 186 | 672 | *672* | *672* | 186 |
-| Puissance PV2 | 187 | 673 | *673* | *673* | 187 |
-| Puissance PV3 | 188 | *674*³ | *674* | — | 188 |
-| Puissance PV4 | — | — | *675* | — | — |
-| Production PV du jour | 108 | *529* | *529* | *529* | 108 |
-| Batterie : SOC | 184 | 588 | *588* | *588* | 184 |
-| Batterie : tension | 183 | 587 | *587* | *587* | 183 |
-| Batterie : puissance | 190 | 590 | *590* | *590* | 190 |
-| Batterie : température | 182 | *586* | *586* | *586* | 182 |
-| Réseau : puissance | 169 | *625* | *625* | *607* | 169 |
-| Réseau : état | 194 | *552* | *552* | *552* | 194 |
-| Achat réseau du jour | 76 | *520* | *520* | *520* | 76 |
-| Vente réseau du jour | 77 | *521* | *521* | *521* | 77 |
-| Consommation : puissance | 178 | 653 | *653* | *637* | 178 |
-| Consommation du jour | 84 | *526* | *526* | *526* | 84 |
-| Puissance du port GEN | 166 | *667* | *667* | — | 166 |
-| Température DC | 90 | *540* | *540* | *540* | 90 |
-| Température AC | 91 | *541* | *541* | *541* | 91 |
-| SmartLoad : état | 195, bit 0 | *552, bit 3* | *552, bit 3* | — | 195, bit 0 |
+| Puissance PV1 | 186 | 672 | 672 | *672* | 186 |
+| Puissance PV2 | 187 | 673 | 673 | *673* | 187 |
+| Puissance PV3 | 188 | *674*³ | 674 | — | 188 |
+| Puissance PV4 | — | — | 675 | — | — |
+| Production PV du jour | 108 | 529 | 529 | *529* | 108 |
+| Batterie : SOC | 184 | 588 | 588 | *588* | 184 |
+| Batterie : tension | 183 | 587 | 587 | *587* | 183 |
+| Batterie : puissance | 190 | 590 | 590 | *590* | 190 |
+| Batterie : température | 182 | 586 | 586 | *586* | 182 |
+| Réseau : puissance | 169 | 625 | 625 | *607* | 169 |
+| Réseau : état | 194 | 552 | 552 | *552* | 194 |
+| Achat réseau du jour | 76 | 520 | 520 | *520* | 76 |
+| Vente réseau du jour | 77 | 521 | 521 | *521* | 77 |
+| Consommation : puissance | 178 | 653 | 653 | *637* | 178 |
+| Consommation du jour | 84 | 526 | 526 | *526* | 84 |
+| Puissance du port GEN | 166 | 667 | 667 | — | 166 |
+| Température DC | 90 | 540 | 540 | *540* | 90 |
+| Température AC | 91 | 541 | 541 | *541* | 91 |
+| SmartLoad : état | 195, bit 0 | 552, bit 3 | 552, bit 3 | — | 195, bit 0 |
 | Charge VE : mode | 489⁴ | Désactivé | Désactivé | Désactivé | 489⁴ |
 | Charge VE : puissance maximale | 490⁴ | Désactivé | Désactivé | Désactivé | 490⁴ |
 
-**Niveau de validation.** Pour le 12K-SG05LP3, les adresses PV1 (672), PV2 (673), tension batterie (587), SOC (588), puissance batterie (590) et puissance de consommation (653) sont recoupées avec un [relevé réalisé sur un SUN-12K-SG05LP3-EU-SM2](https://www.photovoltaikforum.com/thread/255900-der-deye-sun-12k-sg05lp3-eu-sm2-mit-modbus-gateway-auslesen-so-funktioniert-es-b/). Le relevé lit à partir de R580 : les positions des données correspondent à ces six adresses. Cela confirme les **adresses**, pas à lui seul tous les coefficients ni les signes de puissance. Les autres valeurs SG05 restent en italique, notamment le réseau, GEN et SmartLoad.
+**Validation en conditions réelles.** Selon le retour du mainteneur, les projets 12K-SG02LP1, 12K-SG05LP3, 25K-SG01HP3 et VETRONIC fonctionnent sur de vrais onduleurs. Les registres du projet 25K-SG01HP3 fonctionnent aussi sur un **20K-SG01HP3**. Les valeurs de ces quatre variantes sont donc affichées sans italique ; cela décrit le fonctionnement constaté du projet, sans prétendre qu'un essai indépendant a été réalisé pour chaque registre et chaque révision matérielle. Le [manuel Deye couvre les puissances 5 à 25 kW de la famille SG01HP3](https://www.deyeinverter.com/deyeinverter/2024/02/03/rand/1391/instructions_sun-5-25k-sg01hp3-eu-am2_240203_en.pdf).
 
-Pour le profil SG01HP3, **l'utilisateur confirme que les registres du projet 25K fonctionnent avec un SUN-20K-SG01HP3**. Le [manuel Deye regroupe les puissances 5 à 25 kW de cette famille](https://www.deyeinverter.com/deyeinverter/2024/02/03/rand/1391/instructions_sun-5-25k-sg01hp3-eu-am2_240203_en.pdf), ce qui appuie la compatibilité, mais il ne démontre pas chaque adresse. Le détail registre par registre et le fonctionnement sur un **25K** n'ont pas été testés ici : les valeurs de cette colonne restent donc en italique. Pour l'AI-W5.1 ESS, la cartographie est explicitement provisoire : **aucune adresse n'est encore confirmée pour ce profil**. Les adresses non italiques du 12K-SG02LP1 correspondent au profil indiqué comme validé dans le code ; la variante VETRONIC reprend exactement cette cartographie Deye.
+**AI-W5.1 ESS n'a pas encore été testé en réel.** Toutes ses adresses restent en italique.
 
 ¹ Le projet AI-W5.1 ESS existe actuellement en local, mais son firmware n'est pas encore présent dans ce dépôt GitHub. Cette colonne documente son état de développement sans annoncer une version publiée.
 
