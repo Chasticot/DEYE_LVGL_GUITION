@@ -63,6 +63,10 @@ Cette méthode est destinée aux personnes qui souhaitent modifier ou recompiler
 
 Vérifiez toujours le modèle de l'onduleur et le brochage exact de l'écran avant le flash.
 
+## Comparaison des registres
+
+Consultez le [tableau comparatif des registres par variante](REGISTRES_PAR_VARIANTE.md). Les adresses qui restent à confirmer y sont indiquées en italique.
+
 ## Licence
 
 Projet distribué sous licence MIT. Consultez le fichier [`LICENSE`](LICENSE).
