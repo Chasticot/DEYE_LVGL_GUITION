@@ -40,9 +40,36 @@ Cette méthode est destinée aux personnes qui souhaitent modifier ou recompiler
 1. Ouvrez le dossier de la variante voulue dans `firmware/`.
 2. Ouvrez le fichier `.ino` portant exactement le même nom que ce dossier.
 3. Installez le support ESP32 pour Arduino ainsi que les bibliothèques `lvgl` 8.4.0 et `Arduino_GFX` 1.4.7.
-4. Sélectionnez une carte ESP32-S3 correspondant à l'écran.
-5. Utilisez notamment `USB CDC On Boot = Enabled`, `PSRAM = OPI PSRAM` et une table de partitions compatible OTA.
-6. Compilez puis téléversez par USB.
+4. Installez la version **2.0.17** du paquet `esp32 by Espressif Systems`.
+5. Sélectionnez la carte `ESP32S3 Dev Module`.
+6. Appliquez les réglages du menu **Outils** indiqués ci-dessous.
+7. Compilez puis téléversez par USB.
+
+### Configuration du menu Outils (ESP32 2.0.17)
+
+| Option | Valeur |
+| --- | --- |
+| Board | `ESP32S3 Dev Module` |
+| Upload Speed | `921600` |
+| USB Mode | `Hardware CDC and JTAG` |
+| USB CDC On Boot | `Enabled` |
+| USB Firmware MSC On Boot | `Disabled` |
+| USB DFU On Boot | `Disabled` |
+| Upload Mode | `UART0 / Hardware CDC` |
+| CPU Frequency | `240MHz (WiFi)` |
+| Flash Mode | `QIO 80MHz` |
+| Flash Size | `16MB (128Mb)` |
+| Partition Scheme | `16M Flash (3MB APP/9.9MB FATFS)` |
+| Core Debug Level | `None` |
+| PSRAM | `OPI PSRAM` |
+| Arduino Runs On | `Core 1` |
+| Events Run On | `Core 1` |
+| Erase All Flash Before Sketch Upload | `Disabled` |
+| JTAG Adapter | `Disabled` |
+
+La flash de 16 MB et la PSRAM de 8 MB utilisent deux interfaces distinctes : conservez **QIO 80 MHz pour la flash** et **OPI PSRAM pour la PSRAM**. Le schéma de partition ci-dessus fournit deux emplacements applicatifs de 3 MB et reste donc compatible avec les mises à jour OTA.
+
+Après un changement de schéma de partition, effectuez le premier téléversement par USB. Laissez l'effacement complet désactivé si vous souhaitez conserver les paramètres Wi-Fi et les autres préférences déjà enregistrées. Si le téléversement échoue à `921600`, réduisez uniquement `Upload Speed` à `460800` ou `115200`.
 
 ## Fonctions principales
 
