@@ -2,12 +2,13 @@
 
 Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP32-S3 480 × 480, avec configuration depuis l'écran ou un navigateur.
 
-**Deux versions : V3 et VEtronic.** Dans la V3, choisissez votre modèle Deye dans un menu : le programme adapte les registres, les blocs lus et les conversions. Il n'y a pas de binaire différent pour chaque onduleur.
+**V3 générale, VEtronic V3 pour 12K-SG02LP1, et ancienne VEtronic.** Dans la V3 générale, choisissez votre modèle Deye dans un menu. VEtronic V3 réunit les menus V3 et le pilotage de la WB01 pour le 12K-SG02LP1.
 
 ## Télécharger et installer
 
 | Votre besoin | Téléchargement Windows | Firmware pour mise à jour OTA |
 | --- | --- | --- |
+| **VEtronic V3 — 4.3.4-vetronic-v3** : 12K-SG02LP1 + WB01, menus V3, SOC, relais, veille et tarifs | [Pack VEtronic V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_Installation_Windows.zip) | [VEtronic V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_OTA.bin) |
 | **V3 — 4.3.3** : choix du modèle Deye, dont AI-W5.1 ESS P1 | [Pack V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_Installation_Windows.zip) | [V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_OTA.bin) |
 | **VEtronic — 4.2-vetronic-32A** : pilotage d'une passerelle VEtronic WB01 compatible | [Pack VEtronic complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_Installation_Windows.zip) | [VEtronic OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_OTA.bin) |
 
@@ -15,7 +16,7 @@ Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP3
 2. Branchez l'écran avec un câble USB de données.
 3. Double-cliquez sur **INSTALLER.bat**. Si un seul CH340 est détecté, son port COM est sélectionné automatiquement. Sinon, choisissez le port dans la liste.
 4. Suivez les indications et attendez la réussite de l'installation.
-5. Configurez le Wi-Fi et le logger. Dans la V3, sélectionnez le modèle Deye puis enregistrez.
+5. Configurez le Wi-Fi et le logger. Dans la V3 générale, sélectionnez le modèle Deye puis enregistrez. Dans VEtronic V3, activez VE TRONIC / WB01 et configurez l'IP de sa passerelle ESP32.
 
 Aucun Arduino IDE ni Python n'est nécessaire pour cette installation. Les packs contiennent `esptool.exe`, le lanceur BAT, son script PowerShell, les quatre binaires nécessaires et une notice. Le guide et le récapitulatif PDF sont aussi inclus dans le pack V3.
 
@@ -26,18 +27,27 @@ Aucun Arduino IDE ni Python n'est nécessaire pour cette installation. Les packs
 - [Guide utilisateur V3](docs/GUIDE_UTILISATEUR_V3.md) — [PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) : première mise en route, IP du logger, menus, mesures, sauvegardes et OTA.
 - [Améliorations depuis les versions de base, V2 et V3](docs/RECAP_UTILISATEURS_V3.md) — [PDF](docs/pdf/RECAP_UTILISATEURS_V3.pdf).
 - [Guide VEtronic et conditions d'utilisation](docs/GUIDE_VETRONIC.md).
+- [Guide VEtronic V3 pour 12K-SG02LP1](docs/GUIDE_VETRONIC_V3.md) et [validation](docs/VALIDATION_VETRONIC_V3.md).
 - [Compiler avec VS Code et PlatformIO](docs/COMPILATION_PLATFORMIO.md).
 - [Compiler avec Arduino IDE](docs/COMPILATION_ARDUINO.md).
 - [Modèles, registres et limites connues](docs/PROFILS_ET_REGISTRES.md).
 - [Historique des changements](CHANGELOG.md) et [validation de la publication](docs/VALIDATION.md).
 
-## Nouveautés V3 4.3.3
+## Nouveautés VEtronic V3
+
+La version **4.3.4-vetronic-v3** réunit les fonctions V3 et le pilotage WB01 : charge manuelle jusqu'à 32 A selon le plafond de la passerelle, solaire, protection SOC, relais, veille, tarifs optionnels et commandes depuis l'écran ou son Web.
+
+Le bouton **Rendre la main à la borne** laisse la WB01 autonome et annule la reprise tarifaire de l'écran. Il reste possible de reprendre le pilotage ensuite. Les tarifs concernent les charges manuelles lancées depuis l'écran ou son Web pendant ce démarrage. La régulation solaire reste assurée par la passerelle.
+
+Compilation et tests logiciels réussis ; validation sur le matériel encore nécessaire. Cette variante est dédiée au **12K-SG02LP1**, sans sélecteur de modèles. La release contient le firmware de l'écran ; le firmware de la passerelle n'est pas inclus.
+
+## Nouveautés V3 générale 4.3.3
 
 Le profil **AI-W5.1 ESS (P1)** utilise les registres monophasés confirmés par retour utilisateur le 2 octobre 2026 : blocs R76–108 et R169–194, SOC R184, batterie R190, PV R186/R187 et consommation R178. Les anciennes adresses de ce profil sont migrées automatiquement ; les réglages des autres modèles sont conservés. Ce retour ne couvre pas toutes les révisions AI-W5.1 ni les variantes P3.
 
 La V3 reprend les améliorations V2 : menus regroupés, choix des sources PV/GEN, réglages des coefficients, tarifs et heures creuses, relais configurable, veille horaire et sauvegardes. Elle ajoute la sélection du modèle et ses réglages propres. GEN journalier utilise R62 en LP1 et R536 en LP3/HP3.
 
-La version VEtronic est une variante distincte. Elle conserve son numéro de version et n'intègre pas le sélecteur de modèles V3. Elle pilote une passerelle compatible via HTTP ; elle ne se connecte pas directement à la WB01.
+L'ancienne VEtronic 4.2 reste disponible dans la release v4.3.3. Les variantes VEtronic pilotent une passerelle compatible via HTTP.
 
 ## Matériel et compatibilité
 
@@ -52,10 +62,11 @@ La liste propose 12 profils sélectionnables. SG06LP1 est affiché mais indispon
 ```text
 firmware/DEYE_V3/          Sources V3 + entrée Arduino IDE
 firmware/DEYE_VETRONIC/    Sources VEtronic + entrée Arduino IDE
+firmware/DEYE_VETRONIC_V3/ Sources VEtronic V3 pour 12K-SG02LP1 + entrée Arduino IDE
 docs/                     Guides, PDF et références de registres
 installation/             Sources de l'installateur Windows
 tools/                    Préparation Arduino, assemblage et vérification des packs
-platformio.ini            Deux environnements, dépendances avec versions fixées
+platformio.ini            Trois environnements, dépendances avec versions fixées
 ```
 
 Les binaires et l'exécutable Espressif sont distribués dans les **[Releases](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases)**. Le ZIP proposé par **Code > Download ZIP** contient les sources : pour installer sans compiler, utilisez les packs de la release.

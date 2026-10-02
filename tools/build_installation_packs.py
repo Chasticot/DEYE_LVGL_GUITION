@@ -48,6 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--esptool', required=True, type=Path)
     parser.add_argument('--platformio-home', type=Path, default=Path.home() / '.platformio')
+    parser.add_argument('--variant', action='append', choices=['V3', 'VETRONIC', 'VETRONIC_V3'])
     args = parser.parse_args()
     packages = args.platformio_home / 'packages'
     boot_app = packages / 'framework-arduinoespressif32/tools/partitions/boot_app0.bin'
@@ -63,8 +64,10 @@ def main():
         raise ValueError('Taille boot_app0.bin inattendue')
     OUTPUT.mkdir(exist_ok=True)
     release_files = []
-    for variant, env in [('V3', '12KSG02LP1_v3'), ('VETRONIC', 'deye_vetronic')]:
-        firmware_dir = SRC / 'firmware' / ('DEYE_V3' if variant == 'V3' else 'DEYE_VETRONIC')
+    for variant, env, name in [('V3', '12KSG02LP1_v3', 'DEYE_V3'), ('VETRONIC', 'deye_vetronic', 'DEYE_VETRONIC'), ('VETRONIC_V3', 'vetronic_v3', 'DEYE_VETRONIC_V3')]:
+        if args.variant and variant not in args.variant:
+            continue
+        firmware_dir = SRC / 'firmware' / name
         config = (firmware_dir / 'config.h').read_text(encoding='utf-8-sig')
         version = re.search(r'^#define FIRMWARE_VERSION "([^"]+)"', config, re.M)[1]
         build = PROJECT / '.pio' / 'build' / env
@@ -75,7 +78,8 @@ def main():
             raise ValueError('Bootloader trop grand')
         if version.encode() not in (build / 'firmware.bin').read_bytes():
             raise ValueError(f'Version {version} absente du binaire : recompiler {env}')
-        folder = OUTPUT / f'DEYE_{variant}_{version}_Installation_Windows'
+        prefix = f"DEYE_12KSG02LP1_VETRONIC_V3_{version.split('-')[0]}" if variant == 'VETRONIC_V3' else f'DEYE_{variant}_{version}'
+        folder = OUTPUT / f'{prefix}_Installation_Windows'
         folder.mkdir(exist_ok=True)
         for name in ('firmware.bin', 'bootloader.bin', 'partitions.bin'):
             shutil.copy2(build / name, folder / name)
@@ -88,6 +92,8 @@ def main():
         extra = ('Le menu Modèle permet de choisir votre onduleur. Consulter le guide PDF et le récapitulatif inclus.'
                  if variant == 'V3' else
                  'Cette variante intègre le pilotage VEtronic (limite 32 A). Elle reste distincte de la V3 et ne possède pas son sélecteur de modèles. Vérifier les paramètres de la borne avant d’activer son pilotage.')
+        if variant == 'VETRONIC_V3':
+            extra = 'VEtronic V3 pour 12K-SG02LP1 : menus V3, WB01, relais, veille et tarifs. Le bouton Rendre la main a la borne la laisse autonome. Configurer l’IP de sa passerelle ESP32. Guide Markdown inclus : GUIDE_VETRONIC_V3.md.'
         notice = f'''INSTALLATION DEYE MONITOR — {variant} — {version}
 
 Pour Windows 10/11 avec Windows PowerShell 5.1, sans Arduino IDE ni Python à installer.
@@ -138,29 +144,34 @@ Cette commande contrôle les fichiers sans ouvrir de port série.
 '''
         (folder / 'LISEZ_MOI.txt').write_text(notice, encoding='utf-8-sig', newline='\r\n')
         if variant == 'V3':
-            for name in ('GUIDE_UTILISATEUR_V3.pdf', 'RECAP_UTILISATEURS_V3.pdf'):
+            for name in (() if args.variant and 'V3' not in args.variant else ('GUIDE_UTILISATEUR_V3.pdf', 'RECAP_UTILISATEURS_V3.pdf')):
                 shutil.copy2(SRC / 'docs/pdf' / name, folder / name)
+        if variant == 'VETRONIC_V3':
+            shutil.copy2(SRC / 'docs/GUIDE_VETRONIC_V3.md', folder / 'GUIDE_VETRONIC_V3.md')
+            (folder / 'images').mkdir(exist_ok=True)
+            shutil.copy2(SRC / 'docs/images/vetronic-v3.png', folder / 'images/vetronic-v3.png')
         manifest = {'variant': variant, 'version': version, 'environment': env,
                     'chip': 'esp32s3', 'flash_size': '4MB', 'esptool_version': '4.5.1',
-                    'files': [{'name': p.name, 'bytes': p.stat().st_size, 'sha256': sha256(p)}
-                              for p in sorted(folder.iterdir()) if p.is_file() and p.name != 'manifest.json']}
+                    'files': [{'name': p.relative_to(folder).as_posix(), 'bytes': p.stat().st_size, 'sha256': sha256(p)}
+                              for p in sorted(folder.rglob("*")) if p.is_file() and p.name != 'manifest.json']}
         (folder / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         archive = folder.parent / (folder.name + '.zip')
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as z:
-            for file in sorted(folder.iterdir()):
-                z.write(file, f'{folder.name}/{file.name}')
+            for file in sorted(folder.rglob("*")):
+                if file.is_file():
+                    z.write(file, f'{folder.name}/{file.relative_to(folder).as_posix()}')
         with zipfile.ZipFile(archive) as z:
             if z.testzip() is not None:
                 raise ValueError(f'Archive corrompue : {archive}')
         print(f'{archive.name}: {archive.stat().st_size} octets; SHA256 {sha256(archive)}')
-        ota = OUTPUT / f'DEYE_{variant}_{version}_OTA.bin'
+        ota = OUTPUT / f'{prefix}_OTA.bin'
         shutil.copy2(build / 'firmware.bin', ota)
         release_files.extend([archive, ota])
-    for name in ('GUIDE_UTILISATEUR_V3.pdf', 'RECAP_UTILISATEURS_V3.pdf'):
+    for name in (() if args.variant and 'V3' not in args.variant else ('GUIDE_UTILISATEUR_V3.pdf', 'RECAP_UTILISATEURS_V3.pdf')):
         target = OUTPUT / name
         shutil.copy2(SRC / 'docs/pdf' / name, target)
         release_files.append(target)
-    (OUTPUT / 'SHA256SUMS.txt').write_text(''.join(f'{sha256(p)}  {p.name}\n' for p in release_files), encoding='ascii')
+    (OUTPUT / ('SHA256SUMS-VETRONIC_V3.txt' if args.variant == ['VETRONIC_V3'] else 'SHA256SUMS.txt')).write_text(''.join(f'{sha256(p)}  {p.name}\n' for p in release_files), encoding='ascii')
 
 
 if __name__ == '__main__':

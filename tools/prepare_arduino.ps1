@@ -1,10 +1,10 @@
 $ErrorActionPreference = 'Stop'
 try {
     $root = Split-Path -Parent $PSScriptRoot
-    foreach ($name in @('DEYE_V3', 'DEYE_VETRONIC')) {
+    foreach ($name in @('DEYE_V3', 'DEYE_VETRONIC', 'DEYE_VETRONIC_V3')) {
         $sketch = (Join-Path $root "firmware/$name").Replace('\', '/')
         $options = '-I"' + $sketch + '" -include "' + $sketch + '/lv_conf.h"'
-        if ($name -eq 'DEYE_V3') { $options += ' -std=gnu++17' }
+        if ($name -in @('DEYE_V3', 'DEYE_VETRONIC_V3')) { $options += ' -std=gnu++17' }
         [System.IO.File]::WriteAllText((Join-Path $sketch 'build_opt.h'), $options + "`n", (New-Object System.Text.UTF8Encoding($false)))
         Write-Host "Configuration Arduino preparee : $name"
     }

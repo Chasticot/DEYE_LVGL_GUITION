@@ -1,5 +1,17 @@
 # Historique
 
+## Publication v4.3.4-vetronic-v3 — 3 octobre 2026
+
+- Variante VEtronic V3 dédiée au Deye 12K-SG02LP1 et à la WB01 avec passerelle ESP32 compatible.
+- Menus V3, production PV/GEN, relais GPIO40, veille horaire, tarifs, sauvegardes et OTA.
+- Arrêt, charge manuelle 6–32 A selon le plafond annoncé par la passerelle, solaire et **Rendre la main à la borne**.
+- Retour à la borne autonome avec possibilité de reprendre le pilotage ; abandon de toute reprise tarifaire locale lors de cette action.
+- Protection SOC solaire réglable et vérifiée par relecture ; puissance estimée à partir du courant mesuré, mesures périmées signalées.
+- Commandes WB01 disponibles sur le Web de l'écran, avec authentification et jeton CSRF existants.
+- Tarifs optionnels appliqués aux charges manuelles lancées localement pendant ce démarrage, abandon après modification externe détectée ou résultat incertain.
+- Blocage des anciennes commandes VE Deye LoRa dans cette édition.
+- Guide dédié, pack Windows et binaire OTA ; compilation et tests logiciels validés. Vérification matérielle encore à effectuer.
+
 ## Publication v4.3.3 — 2 octobre 2026
 
 - Dépôt réorganisé autour de deux variantes : V3 et VEtronic. Historique conservé et ancien état repéré par un tag d'archive.

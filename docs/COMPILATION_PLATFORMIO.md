@@ -14,6 +14,7 @@
 | --- | --- | --- |
 | V3 (par défaut) | `12KSG02LP1_v3` | `firmware/DEYE_V3/` |
 | VEtronic | `deye_vetronic` | `firmware/DEYE_VETRONIC/` |
+| VEtronic V3 pour 12K-SG02LP1 | `vetronic_v3` | `firmware/DEYE_VETRONIC_V3/` |
 
 Dans l'icône PlatformIO, ouvrir **Project Tasks > environnement > General > Build**. **Build** compile seulement. **Upload** installe le firmware sur l'écran USB sélectionné. **Monitor** ouvre le moniteur série à 115200 bauds ; le fermer avant un téléversement ou l'utilisation du pack Windows.
 
@@ -24,6 +25,7 @@ Dans un terminal PlatformIO, à la racine du dépôt :
 ```powershell
 pio run -e 12KSG02LP1_v3
 pio run -e deye_vetronic
+pio run -e vetronic_v3
 ```
 
 Les applications compilées sont `.pio/build/12KSG02LP1_v3/firmware.bin` et `.pio/build/deye_vetronic/firmware.bin`. Pour installer par USB, en remplaçant COM5 par le port réel :
@@ -40,7 +42,7 @@ Pour VEtronic, remplacer le nom de l'environnement. Le téléversement écrit l'
 
 La carte de compilation est `esp32-s3-devkitc-1` avec PSRAM OPI et mémoire Arduino `qio_opi`. Le brochage du véritable écran se trouve dans `main.cpp` et `config.h`. Flash logique 4 Mo, partition `min_spiffs.csv`, deux emplacements OTA de 1 966 080 octets. Cette configuration utilise les quatre premiers Mo même si l'écran possède davantage de flash physique. Ne pas mélanger les binaires avec une autre table de partitions.
 
-La V3 utilise C++17. Les options et l'inclusion de `lv_conf.h` sont fournies automatiquement ; `PREPARER_ARDUINO.bat` n'est pas nécessaire pour PlatformIO.
+La V3 générale et VEtronic V3 utilisent C++17. Les options et l'inclusion de `lv_conf.h` sont fournies automatiquement ; `PREPARER_ARDUINO.bat` n'est pas nécessaire pour PlatformIO.
 
 ## Tests et création des packs
 
@@ -50,7 +52,7 @@ Après compilation de la V3, les tests hôtes utilisent Zig 0.13.0 :
 powershell -ExecutionPolicy Bypass -File firmware/DEYE_V3/tests/run_checks.ps1 -Zig C:/outils/zig/zig.exe
 ```
 
-Pour assembler les deux packs Windows après compilation des deux environnements, fournir l'exécutable Windows esptool 4.5.1 (celui du pack publié convient) :
+Pour assembler les trois packs Windows après compilation des trois environnements, fournir l'exécutable Windows esptool 4.5.1 (celui du pack publié convient) :
 
 ```powershell
 python tools/build_installation_packs.py --esptool C:/outils/esptool.exe

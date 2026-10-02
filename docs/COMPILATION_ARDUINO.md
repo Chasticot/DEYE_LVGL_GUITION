@@ -15,7 +15,7 @@ La procédure d'ajout du support ESP32 est décrite dans la [documentation Espre
 
 1. Extraire le dépôt dans un dossier du PC.
 2. À sa racine, double-cliquer sur **PREPARER_ARDUINO.bat**. Ce script crée un `build_opt.h` dans chaque variante pour que toutes les bibliothèques utilisent le bon `lv_conf.h`, sans modifier votre installation LVGL. Il active aussi C++17 pour la V3.
-3. Ouvrir `firmware/DEYE_V3/DEYE_V3.ino` ou `firmware/DEYE_VETRONIC/DEYE_VETRONIC.ino`.
+3. Ouvrir `firmware/DEYE_V3/DEYE_V3.ino`, `firmware/DEYE_VETRONIC/DEYE_VETRONIC.ino` ou `firmware/DEYE_VETRONIC_V3/DEYE_VETRONIC_V3.ino` selon la variante souhaitée. VEtronic V3 utilise aussi C++17.
 
 Le `.ino` est volontairement minimal : le programme se trouve dans `main.cpp`, compilé avec les fichiers du sketch. Garder tous les fichiers ensemble. **Si le dossier est déplacé ou renommé, relancer PREPARER_ARDUINO.bat** avant de compiler. Les fichiers `build_opt.h` générés contiennent les chemins de votre PC et sont exclus de Git.
 
