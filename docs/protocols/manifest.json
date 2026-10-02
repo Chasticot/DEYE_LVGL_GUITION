@@ -1,0 +1,25 @@
+{
+  "retrieved": "2026-10-01",
+  "files": [
+    {
+      "file": "Deye_Modbus_V105.4_20240814.pdf",
+      "pages": 48,
+      "sha256": "0bc70992367d38c359d08ffc46594d599bda49a242f093df4847e8f1e3c6c192"
+    },
+    {
+      "file": "Deye_Modbus_V118.pdf",
+      "pages": 43,
+      "sha256": "7444d2ef7dee282d5dbc734e73d6792788bc8a323ca532c8202d8d5f976b3717"
+    },
+    {
+      "file": "Deye_SG01HP3_V104.3.1.pdf",
+      "pages": 52,
+      "sha256": "4c9f9b57cf2e7cb85300a6a2fe5249d310c6174c3fbacfc6874bc2e51c133c02"
+    },
+    {
+      "file": "Deye_Single_Phase_TPE_2025.pdf",
+      "pages": 49,
+      "sha256": "e3b1b7023d5b4a3ed95f37d5e579f84d73c2b586031935d498ce2afe50b75d86"
+    }
+  ]
+}

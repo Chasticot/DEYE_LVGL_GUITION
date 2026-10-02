@@ -1,99 +1,67 @@
-# DEYE LVGL GUITION
+# Deye Monitor — écran GUITION
 
-Firmware pour écran tactile GUITION ESP32-S3 480 × 480, destiné au suivi et au pilotage d'installations équipées d'un onduleur Deye.
+Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP32-S3 480 × 480, avec configuration depuis l'écran ou un navigateur.
 
-Le dépôt contient plusieurs variantes. Il est important de choisir le dossier correspondant exactement au modèle d'onduleur ou à l'intégration utilisée.
+**Deux versions : V3 et VEtronic.** Dans la V3, choisissez votre modèle Deye dans un menu : le programme adapte les registres, les blocs lus et les conversions. Il n'y a pas de binaire différent pour chaque onduleur.
 
-## Choisir la bonne variante
+## Télécharger et installer
 
-| Variante | Utilisation |
-| --- | --- |
-| [`DEYE_LVGL_GUITION_12KSG02LP1`](firmware/DEYE_LVGL_GUITION_12KSG02LP1/) | Onduleur Deye 12K SG02 LP1 |
-| [`DEYE_LVGL_GUITION_12KSG05LP3`](firmware/DEYE_LVGL_GUITION_12KSG05LP3/) | Onduleur Deye 12K SG05 LP3 |
-| [`DEYE_LVGL_GUITION_25KSG01HP3`](firmware/DEYE_LVGL_GUITION_25KSG01HP3/) | Onduleur Deye 25K SG01 HP3 |
-| [`DEYE_LVGL_GUITION_VETRONIC`](firmware/DEYE_LVGL_GUITION_VETRONIC/) | Version intégrant la gestion VETRONIC |
+| Votre besoin | Téléchargement Windows | Firmware pour mise à jour OTA |
+| --- | --- | --- |
+| **V3 — 4.3.3** : choix du modèle Deye, dont AI-W5.1 ESS P1 | [Pack V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_Installation_Windows.zip) | [V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_OTA.bin) |
+| **VEtronic — 4.2-vetronic-32A** : pilotage d'une passerelle VEtronic WB01 compatible | [Pack VEtronic complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_Installation_Windows.zip) | [VEtronic OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_OTA.bin) |
 
-Ne flashez pas une variante prévue pour un autre modèle d'onduleur.
+1. Téléchargez le **pack Windows de votre variante**, puis extrayez entièrement le ZIP.
+2. Branchez l'écran avec un câble USB de données.
+3. Double-cliquez sur **INSTALLER.bat**. Si un seul CH340 est détecté, son port COM est sélectionné automatiquement. Sinon, choisissez le port dans la liste.
+4. Suivez les indications et attendez la réussite de l'installation.
+5. Configurez le Wi-Fi et le logger. Dans la V3, sélectionnez le modèle Deye puis enregistrez.
 
-## Installation simple — recommandée aux débutants
+Aucun Arduino IDE ni Python n'est nécessaire pour cette installation. Les packs contiennent `esptool.exe`, le lanceur BAT, son script PowerShell, les quatre binaires nécessaires et une notice. Le guide et le récapitulatif PDF sont aussi inclus dans le pack V3.
 
-Cette méthode ne nécessite ni Arduino IDE ni compilation.
+**Écran neuf ou changement de partitionnement : utiliser le pack USB complet.** Pour un écran déjà compatible, le fichier OTA suffit. Sauvegardez les réglages avant installation ; un effacement complet les supprime. [Installation détaillée et dépannage](docs/INSTALLATION_WINDOWS.md).
 
-1. Cliquez sur **Code**, puis **Download ZIP** sur cette page GitHub.
-2. Décompressez le fichier téléchargé.
-3. Ouvrez `firmware`, puis le dossier correspondant à votre onduleur.
-4. Ouvrez le dossier `INSTALLATION_NOUVEL_ECRAN`.
-5. Branchez l'écran au PC avec un câble USB qui transporte les données.
-6. Double-cliquez sur `INSTALLER_NOUVEL_ECRAN.bat`.
-7. Suivez les indications affichées et attendez le message `SUCCES`.
+## Les guides
 
-Le dossier contient déjà le programme d'installation, le firmware, le bootloader et la table de partitions. Aucun logiciel supplémentaire n'est nécessaire sous Windows.
+- [Guide utilisateur V3](docs/GUIDE_UTILISATEUR_V3.md) — [PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) : première mise en route, IP du logger, menus, mesures, sauvegardes et OTA.
+- [Améliorations depuis les versions de base, V2 et V3](docs/RECAP_UTILISATEURS_V3.md) — [PDF](docs/pdf/RECAP_UTILISATEURS_V3.pdf).
+- [Guide VEtronic et conditions d'utilisation](docs/GUIDE_VETRONIC.md).
+- [Compiler avec VS Code et PlatformIO](docs/COMPILATION_PLATFORMIO.md).
+- [Compiler avec Arduino IDE](docs/COMPILATION_ARDUINO.md).
+- [Modèles, registres et limites connues](docs/PROFILS_ET_REGISTRES.md).
+- [Historique des changements](CHANGELOG.md) et [validation de la publication](docs/VALIDATION.md).
 
-Pour un écran neuf, acceptez l'effacement complet de la mémoire. Sur un écran déjà configuré, refusez l'effacement pour conserver le Wi-Fi et les réglages locaux.
+## Nouveautés V3 4.3.3
 
-En cas d'échec, vérifiez que le câble USB transmet bien les données. Si la carte possède des boutons `BOOT` et `RESET`, maintenez `BOOT`, appuyez brièvement sur `RESET`, relâchez `BOOT`, puis relancez l'installateur.
+Le profil **AI-W5.1 ESS (P1)** utilise les registres monophasés confirmés par retour utilisateur le 2 octobre 2026 : blocs R76–108 et R169–194, SOC R184, batterie R190, PV R186/R187 et consommation R178. Les anciennes adresses de ce profil sont migrées automatiquement ; les réglages des autres modèles sont conservés. Ce retour ne couvre pas toutes les révisions AI-W5.1 ni les variantes P3.
 
-## Installation et développement avec Arduino IDE
+La V3 reprend les améliorations V2 : menus regroupés, choix des sources PV/GEN, réglages des coefficients, tarifs et heures creuses, relais configurable, veille horaire et sauvegardes. Elle ajoute la sélection du modèle et ses réglages propres. GEN journalier utilise R62 en LP1 et R536 en LP3/HP3.
 
-Cette méthode est destinée aux personnes qui souhaitent modifier ou recompiler le firmware.
+La version VEtronic est une variante distincte. Elle conserve son numéro de version et n'intègre pas le sélecteur de modèles V3. Elle pilote une passerelle compatible via HTTP ; elle ne se connecte pas directement à la WB01.
 
-1. Ouvrez le dossier de la variante voulue dans `firmware/`.
-2. Ouvrez le fichier `.ino` portant exactement le même nom que ce dossier.
-3. Installez le support ESP32 pour Arduino ainsi que les bibliothèques `lvgl` 8.4.0 et `Arduino_GFX` 1.4.7.
-4. Installez la version **2.0.17** du paquet `esp32 by Espressif Systems`.
-5. Sélectionnez la carte `ESP32S3 Dev Module`.
-6. Appliquez les réglages du menu **Outils** indiqués ci-dessous.
-7. Compilez puis téléversez par USB.
+## Matériel et compatibilité
 
-### Configuration du menu Outils (ESP32 2.0.17)
+- Écran GUITION ESP32-S3 480 × 480 avec le brochage défini dans les sources, PSRAM OPI. Le relais V3 vise l'ESP32-4848S040C à un relais, GPIO40.
+- Logger compatible avec la communication locale Solarman V5, accessible sur le même réseau.
+- Profil correspondant à l'onduleur ; comparez les mesures au LCD lors de la mise en route.
 
-| Option | Valeur |
-| --- | --- |
-| Board | `ESP32S3 Dev Module` |
-| Upload Speed | `921600` |
-| USB Mode | `Hardware CDC and JTAG` |
-| USB CDC On Boot | `Enabled` |
-| USB Firmware MSC On Boot | `Disabled` |
-| USB DFU On Boot | `Disabled` |
-| Upload Mode | `UART0 / Hardware CDC` |
-| CPU Frequency | `240MHz (WiFi)` |
-| Flash Mode | `QIO 80MHz` |
-| Flash Size | `16MB (128Mb)` |
-| Partition Scheme | `16M Flash (3MB APP/9.9MB FATFS)` |
-| Core Debug Level | `None` |
-| PSRAM | `OPI PSRAM` |
-| Arduino Runs On | `Core 1` |
-| Events Run On | `Core 1` |
-| Erase All Flash Before Sketch Upload | `Disabled` |
-| JTAG Adapter | `Disabled` |
+La liste propose 12 profils sélectionnables. SG06LP1 est affiché mais indisponible en attendant une cartographie complète. Les détails, retours terrain et fonctions à confirmer figurent dans le [tableau des profils](docs/PROFILS_ET_REGISTRES.md).
 
-La flash de 16 MB et la PSRAM de 8 MB utilisent deux interfaces distinctes : conservez **QIO 80 MHz pour la flash** et **OPI PSRAM pour la PSRAM**. Le schéma de partition ci-dessus fournit deux emplacements applicatifs de 3 MB et reste donc compatible avec les mises à jour OTA.
+## Organisation du dépôt
 
-Après un changement de schéma de partition, effectuez le premier téléversement par USB. Laissez l'effacement complet désactivé si vous souhaitez conserver les paramètres Wi-Fi et les autres préférences déjà enregistrées. Si le téléversement échoue à `921600`, réduisez uniquement `Upload Speed` à `460800` ou `115200`.
+```text
+firmware/DEYE_V3/          Sources V3 + entrée Arduino IDE
+firmware/DEYE_VETRONIC/    Sources VEtronic + entrée Arduino IDE
+docs/                     Guides, PDF et références de registres
+installation/             Sources de l'installateur Windows
+tools/                    Préparation Arduino, assemblage et vérification des packs
+platformio.ini            Deux environnements, dépendances avec versions fixées
+```
 
-## Fonctions principales
+Les binaires et l'exécutable Espressif sont distribués dans les **[Releases](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases)**. Le ZIP proposé par **Code > Download ZIP** contient les sources : pour installer sans compiler, utilisez les packs de la release.
 
-- Interface tactile LVGL pour écran 480 × 480.
-- Lecture des informations de l'onduleur Deye par le réseau.
-- Affichage solaire, batterie, consommation, réseau et bilans d'énergie.
-- Configuration Wi-Fi, réseau, NTP et onduleur depuis l'écran ou l'interface Web.
-- Intégration des informations VE et Tempo selon la variante.
-- Mise à jour OTA du firmware depuis l'interface Web.
-- Intégration VETRONIC dans la variante dédiée.
-
-## Matériel
-
-- Écran GUITION ESP32-S3 480 × 480, par exemple ESP32-4848S040.
-- PSRAM OPI.
-- Onduleur Deye compatible avec la variante choisie.
-- Logger ou interface réseau compatible avec le firmware.
-
-Vérifiez toujours le modèle de l'onduleur et le brochage exact de l'écran avant le flash.
-
-## Comparaison des registres
-
-Consultez le [tableau comparatif des registres par variante](REGISTRES_PAR_VARIANTE.md). Les adresses qui restent à confirmer y sont indiquées en italique.
+L'ancien contenu reste accessible dans l'historique et sous le tag [archive-avant-v3-2026-10-02](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/archive-avant-v3-2026-10-02).
 
 ## Licence
 
-Projet distribué sous licence MIT. Consultez le fichier [`LICENSE`](LICENSE).
+Code du projet sous [licence MIT](LICENSE). Les bibliothèques et l'outil Espressif conservent leurs licences respectives ; la licence d'esptool est incluse dans les packs. Les PDF de protocoles constructeur restent la propriété de leurs éditeurs et servent de références techniques.
