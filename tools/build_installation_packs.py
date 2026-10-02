@@ -48,7 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--esptool', required=True, type=Path)
     parser.add_argument('--platformio-home', type=Path, default=Path.home() / '.platformio')
-    parser.add_argument('--variant', action='append', choices=['V3', 'VETRONIC', 'VETRONIC_V3'])
+    parser.add_argument('--variant', action='append', choices=['V3', 'VETRONIC_V3'])
     args = parser.parse_args()
     packages = args.platformio_home / 'packages'
     boot_app = packages / 'framework-arduinoespressif32/tools/partitions/boot_app0.bin'
@@ -64,7 +64,7 @@ def main():
         raise ValueError('Taille boot_app0.bin inattendue')
     OUTPUT.mkdir(exist_ok=True)
     release_files = []
-    for variant, env, name in [('V3', '12KSG02LP1_v3', 'DEYE_V3'), ('VETRONIC', 'deye_vetronic', 'DEYE_VETRONIC'), ('VETRONIC_V3', 'vetronic_v3', 'DEYE_VETRONIC_V3')]:
+    for variant, env, name in [('V3', '12KSG02LP1_v3', 'DEYE_V3'), ('VETRONIC_V3', 'vetronic_v3', 'DEYE_VETRONIC_V3')]:
         if args.variant and variant not in args.variant:
             continue
         firmware_dir = SRC / 'firmware' / name
@@ -91,9 +91,7 @@ def main():
             (folder / name).write_text((TEMPLATES / name).read_text(encoding='utf-8'), encoding=encoding, newline='\r\n')
         extra = ('Le menu Modèle permet de choisir votre onduleur. Consulter le guide PDF et le récapitulatif inclus.'
                  if variant == 'V3' else
-                 'Cette variante intègre le pilotage VEtronic (limite 32 A). Elle reste distincte de la V3 et ne possède pas son sélecteur de modèles. Vérifier les paramètres de la borne avant d’activer son pilotage.')
-        if variant == 'VETRONIC_V3':
-            extra = 'VEtronic V3 pour 12K-SG02LP1 : menus V3, WB01, relais, veille et tarifs. Le bouton Rendre la main a la borne la laisse autonome. Configurer l’IP de sa passerelle ESP32. Guide Markdown inclus : GUIDE_VETRONIC_V3.md.'
+                 'VEtronic V3 pour 12K-SG02LP1 : menus V3, WB01, relais, veille et tarifs. Le bouton Rendre la main a la borne la laisse autonome. Configurer l’IP de sa passerelle ESP32. Guide Markdown inclus : GUIDE_VETRONIC_V3.md.')
         notice = f'''INSTALLATION DEYE MONITOR — {variant} — {version}
 
 Pour Windows 10/11 avec Windows PowerShell 5.1, sans Arduino IDE ni Python à installer.

@@ -1,4 +1,6 @@
-# Validation de la publication du 2 octobre 2026
+# Validation historique de la publication du 2 octobre 2026
+
+L’ancienne VEtronic a été retirée des sources et téléchargements actuels le 3 octobre 2026. Pour la version active, voir [VEtronic V3](VALIDATION_VETRONIC_V3.md). Les résultats ci-dessous documentent la publication initiale.
 
 ## Sources et versions
 

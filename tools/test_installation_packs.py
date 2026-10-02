@@ -20,7 +20,8 @@ def verify(folder, expected_code, message):
 
 
 archives = sorted((ROOT / 'dist').glob('DEYE_*_Installation_Windows.zip'))
-assert len(archives) == 3, 'Trois variantes attendues'
+archives = [p for p in archives if p.name.startswith(('DEYE_V3_', 'DEYE_12KSG02LP1_VETRONIC_V3_'))]
+assert len(archives) == 2, 'Deux variantes actuelles attendues'
 with tempfile.TemporaryDirectory(prefix='deye-pack-test-') as temporary:
     test_root = Path(temporary).resolve()
     assert test_root.parent == Path(tempfile.gettempdir()).resolve()

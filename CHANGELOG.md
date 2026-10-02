@@ -1,5 +1,12 @@
 # Historique
 
+## Retrait de l’ancienne VEtronic — 3 octobre 2026
+
+- Ancienne VEtronic 4.2 retirée des téléchargements et des sources de la branche principale.
+- Deux variantes actuelles : V3 générale et VEtronic V3 pour 12K-SG02LP1.
+- Guides, environnements de compilation et outils de création des packs actualisés.
+- La release v4.3.3 conserve les fichiers de la V3 générale ; ses empreintes et sa description sont actualisées.
+
 ## Publication v4.3.4-vetronic-v3 — 3 octobre 2026
 
 - Variante VEtronic V3 dédiée au Deye 12K-SG02LP1 et à la WB01 avec passerelle ESP32 compatible.

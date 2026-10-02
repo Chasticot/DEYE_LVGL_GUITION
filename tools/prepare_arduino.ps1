@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 try {
     $root = Split-Path -Parent $PSScriptRoot
-    foreach ($name in @('DEYE_V3', 'DEYE_VETRONIC', 'DEYE_VETRONIC_V3')) {
+    foreach ($name in @('DEYE_V3', 'DEYE_VETRONIC_V3')) {
         $sketch = (Join-Path $root "firmware/$name").Replace('\', '/')
         $options = '-I"' + $sketch + '" -include "' + $sketch + '/lv_conf.h"'
         if ($name -in @('DEYE_V3', 'DEYE_VETRONIC_V3')) { $options += ' -std=gnu++17' }

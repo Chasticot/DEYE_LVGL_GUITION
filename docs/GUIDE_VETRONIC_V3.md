@@ -2,7 +2,7 @@
 
 Variante dédiée au Deye 12K-SG02LP1 et à la borne VE TRONIC WB01 pilotée par
 sa passerelle ESP32. Base : `12KSG02LP1_v3` 4.3.3 et client WB01 de
-`deye_vetronic`. Les sources de ces deux versions sont conservées.
+l’ancienne intégration WB01. Les versions précédentes restent dans l’historique Git.
 
 ## Fonctions
 

@@ -13,7 +13,6 @@
 | Variante | Environnement | Sources |
 | --- | --- | --- |
 | V3 (par défaut) | `12KSG02LP1_v3` | `firmware/DEYE_V3/` |
-| VEtronic | `deye_vetronic` | `firmware/DEYE_VETRONIC/` |
 | VEtronic V3 pour 12K-SG02LP1 | `vetronic_v3` | `firmware/DEYE_VETRONIC_V3/` |
 
 Dans l'icône PlatformIO, ouvrir **Project Tasks > environnement > General > Build**. **Build** compile seulement. **Upload** installe le firmware sur l'écran USB sélectionné. **Monitor** ouvre le moniteur série à 115200 bauds ; le fermer avant un téléversement ou l'utilisation du pack Windows.
@@ -24,11 +23,10 @@ Dans un terminal PlatformIO, à la racine du dépôt :
 
 ```powershell
 pio run -e 12KSG02LP1_v3
-pio run -e deye_vetronic
 pio run -e vetronic_v3
 ```
 
-Les applications compilées sont `.pio/build/12KSG02LP1_v3/firmware.bin` et `.pio/build/deye_vetronic/firmware.bin`. Pour installer par USB, en remplaçant COM5 par le port réel :
+Les applications compilées sont `.pio/build/12KSG02LP1_v3/firmware.bin` et `.pio/build/vetronic_v3/firmware.bin`. Pour installer par USB, en remplaçant COM5 par le port réel :
 
 ```powershell
 pio run -e 12KSG02LP1_v3 -t upload --upload-port COM5
@@ -52,7 +50,7 @@ Après compilation de la V3, les tests hôtes utilisent Zig 0.13.0 :
 powershell -ExecutionPolicy Bypass -File firmware/DEYE_V3/tests/run_checks.ps1 -Zig C:/outils/zig/zig.exe
 ```
 
-Pour assembler les trois packs Windows après compilation des trois environnements, fournir l'exécutable Windows esptool 4.5.1 (celui du pack publié convient) :
+Pour assembler les deux packs Windows après compilation des deux environnements, fournir l'exécutable Windows esptool 4.5.1 (celui du pack publié convient) :
 
 ```powershell
 python tools/build_installation_packs.py --esptool C:/outils/esptool.exe

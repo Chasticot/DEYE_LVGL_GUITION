@@ -2,7 +2,7 @@
 
 Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP32-S3 480 × 480, avec configuration depuis l'écran ou un navigateur.
 
-**V3 générale, VEtronic V3 pour 12K-SG02LP1, et ancienne VEtronic.** Dans la V3 générale, choisissez votre modèle Deye dans un menu. VEtronic V3 réunit les menus V3 et le pilotage de la WB01 pour le 12K-SG02LP1.
+**Deux versions : V3 générale et VEtronic V3 pour 12K-SG02LP1.** Dans la V3 générale, choisissez votre modèle Deye dans un menu. VEtronic V3 réunit les menus V3 et le pilotage de la WB01 pour le 12K-SG02LP1.
 
 ## Télécharger et installer
 
@@ -10,7 +10,6 @@ Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP3
 | --- | --- | --- |
 | **VEtronic V3 — 4.3.4-vetronic-v3** : 12K-SG02LP1 + WB01, menus V3, SOC, relais, veille et tarifs | [Pack VEtronic V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_Installation_Windows.zip) | [VEtronic V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_OTA.bin) |
 | **V3 — 4.3.3** : choix du modèle Deye, dont AI-W5.1 ESS P1 | [Pack V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_Installation_Windows.zip) | [V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_OTA.bin) |
-| **VEtronic — 4.2-vetronic-32A** : pilotage d'une passerelle VEtronic WB01 compatible | [Pack VEtronic complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_Installation_Windows.zip) | [VEtronic OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_VETRONIC_4.2-vetronic-32A_OTA.bin) |
 
 1. Téléchargez le **pack Windows de votre variante**, puis extrayez entièrement le ZIP.
 2. Branchez l'écran avec un câble USB de données.
@@ -26,7 +25,6 @@ Aucun Arduino IDE ni Python n'est nécessaire pour cette installation. Les packs
 
 - [Guide utilisateur V3](docs/GUIDE_UTILISATEUR_V3.md) — [PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) : première mise en route, IP du logger, menus, mesures, sauvegardes et OTA.
 - [Améliorations depuis les versions de base, V2 et V3](docs/RECAP_UTILISATEURS_V3.md) — [PDF](docs/pdf/RECAP_UTILISATEURS_V3.pdf).
-- [Guide VEtronic et conditions d'utilisation](docs/GUIDE_VETRONIC.md).
 - [Guide VEtronic V3 pour 12K-SG02LP1](docs/GUIDE_VETRONIC_V3.md) et [validation](docs/VALIDATION_VETRONIC_V3.md).
 - [Compiler avec VS Code et PlatformIO](docs/COMPILATION_PLATFORMIO.md).
 - [Compiler avec Arduino IDE](docs/COMPILATION_ARDUINO.md).
@@ -47,7 +45,7 @@ Le profil **AI-W5.1 ESS (P1)** utilise les registres monophasés confirmés par 
 
 La V3 reprend les améliorations V2 : menus regroupés, choix des sources PV/GEN, réglages des coefficients, tarifs et heures creuses, relais configurable, veille horaire et sauvegardes. Elle ajoute la sélection du modèle et ses réglages propres. GEN journalier utilise R62 en LP1 et R536 en LP3/HP3.
 
-L'ancienne VEtronic 4.2 reste disponible dans la release v4.3.3. Les variantes VEtronic pilotent une passerelle compatible via HTTP.
+VEtronic V3 pilote la passerelle ESP32 de la WB01 via HTTP.
 
 ## Matériel et compatibilité
 
@@ -61,12 +59,11 @@ La liste propose 12 profils sélectionnables. SG06LP1 est affiché mais indispon
 
 ```text
 firmware/DEYE_V3/          Sources V3 + entrée Arduino IDE
-firmware/DEYE_VETRONIC/    Sources VEtronic + entrée Arduino IDE
 firmware/DEYE_VETRONIC_V3/ Sources VEtronic V3 pour 12K-SG02LP1 + entrée Arduino IDE
 docs/                     Guides, PDF et références de registres
 installation/             Sources de l'installateur Windows
 tools/                    Préparation Arduino, assemblage et vérification des packs
-platformio.ini            Trois environnements, dépendances avec versions fixées
+platformio.ini            Deux environnements, dépendances avec versions fixées
 ```
 
 Les binaires et l'exécutable Espressif sont distribués dans les **[Releases](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases)**. Le ZIP proposé par **Code > Download ZIP** contient les sources : pour installer sans compiler, utilisez les packs de la release.
