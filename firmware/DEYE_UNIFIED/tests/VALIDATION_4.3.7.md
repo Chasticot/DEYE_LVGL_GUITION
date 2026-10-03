@@ -8,10 +8,10 @@
 
 Le test `ota_version_test.cjs` extrait et exécute le JavaScript réel inclus dans `web_server.h`. Avant correction, `4.3.4-vetronic-v3` reproduisait l'erreur de lecture d'une valeur `null` pendant la comparaison. Après correction, ses quatorze cas réussissent : suffixe historique, préfixe v, métadonnées, version identique ou supérieure, comparaison numérique 9/10, version inconnue, tag invalide, réponse GitHub vide, HTTP 404/403 et erreur réseau. Toutes les requêtes sont des lectures GET ; aucune installation n'est déclenchée.
 
-Les tests Web de production existants passent également : tableaux de bord et bornes, CSRF, absence de POST à l'ouverture, mesures et états hors ligne, SOC et tarifs. Les fonctions C++ et le cumul GEN MO/PV5 de la 4.3.6 sont conservés ; leur validation est décrite dans [VALIDATION_4.3.6.md](VALIDATION_4.3.6.md).
+Les tests Web de production existants passent également : tableaux de bord et bornes, CSRF, absence de POST à l'ouverture, mesures et états hors ligne, SOC et tarifs. Les fonctions C++ et le cumul GEN MO/PV5 de la 4.3.6 sont conservés ; leur validation est décrite dans [VALIDATION_4.3.6.md](../../../docs/VALIDATION_4.3.6.md).
 
 Le pack Windows est vérifié par les contrôles ZIP, tailles et empreintes, le mode de vérification seul et le refus de fichiers absents ou corrompus. Aucun flash ni commande réelle de charge n'a été effectué.
 
 Pour un appareil sous 4.3.4 Vetronic V3, télécharger le fichier OTA manuellement : son ancien bouton contient toujours le code précédent jusqu'à la mise à jour. Après migration initiale vers le firmware unifié, sélectionner explicitement la borne.
 
-[Guide 4.3.7](GUIDE_UNIFIE_4.3.7.md) · [Release](RELEASE_v4.3.7.md)
+[Guide 4.3.7](../../../docs/GUIDE_UNIFIE_4.3.7.md) · [Release](../../../docs/RELEASE_v4.3.7.md)

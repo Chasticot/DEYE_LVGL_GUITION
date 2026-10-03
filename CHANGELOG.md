@@ -1,5 +1,12 @@
 # Historique
 
+## Publication v4.3.7 — 3 octobre 2026
+
+- Correction du bouton de vérification GitHub avec les versions suffixées telles que `4.3.4-vetronic-v3`.
+- Validation de la version installée avant comparaison et message explicite pour une réponse GitHub invalide.
+- Test du JavaScript réellement envoyé par l'écran : erreur reproduite avant correction, puis suffixes, comparaison numérique et erreurs réseau/API vérifiés.
+- Firmware OTA, pack Windows et guide 4.3.7. Cumul GEN MO + PV de la 4.3.6 conservé.
+
 ## Publication v4.3.6 — 3 octobre 2026
 
 - GEN MO devient une source PV supplémentaire pour le total instantané et les kWh du jour avec l'option de cumul activée.

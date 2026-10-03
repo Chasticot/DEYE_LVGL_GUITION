@@ -17,6 +17,8 @@ foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'production_te
 }
 & $Node (Join-Path $testDir 'web_test.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Production Web tests failed' }
+& $Node (Join-Path $testDir 'ota_version_test.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'OTA release version tests failed' }
 if ($SkipPreview) { return }
 $lvgl = Join-Path $projectDir '.pio\libdeps\deye_unified\lvgl'
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $lvgl 'src') -Filter '*.c' -Recurse | ForEach-Object FullName)
