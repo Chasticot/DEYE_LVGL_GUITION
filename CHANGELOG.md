@@ -1,5 +1,19 @@
 # Historique
 
+## Publication v4.3.5 — 3 octobre 2026
+
+- Firmware unifié : V3 multi-onduleurs et client VE TRONIC WB01 réunis dans `firmware/DEYE_UNIFIED/`, environnement PlatformIO `deye_unified` par défaut.
+- Choix indépendants du modèle Deye et de la recharge : Aucune, Deye LoRa ou Vetronic WB01, enregistrés puis appliqués après redémarrage.
+- Douze profils Deye sélectionnables. Deye LoRa reste réservé au SUN-12K-SG02LP1-EU-AM2 ; le client WB01 est accessible avec tous les profils sélectionnables de l'écran.
+- Menus, page véhicule, communications et automatismes tarifaires adaptés au backend actif. Les commandes du système inactif sont bloquées.
+- Migration de l'ancienne activation VE ambiguë : aucune borne réactivée automatiquement ; choix explicite demandé. Réglages communs et espaces par modèle conservés.
+- Reprise des adresses VE natives personnalisées sans reprendre leur ancien déverrouillage. Les autres sauvegardes de réglages préservent le choix de borne.
+- Exports JSON avec `ev_backend` explicite ; imports anciens avec VE activé sans ce choix refusés.
+- Restrictions LoRa sur une charge Libre démarrée et confirmée depuis l'écran tactile ; restrictions WB01 sur les charges manuelles démarrées et confirmées depuis l'écran ou son Web. Aucune reprise d'une ancienne pause après redémarrage.
+- WB01 : courant, puissance estimée à 230 V, quatre modes, protection SOC compatible et retour à la borne autonome conservés. La passerelle garde son propre firmware et sa configuration Deye.
+- Pack Windows et application OTA uniques 4.3.5, guide de migration et tests fusionnés. Compilation PlatformIO et tests logiciels réussis ; aucun flash ni essai matériel réalisé.
+- Sources et releases V3 4.3.3 et Vetronic V3 4.3.4 conservées comme versions historiques.
+
 ## Retrait de l’ancienne VEtronic — 3 octobre 2026
 
 - Ancienne VEtronic 4.2 retirée des téléchargements et des sources de la branche principale.

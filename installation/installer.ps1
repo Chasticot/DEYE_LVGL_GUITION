@@ -73,7 +73,13 @@ try {
     if ($speed -notin @('460800', '115200')) { throw 'Vitesse invalide. Aucun flash effectué.' }
     Write-Host ''
     Write-Host 'Effacer la mémoire supprime le Wi-Fi, les réglages, les tarifs et les données enregistrées.'
-    Write-Host 'Pour un écran neuf ou un changement de variante/partitionnement : choisir O.'
+    Write-Host 'Pour un écran neuf ou un changement de partitionnement : choisir O.'
+    if ($manifest.variant -eq 'UNIFIED') {
+        Write-Host 'Depuis V3/Vetronic V3 avec le même partitionnement, la mise à jour 4.3.5 permet de conserver les réglages avec N.'
+        Write-Host 'Après migration, sélectionner explicitement la borne dans les réglages de l''écran.'
+    } else {
+        Write-Host 'Pour un changement entre anciennes variantes : choisir O.'
+    }
     Write-Host 'Pour conserver les réglages : choisir N (compatibilité non garantie entre anciennes versions).'
     $erase = (Read-Host 'Effacer complètement avant installation ? O/N [N]').Trim().ToUpperInvariant()
     if ($erase -eq '') { $erase = 'N' }

@@ -1,75 +1,79 @@
-# Deye Monitor — écran GUITION
+# Deye Monitor — firmware unifié 4.3.5
 
 Suivi solaire, batterie, réseau et consommation sur écran tactile GUITION ESP32-S3 480 × 480, avec configuration depuis l'écran ou un navigateur.
 
-**Deux versions : V3 générale et VEtronic V3 pour 12K-SG02LP1.** Dans la V3 générale, choisissez votre modèle Deye dans un menu. VEtronic V3 réunit les menus V3 et le pilotage de la WB01 pour le 12K-SG02LP1.
+**Un seul firmware : choisissez le modèle Deye et la borne de recharge dans les réglages.** La version 4.3.5 réunit la V3 multi-onduleurs et le client VE TRONIC WB01. Le catalogue conserve 12 profils sélectionnables ; la recharge propose Aucune, Deye LoRa ou VE TRONIC WB01.
 
 ## Télécharger et installer
 
-| Votre besoin | Téléchargement Windows | Firmware pour mise à jour OTA |
-| --- | --- | --- |
-| **VEtronic V3 — 4.3.4-vetronic-v3** : 12K-SG02LP1 + WB01, menus V3, SOC, relais, veille et tarifs | [Pack VEtronic V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_Installation_Windows.zip) | [VEtronic V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.4-vetronic-v3/DEYE_12KSG02LP1_VETRONIC_V3_4.3.4_OTA.bin) |
-| **V3 — 4.3.3** : choix du modèle Deye, dont AI-W5.1 ESS P1 | [Pack V3 complet](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_Installation_Windows.zip) | [V3 OTA](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.3/DEYE_V3_4.3.3_OTA.bin) |
+| Installation | Fichier |
+| --- | --- |
+| Écran neuf ou installation USB complète Windows | [DEYE_V3_4.3.5_Installation_Windows.zip](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.5/DEYE_V3_4.3.5_Installation_Windows.zip) |
+| Mise à jour d'un écran avec partitionnement OTA compatible | [DEYE_V3_4.3.5_OTA.bin](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.5/DEYE_V3_4.3.5_OTA.bin) |
+| Vérification des fichiers téléchargés | [SHA256SUMS-4.3.5.txt](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.3.5/SHA256SUMS-4.3.5.txt) |
 
-1. Téléchargez le **pack Windows de votre variante**, puis extrayez entièrement le ZIP.
-2. Branchez l'écran avec un câble USB de données.
-3. Double-cliquez sur **INSTALLER.bat**. Si un seul CH340 est détecté, son port COM est sélectionné automatiquement. Sinon, choisissez le port dans la liste.
-4. Suivez les indications et attendez la réussite de l'installation.
-5. Configurez le Wi-Fi et le logger. Dans la V3 générale, sélectionnez le modèle Deye puis enregistrez. Dans VEtronic V3, activez VE TRONIC / WB01 et configurez l'IP de sa passerelle ESP32.
+1. Sauvegardez la configuration de l'écran avant la mise à jour.
+2. Pour l'installation USB, extrayez tout le ZIP, branchez un câble USB de données et lancez **INSTALLER.bat**. Un CH340 unique est sélectionné automatiquement ; sinon choisissez le port COM.
+3. Après installation, vérifiez le Wi-Fi, le logger et **DEYE / SOLARMAN > MODÈLE DEYE**.
+4. Dans **VÉHICULE ÉLECTRIQUE > ACTIVATION / TARIFS**, choisissez la borne, enregistrez et laissez l'écran redémarrer.
+5. Pour WB01, configurez l'adresse IP de sa passerelle. Pour Deye LoRa, vérifiez les registres avant de débloquer les écritures depuis le Web.
 
-Aucun Arduino IDE ni Python n'est nécessaire pour cette installation. Les packs contiennent `esptool.exe`, le lanceur BAT, son script PowerShell, les quatre binaires nécessaires et une notice. Le guide et le récapitulatif PDF sont aussi inclus dans le pack V3.
+Le pack Windows contient l'outil Espressif, les quatre binaires, les empreintes et les instructions ; aucun Arduino IDE ni Python n'est nécessaire. Le fichier OTA est l'application de **l'écran**, utilisable depuis sa page Web de mise à jour. Un changement de partitionnement nécessite le pack USB complet. [Installation détaillée](docs/INSTALLATION_WINDOWS.md).
 
-**Écran neuf ou changement de partitionnement : utiliser le pack USB complet.** Pour un écran déjà compatible, le fichier OTA suffit. Sauvegardez les réglages avant installation ; un effacement complet les supprime. [Installation détaillée et dépannage](docs/INSTALLATION_WINDOWS.md).
+## Choisir la recharge
 
-## Les guides
+| Recharge | Compatibilité et fonctionnement |
+| --- | --- |
+| Aucune | Tableau de bord Deye et fonctions communes, sans communication avec une borne. |
+| Deye LoRa | Registres et commandes VE natifs, uniquement sur **SUN-12K-SG02LP1-EU-AM2**. |
+| VE TRONIC WB01 | Client HTTP vers une passerelle ESP32 WB01 compatible, disponible avec les 12 profils Deye sélectionnables. |
 
-- [Guide utilisateur V3](docs/GUIDE_UTILISATEUR_V3.md) — [PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) : première mise en route, IP du logger, menus, mesures, sauvegardes et OTA.
-- [Améliorations depuis les versions de base, V2 et V3](docs/RECAP_UTILISATEURS_V3.md) — [PDF](docs/pdf/RECAP_UTILISATEURS_V3.pdf).
-- [Guide VEtronic V3 pour 12K-SG02LP1](docs/GUIDE_VETRONIC_V3.md) et [validation](docs/VALIDATION_VETRONIC_V3.md).
-- [Compiler avec VS Code et PlatformIO](docs/COMPILATION_PLATFORMIO.md).
-- [Compiler avec Arduino IDE](docs/COMPILATION_ARDUINO.md).
-- [Modèles, registres et limites connues](docs/PROFILS_ET_REGISTRES.md).
-- [Historique des changements](CHANGELOG.md) et [validation de la publication](docs/VALIDATION.md).
+Le modèle et la borne sont des choix indépendants, appliqués après sauvegarde et redémarrage. Une seule recharge est active. Les pages, communications et automatismes suivent ce choix.
 
-## Nouveautés VEtronic V3
+**Après migration depuis la V3 ou Vetronic V3, choisissez explicitement la borne.** L'ancienne activation VE ne distinguait pas LoRa et WB01 ; elle ne réactive aucun des deux automatiquement. Les réglages communs et les espaces de réglages des modèles sont conservés. Un ancien export avec VE activé sans choix de borne explicite est refusé à l'import. [Migration et guide 4.3.5](docs/GUIDE_UNIFIE_4.3.5.md).
 
-La version **4.3.4-vetronic-v3** réunit les fonctions V3 et le pilotage WB01 : charge manuelle jusqu'à 32 A selon le plafond de la passerelle, solaire, protection SOC, relais, veille, tarifs optionnels et commandes depuis l'écran ou son Web.
+La passerelle WB01 garde son propre firmware et ses propres paramètres Deye. Changer le modèle sur l'écran ne reconfigure pas sa régulation solaire. La disponibilité du client avec tous les profils ne valide pas toutes ces combinaisons sur matériel.
 
-Le bouton **Rendre la main à la borne** laisse la WB01 autonome et annule la reprise tarifaire de l'écran. Il reste possible de reprendre le pilotage ensuite. Les tarifs concernent les charges manuelles lancées depuis l'écran ou son Web pendant ce démarrage. La régulation solaire reste assurée par la passerelle.
+## Fonctions
 
-Compilation et tests logiciels réussis ; validation sur le matériel encore nécessaire. Cette variante est dédiée au **12K-SG02LP1**, sans sélecteur de modèles. La release contient le firmware de l'écran ; le firmware de la passerelle n'est pas inclus.
+Mesures PV/batterie/réseau/consommation, historique, sources PV/GEN, registres et coefficients, tarifs Tempo ou heures creuses, relais GPIO40, veille horaire, thèmes, luminosité, configuration Web, diagnostic, export/import JSON et OTA.
 
-## Nouveautés V3 générale 4.3.3
+WB01 propose Arrêt, Charge immédiate, Solaire et **Rendre la main à la borne**, ainsi que la protection SOC si la passerelle expose son API. La charge manuelle respecte son plafond, avec une limite locale de 32 A. La puissance précédée de `~` est estimée à 230 V à partir du courant mesuré.
 
-Le profil **AI-W5.1 ESS (P1)** utilise les registres monophasés confirmés par retour utilisateur le 2 octobre 2026 : blocs R76–108 et R169–194, SOC R184, batterie R190, PV R186/R187 et consommation R178. Les anciennes adresses de ce profil sont migrées automatiquement ; les réglages des autres modèles sont conservés. Ce retour ne couvre pas toutes les révisions AI-W5.1 ni les variantes P3.
+Les restrictions tarifaires concernent uniquement une charge Libre démarrée et confirmée depuis l'écran tactile pour LoRa, ou une charge manuelle démarrée et confirmée depuis l'écran ou son Web pour WB01, pendant le démarrage courant. Le redémarrage ne récupère aucune ancienne pause tarifaire et n'envoie aucune consigne de charge. Désactiver ou changer la borne dans l'écran n'arrête pas une charge déjà en cours.
 
-La V3 reprend les améliorations V2 : menus regroupés, choix des sources PV/GEN, réglages des coefficients, tarifs et heures creuses, relais configurable, veille horaire et sauvegardes. Elle ajoute la sélection du modèle et ses réglages propres. GEN journalier utilise R62 en LP1 et R536 en LP3/HP3.
+## Guides et validation
 
-VEtronic V3 pilote la passerelle ESP32 de la WB01 via HTTP.
+- [Guide du firmware unifié 4.3.5](docs/GUIDE_UNIFIE_4.3.5.md).
+- [Installation Windows et OTA](docs/INSTALLATION_WINDOWS.md).
+- [Compiler avec PlatformIO](docs/COMPILATION_PLATFORMIO.md) ou [Arduino IDE](docs/COMPILATION_ARDUINO.md).
+- [Profils et registres](docs/PROFILS_ET_REGISTRES.md).
+- [Validation logicielle et limites matérielles](docs/VALIDATION.md).
+- [Notes de la release 4.3.5](docs/RELEASE_v4.3.5.md) et [historique](CHANGELOG.md).
+- Guides historiques : [V3](docs/GUIDE_UTILISATEUR_V3.md), [récapitulatif V2/V3](docs/RECAP_UTILISATEURS_V3.md), [Vetronic V3](docs/GUIDE_VETRONIC_V3.md). Leurs descriptions de variantes et d'activation VE concernent ces anciennes versions.
 
-## Matériel et compatibilité
+Compilation et tests logiciels réussis pour les sources unifiées. **Aucun flash ni essai de charge réel n'a été réalisé pour cette version** ; vérifier les mesures, commandes et automatismes sur l'installation. [Détails](docs/VALIDATION.md).
 
-- Écran GUITION ESP32-S3 480 × 480 avec le brochage défini dans les sources, PSRAM OPI. Le relais V3 vise l'ESP32-4848S040C à un relais, GPIO40.
-- Logger compatible avec la communication locale Solarman V5, accessible sur le même réseau.
-- Profil correspondant à l'onduleur ; comparez les mesures au LCD lors de la mise en route.
+## Matériel et dépôt
 
-La liste propose 12 profils sélectionnables. SG06LP1 est affiché mais indisponible en attendant une cartographie complète. Les détails, retours terrain et fonctions à confirmer figurent dans le [tableau des profils](docs/PROFILS_ET_REGISTRES.md).
+GUITION ESP32-S3 480 × 480 avec le brochage du projet, PSRAM OPI et logger local Solarman V5. Le relais vise l'ESP32-4848S040C à un relais, GPIO40. Flash logique 4 Mo, partition Minimal SPIFFS avec OTA. Comparez les mesures au LCD lors de la mise en route.
 
-## Organisation du dépôt
+Le catalogue contient 13 références : 12 sélectionnables et SG06LP1 indisponible tant que sa cartographie reste incomplète. [Compatibilité par modèle](docs/PROFILS_ET_REGISTRES.md).
 
 ```text
-firmware/DEYE_V3/          Sources V3 + entrée Arduino IDE
-firmware/DEYE_VETRONIC_V3/ Sources VEtronic V3 pour 12K-SG02LP1 + entrée Arduino IDE
-docs/                     Guides, PDF et références de registres
-installation/             Sources de l'installateur Windows
+firmware/DEYE_UNIFIED/     Sources actuelles 4.3.5 + entrée Arduino IDE
+firmware/DEYE_V3/          Sources historiques V3 4.3.3
+firmware/DEYE_VETRONIC_V3/  Sources historiques Vetronic V3 4.3.4
+docs/                     Guides, références et validation
+installation/             Installateur Windows
 tools/                    Préparation Arduino, assemblage et vérification des packs
-platformio.ini            Deux environnements, dépendances avec versions fixées
+platformio.ini            Environnement deye_unified par défaut
 ```
 
-Les binaires et l'exécutable Espressif sont distribués dans les **[Releases](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases)**. Le ZIP proposé par **Code > Download ZIP** contient les sources : pour installer sans compiler, utilisez les packs de la release.
+Les binaires sont dans la [release v4.3.5](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.5). **Code > Download ZIP** contient les sources ; pour installer sans compiler, téléchargez le pack de la release.
 
-L'ancien contenu reste accessible dans l'historique et sous le tag [archive-avant-v3-2026-10-02](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/archive-avant-v3-2026-10-02).
+Les anciennes releases restent historiques : [V3 4.3.3](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.3), [Vetronic V3 4.3.4](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.4-vetronic-v3). L'état antérieur du dépôt est repéré par le [tag d'archive](https://github.com/Chasticot/DEYE_LVGL_GUITION/tree/archive-avant-v3-2026-10-02).
 
 ## Licence
 
-Code du projet sous [licence MIT](LICENSE). Les bibliothèques et l'outil Espressif conservent leurs licences respectives ; la licence d'esptool est incluse dans les packs. Les PDF de protocoles constructeur restent la propriété de leurs éditeurs et servent de références techniques.
+Code sous [licence MIT](LICENSE). Les bibliothèques et esptool conservent leurs licences respectives. Les PDF de protocoles constructeur restent la propriété de leurs éditeurs.

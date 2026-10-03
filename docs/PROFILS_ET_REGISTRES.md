@@ -1,4 +1,6 @@
-# 12KSG02LP1_v3 — firmware 4.3.3
+# Profils Deye et registres — firmware unifié 4.3.5
+
+Le firmware unifié reprend le catalogue et les conversions de la V3 4.3.3 décrits ci-dessous. Le modèle Deye et la borne se choisissent indépendamment. Deye LoRa reste réservé au SG02 AM2 ; le client VE TRONIC WB01 est disponible avec les douze profils sélectionnables. Voir le [guide unifié](GUIDE_UNIFIE_4.3.5.md) pour la sélection et la migration.
 
 ## Documents pour les utilisateurs
 
@@ -89,7 +91,7 @@ Une adresse 0 (estimation), une autre adresse personnalisee et le coefficient
 personnalise sont conserves. Les anciens profils LP1 deja sauvegardes a 0
 restent donc en estimation ; REINITIALISER dans Registres perso propose R62.
 
-La recharge VE est disponible uniquement sur le profil SG02 deja valide.
+La recharge VE native Deye LoRa est disponible uniquement sur le profil SG02 AM2 deja valide.
 Sur les autres profils, aucune lecture de bloc VE et aucune ecriture VE
 n'est autorisee, meme si d'anciens reglages NVS activaient cette option.
 
@@ -118,7 +120,7 @@ exports sans champs PV4 restent compatibles.
 
 Dans le projet Deye-LVGL : `pio run -e 12KSG02LP1_v3`.
 Binaire : `.pio/build/12KSG02LP1_v3/firmware.bin`.
-La V3 est la variante par defaut du depot. Aucun televersement
+Le firmware unifié 4.3.5 est compilé par défaut dans le dépôt. Aucun televersement
 sur l'ecran n'est effectue par cette commande.
 
 `firmware/DEYE_V3/tests/run_checks.ps1` execute les tests des profils/blocs/conversions,
