@@ -75,7 +75,7 @@ try {
     Write-Host 'Effacer la mémoire supprime le Wi-Fi, les réglages, les tarifs et les données enregistrées.'
     Write-Host 'Pour un écran neuf ou un changement de partitionnement : choisir O.'
     if ($manifest.variant -eq 'UNIFIED') {
-        Write-Host 'Depuis V3/Vetronic V3 avec le même partitionnement, la mise à jour 4.3.5 permet de conserver les réglages avec N.'
+        Write-Host "Depuis V3/Vetronic V3 avec le même partitionnement, la mise à jour $($manifest.version) permet de conserver les réglages avec N."
         Write-Host 'Après migration, sélectionner explicitement la borne dans les réglages de l''écran.'
     } else {
         Write-Host 'Pour un changement entre anciennes variantes : choisir O.'

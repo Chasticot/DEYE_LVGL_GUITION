@@ -1,11 +1,12 @@
 """Vérifie les ZIP et le refus de fichiers absents/corrompus, sans port série.
 
-Sans option, cible le pack unifié 4.3.5. --archive sélectionne un ZIP précis ;
+Sans option, cible le pack unifié de la version courante. --archive sélectionne un ZIP précis ;
 --variant sélectionne les packs d'une variante, même avec des archives historiques.
 """
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import tempfile
 import zipfile
@@ -35,7 +36,9 @@ def select_archives(args):
             if manifest['variant'] in args.variant:
                 archives.append(path)
     else:
-        archives = [ROOT / 'dist/DEYE_V3_4.3.5_Installation_Windows.zip']
+        config = (ROOT / 'firmware/DEYE_UNIFIED/config.h').read_text(encoding='utf-8-sig')
+        version = re.search(r'^#define FIRMWARE_VERSION "([^"]+)"', config, re.M)[1]
+        archives = [ROOT / 'dist' / f'DEYE_V3_{version}_Installation_Windows.zip']
     if not archives:
         raise FileNotFoundError('Aucun pack correspondant à la sélection')
     for archive in archives:

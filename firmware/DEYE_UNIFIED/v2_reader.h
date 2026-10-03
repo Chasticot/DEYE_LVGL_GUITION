@@ -33,7 +33,7 @@ static void v2_read_auxiliary(bool core_sample_ok) {
       if (energy_ok) meter.kwh = modbus_get_u16_be(rtu, 0) * cfg_v2.gen_daily_scale;
       meter.previous_valid = false;
     } else {
-      meter.sample(today, gen_ok, power, sampled_ms);
+      meter.sample(today, gen_ok, float(v2_gen_production_w(power)), sampled_ms);
       energy_ok = true;
       // Bounded flash wear: at most one checkpoint every five minutes.
       if (uint32_t(sampled_ms - last_save_ms) >= 300000) {

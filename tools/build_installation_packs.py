@@ -100,7 +100,7 @@ def main():
                  'Le menu Modèle permet de choisir votre onduleur. Consulter le guide PDF et le récapitulatif inclus.'
                  if variant == 'V3' else
                  'VEtronic V3 pour 12K-SG02LP1 : menus V3, WB01, relais, veille et tarifs. Le bouton Rendre la main a la borne la laisse autonome. Configurer l’IP de sa passerelle ESP32. Guide Markdown inclus : GUIDE_VETRONIC_V3.md.')
-        erase_notice = ('Choisir O pour une remise à zéro complète ou un écran neuf : tous les réglages et les données enregistrées sont supprimés. Depuis V3/Vetronic V3 avec le même partitionnement, N permet de conserver les zones de données ; la migration 4.3.5 ne nécessite pas à elle seule un effacement. Sauvegarder avant toute opération et choisir explicitement la borne après migration.'
+        erase_notice = (f'Choisir O pour une remise à zéro complète ou un écran neuf : tous les réglages et les données enregistrées sont supprimés. Depuis V3/Vetronic V3 avec le même partitionnement, N permet de conserver les zones de données ; la migration {version} ne nécessite pas à elle seule un effacement. Sauvegarder avant toute opération et choisir explicitement la borne après migration.'
                        if variant == 'UNIFIED' else
                        'Choisir O pour effacer la mémoire sur un écran neuf ou lors d’un changement de variante/partitionnement. Cela supprime tous les réglages et les données enregistrées. N conserve les zones de données, sans garantie de compatibilité avec les anciennes versions. Exporter avant toute opération.')
         notice = f'''INSTALLATION DEYE MONITOR — {variant} — {version}

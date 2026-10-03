@@ -1,15 +1,13 @@
 #pragma once
 #include "settings.h"
 #include "app_data.h"
+#include "pv_production.h"
 #include "ntp_manager.h"
 #include "tempo_api.h"
 
-static bool v2_gen_included() { return inverter_profile().gen_supported && cfg_v2.add_gen && !cfg_gen_smartload; }
+static bool v2_gen_included() { return v2_gen_as_pv(cfg_v2, inverter_profile().gen_supported, cfg_gen_smartload); }
 static uint32_t v2_pv_power(const DashboardData &data) {
-  uint32_t total = (cfg_v2.pv_visible[0] ? data.pv1_w : 0) +
-    (cfg_v2.pv_visible[1] ? data.pv2_w : 0) + (cfg_v2.pv_visible[2] ? data.pv3_w : 0) + (cfg_v2.pv4_visible ? data.pv4_w : 0);
-  if (v2_gen_included() && data.gen_power > 0) total += data.gen_power;
-  return total;
+  return v2_production_power(data, cfg_v2, v2_gen_included());
 }
 static int v2_day_key(const struct tm &local) { return (local.tm_year + 1900) * 1000 + local.tm_yday; }
 static int v2_tempo_day(time_t timestamp) {
@@ -67,18 +65,18 @@ static V2Measurements v2_measure_snapshot() {
 }
 
 static bool v2_daily_kwh(uint16_t pv_raw, bool pv_valid, float &result) {
-  const bool pv = cfg_v2.pv_visible[0] || cfg_v2.pv_visible[1] ||
-    (inverter_profile().pv_count >= 3 && cfg_v2.pv_visible[2]) || (inverter_profile().pv_count >= 4 && cfg_v2.pv4_visible);
-  result = pv ? pv_raw * 0.1f : 0;
-  if (pv && !pv_valid) return false;
-  if (v2_gen_included()) {
+  const bool include_gen = v2_gen_included();
+  bool gen_valid = false;
+  float gen_kwh = 0;
+  if (include_gen) {
     const V2Measurements m = v2_measure_snapshot();
     struct tm local = {};
-    if (!ntp_received.load() || !getLocalTime(&local, 0) || !m.energy_valid ||
-        m.energy_day != v2_day_key(local) || !m.gen_valid) return false;
-    result += m.gen_kwh;
+    gen_valid = ntp_received.load() && getLocalTime(&local, 0) && m.energy_valid &&
+      m.energy_day == v2_day_key(local) && m.gen_valid;
+    gen_kwh = m.gen_kwh;
   }
-  return true;
+  return v2_production_daily_kwh(cfg_v2, inverter_profile().pv_count,
+    pv_raw, pv_valid, include_gen, gen_valid, gen_kwh, result);
 }
 
 static constexpr uint8_t V2_RELAY_GPIO = 40;

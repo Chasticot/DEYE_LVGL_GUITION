@@ -1,6 +1,8 @@
-# Profils Deye et registres — firmware unifié 4.3.5
+# Profils Deye et registres — firmware unifié 4.3.6
 
-Le firmware unifié reprend le catalogue et les conversions de la V3 4.3.3 décrits ci-dessous. Le modèle Deye et la borne se choisissent indépendamment. Deye LoRa reste réservé au SG02 AM2 ; le client VE TRONIC WB01 est disponible avec les douze profils sélectionnables. Voir le [guide unifié](GUIDE_UNIFIE_4.3.5.md) pour la sélection et la migration.
+Le firmware unifié reprend le catalogue et les conversions de la V3 4.3.3 décrits ci-dessous. Le modèle Deye et la borne se choisissent indépendamment. Deye LoRa reste réservé au SG02 AM2 ; le client VE TRONIC WB01 est disponible avec les douze profils sélectionnables. Voir le [guide unifié](GUIDE_UNIFIE_4.3.6.md) pour la sélection et la migration.
+
+Avec GEN MO et le cumul activés, la puissance GEN après calibration est traitée comme une production positive et ajoutée aux PV, ainsi que son énergie du jour. Le compteur GEN journalier reste prioritaire ; son estimation sans registre utilise la même puissance positive. SmartLoad ne participe pas au cumul.
 
 ## Documents pour les utilisateurs
 
@@ -120,7 +122,7 @@ exports sans champs PV4 restent compatibles.
 
 Dans le projet Deye-LVGL : `pio run -e 12KSG02LP1_v3`.
 Binaire : `.pio/build/12KSG02LP1_v3/firmware.bin`.
-Le firmware unifié 4.3.5 est compilé par défaut dans le dépôt. Aucun televersement
+Le firmware unifié 4.3.6 est compilé par défaut dans le dépôt. Aucun televersement
 sur l'ecran n'est effectue par cette commande.
 
 `firmware/DEYE_V3/tests/run_checks.ps1` execute les tests des profils/blocs/conversions,

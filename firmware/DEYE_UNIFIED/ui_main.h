@@ -1046,7 +1046,7 @@ static void ui_main_update() {
                                 LV_PART_MAIN);
   } else {
     // Mode GEN MO : afficher la puissance
-    if (v2_measure_snapshot().gen_valid) snprintf(smart_text, sizeof(smart_text), "GEN : %d W", data.gen_power);
+    if (v2_measure_snapshot().gen_valid) snprintf(smart_text, sizeof(smart_text), "GEN : %lu W", (unsigned long)v2_gen_production_w(data.gen_power));
     else snprintf(smart_text, sizeof(smart_text), "GEN : -- W");
     lv_obj_set_style_text_color(label_smartload, ui_main_theme_color(theme.accent), LV_PART_MAIN);
   }

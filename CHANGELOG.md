@@ -1,5 +1,12 @@
 # Historique
 
+## Publication v4.3.6 — 3 octobre 2026
+
+- GEN MO devient une source PV supplémentaire pour le total instantané et les kWh du jour avec l'option de cumul activée.
+- Correction du cas où le signe de la puissance GEN après calibration empêchait son addition aux PV. Même puissance de production positive pour l'écran, le Web, l'historique et l'estimation des kWh.
+- Compteur journalier GEN conservé lorsqu'il est configuré. SmartLoad et les profils sans GEN restent exclus du cumul.
+- Test de régression GEN MO/PV5, huit tests hôte et tests Web réussis. Firmware OTA, pack Windows et guide 4.3.6.
+
 ## Publication v4.3.5 — 3 octobre 2026
 
 - Firmware unifié : V3 multi-onduleurs et client VE TRONIC WB01 réunis dans `firmware/DEYE_UNIFIED/`, environnement PlatformIO `deye_unified` par défaut.
