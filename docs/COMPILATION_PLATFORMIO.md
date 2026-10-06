@@ -1,4 +1,4 @@
-# Compiler le firmware unifié 4.3.7 avec PlatformIO
+# Compiler le firmware unifié 4.3.8 avec PlatformIO
 
 ## Installer et ouvrir le projet
 
@@ -70,4 +70,4 @@ Les résultats sont dans `dist/`, exclu de Git. L'assemblage vérifie les fichie
 | V3 4.3.3 | `12KSG02LP1_v3` | `firmware/DEYE_V3/` |
 | Vetronic V3 4.3.4 | `vetronic_v3` | `firmware/DEYE_VETRONIC_V3/` |
 
-Ces environnements servent à reproduire les anciennes versions. Le projet courant et les téléchargements recommandés utilisent 4.3.7. [Validation et limites](VALIDATION.md).
+Ces environnements servent à reproduire les anciennes versions. Le projet courant et les téléchargements recommandés utilisent 4.3.8. [Validation et limites](VALIDATION.md).

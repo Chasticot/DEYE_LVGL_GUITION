@@ -1,4 +1,4 @@
-# Deye LVGL — firmware unifié 4.3.7
+# Deye LVGL — firmware unifié 4.3.8
 
 Un seul firmware pour l'écran Guition ESP32-S3 480 × 480, avec choix du modèle
 d'onduleur et du système de recharge. Il réunit le catalogue multi-onduleurs
@@ -44,7 +44,7 @@ Deye LoRa compatibles avec un autre modèle.
 ## Installation et migration
 
 1. Sauvegarder la configuration JSON de l'écran avant la mise à jour.
-2. Installer le firmware 4.3.7 sur l'écran, puis vérifier le modèle Deye dans
+2. Installer le firmware 4.3.8 sur l'écran, puis vérifier le modèle Deye dans
    les réglages. Le modèle mémorisé par la V3 est conservé.
 3. Dans les réglages du véhicule, choisir explicitement Aucune, Deye LoRa ou
    VE TRONIC WB01, enregistrer et laisser l'écran redémarrer.
@@ -132,7 +132,7 @@ Depuis la racine du dépôt, compiler les sources firmware/DEYE_UNIFIED/ :
 pio run -e deye_unified
 ```
 
-Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.3.7](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.7). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
+Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.3.8](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.8). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
 
 Configuration matérielle : ESP32-S3, PSRAM OPI, écran 480 × 480, USB CDC actif,
 flash 4 MB et partition Minimal SPIFFS avec OTA.

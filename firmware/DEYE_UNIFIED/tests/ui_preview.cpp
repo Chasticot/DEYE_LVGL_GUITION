@@ -100,6 +100,7 @@ static bool vt_save_host(const char *host) { cfg_vetronic_host = host; return tr
 #include "../ui_ve_deye.h"
 #include "../ui_vetronic.h"
 #include "../ui_v2.h"
+#include "../ui_ev_badges.h"
 
 static lv_color_t pixels[480 * 480], draw_buffer[480 * 40];
 static void flush(lv_disp_drv_t *driver, const lv_area_t *area, lv_color_t *colors) {
@@ -130,11 +131,58 @@ static void check_form() {
     assert(bounds.x1 >= 20 && bounds.x2 < 460);
   }
 }
+static void check_ev_badges(UiThemeId theme) {
+  auto screen = lv_obj_create(nullptr);
+  const auto &palette = ui_theme_palette(theme);
+  lv_obj_set_style_bg_color(screen, lv_color_hex(palette.dashboard_bg), 0);
+  auto group = lv_obj_create(screen);
+  lv_obj_set_size(group, 190, 24);
+  lv_obj_center(group);
+  lv_obj_set_style_pad_all(group, 0, 0);
+  lv_obj_set_style_border_width(group, 0, 0);
+  lv_obj_set_style_bg_color(group, lv_color_hex(palette.card_bg), 0);
+  lv_obj_clear_flag(group, LV_OBJ_FLAG_SCROLLABLE);
+  auto badges = ui_ev_badges_create(group);
+  auto power = lv_label_create(group);
+  lv_label_set_text(power, "~7360 W");
+  lv_obj_set_width(power, 110);
+  lv_obj_set_style_text_font(power, &lv_font_montserrat_14, 0);
+  lv_obj_set_style_text_color(power, lv_color_hex(palette.text), 0);
+  lv_obj_align(power, LV_ALIGN_LEFT_MID, 77, 0);
+  lv_scr_load(screen);
+  VtSnapshot wb; wb.online = wb.measured = true; wb.mode = VT_SOLAR; wb.state = 1;
+  auto update = [&]() { ui_ev_badges_update(badges,
+    ev_dashboard_indicators(EvBackend::VetronicWb01, wb, EvDeyeData{})); };
+  update();
+  assert(!lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_HIDDEN));
+  assert(!strcmp(lv_label_get_text(badges.cable), LV_SYMBOL_OK));
+  assert(lv_color_eq(lv_obj_get_style_text_color(badges.cable, 0), lv_color_hex(0x22C55E)));
+  assert(!lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_CLICKABLE));
+  assert(!lv_obj_has_flag(badges.cable, LV_OBJ_FLAG_CLICKABLE));
+  assert(lv_obj_has_flag(group, LV_OBJ_FLAG_CLICKABLE));
+  lv_obj_update_layout(screen);
+  lv_area_t cable, sun, watts, bounds;
+  lv_obj_get_coords(badges.cable, &cable); lv_obj_get_coords(badges.solar, &sun);
+  lv_obj_get_coords(power, &watts); lv_obj_get_coords(group, &bounds);
+  assert(cable.x2 < sun.x1 && sun.x2 < watts.x1 && watts.x2 <= bounds.x2);
+  snapshot(theme == UI_THEME_DARK ? "ev-badges-solar-dark.bmp" : "ev-badges-solar-light.bmp");
+  wb.state = 2; update(); assert(!strcmp(lv_label_get_text(badges.cable), LV_SYMBOL_OK));
+  wb.state = 0; wb.mode = VT_MANUAL; update();
+  assert(!strcmp(lv_label_get_text(badges.cable), LV_SYMBOL_CLOSE));
+  assert(lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_HIDDEN));
+  wb.mode = VT_SOLAR; wb.state = 2; wb.online = false; update();
+  assert(!strcmp(lv_label_get_text(badges.cable), "-"));
+  assert(lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_HIDDEN));
+  ui_ev_badges_update(badges, ev_dashboard_indicators(EvBackend::None, wb, EvDeyeData{}));
+  assert(lv_obj_has_flag(badges.cable, LV_OBJ_FLAG_HIDDEN));
+  lv_scr_load(lv_obj_create(nullptr)); lv_obj_del(screen);
+}
 int main() {
   lv_init();
   static lv_disp_draw_buf_t buffer; lv_disp_draw_buf_init(&buffer, draw_buffer, nullptr, 480 * 40);
   static lv_disp_drv_t driver; lv_disp_drv_init(&driver);
   driver.hor_res = 480; driver.ver_res = 480; driver.draw_buf = &buffer; driver.flush_cb = flush; lv_disp_drv_register(&driver);
+  check_ev_badges(UI_THEME_DARK); check_ev_badges(UI_THEME_LIGHT);
   ui_show_v2_deye(nullptr); snapshot("menu-deye.bmp");
   ui_show_inverter_model(nullptr); snapshot("modele-deye.bmp");
   assert(lv_dropdown_get_option_cnt(model_dropdown) == DEYE_PROFILE_COUNT);

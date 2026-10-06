@@ -18,4 +18,4 @@ Le pack Windows réussit les contrôles ZIP, empreintes, vérification seule et 
 
 Après installation, contrôler les états branché en attente, solaire en charge, débranché et perte de liaison avec la WB01. Le soleil représente le mode solaire confirmé, pas la présence d'une puissance de charge à chaque instant.
 
-[Guide 4.3.8](GUIDE_UNIFIE_4.3.8.md) · [Release](RELEASE_v4.3.8.md)
+[Guide 4.3.8](../../../docs/GUIDE_UNIFIE_4.3.8.md) · [Release](../../../docs/RELEASE_v4.3.8.md)

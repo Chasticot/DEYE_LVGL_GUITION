@@ -1,6 +1,6 @@
-# Compiler le firmware unifié 4.3.7 avec Arduino IDE
+# Compiler le firmware unifié 4.3.8 avec Arduino IDE
 
-Cette procédure utilise les sources de `firmware/DEYE_UNIFIED/`. Le pack de la release est construit avec PlatformIO et s'installe sans Arduino IDE. La compilation Arduino 4.3.7 doit être distinguée de la validation PlatformIO consignée dans [VALIDATION.md](VALIDATION.md).
+Cette procédure utilise les sources de `firmware/DEYE_UNIFIED/`. Le pack de la release est construit avec PlatformIO et s'installe sans Arduino IDE. La compilation Arduino 4.3.8 doit être distinguée de la validation PlatformIO consignée dans [VALIDATION.md](VALIDATION.md).
 
 ## Installer les dépendances
 
@@ -63,4 +63,4 @@ La compilation seule ne modifie aucun matériel.
 - Application trop grande : sélectionner Minimal SPIFFS avec OTA.
 - Écran noir ou redémarrages : vérifier la PSRAM OPI, le brochage et la référence physique de l'écran.
 
-Les sketches `firmware/DEYE_V3/DEYE_V3.ino` et `firmware/DEYE_VETRONIC_V3/DEYE_VETRONIC_V3.ino` restent disponibles pour les versions historiques 4.3.3 et 4.3.4. La version actuelle se compile dans DEYE_UNIFIED. [Guide 4.3.7](GUIDE_UNIFIE_4.3.7.md).
+Les sketches `firmware/DEYE_V3/DEYE_V3.ino` et `firmware/DEYE_VETRONIC_V3/DEYE_VETRONIC_V3.ino` restent disponibles pour les versions historiques 4.3.3 et 4.3.4. La version actuelle se compile dans DEYE_UNIFIED. [Guide 4.3.8](GUIDE_UNIFIE_4.3.8.md).

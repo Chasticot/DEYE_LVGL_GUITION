@@ -1,5 +1,13 @@
 # Historique
 
+## Publication v4.3.8 — 6 octobre 2026
+
+- Restauration du soleil jaune et de la coche verte près de la voiture du tableau de bord unifié.
+- WB01 : branchement déterminé par l’état récent du véhicule (attente ou charge), croix rouge si débranché, tiret gris si indisponible. Soleil basé sur le mode solaire renvoyé par la passerelle.
+- Deye LoRa : soleil basé sur R489 récent ; aucun branchement déduit de R489/R490.
+- Ligne VE élargie pour conserver la voiture, les deux indicateurs et la puissance sans chevauchement. Tests des états et rendu LVGL clair/sombre.
+- GEN MO/PV5 et vérification GitHub des versions suffixées conservés.
+
 ## Publication v4.3.7 — 3 octobre 2026
 
 - Correction du bouton de vérification GitHub avec les versions suffixées telles que `4.3.4-vetronic-v3`.

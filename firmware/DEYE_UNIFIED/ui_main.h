@@ -12,6 +12,7 @@
 #include "tempo_api.h"
 #include "ve_deye.h"
 #include "vetronic.h"
+#include "ui_ev_badges.h"
 #include "ui_v2_navigation.h"
 
 // ==================== VARIABLES STATIQUES ====================
@@ -42,6 +43,7 @@ static lv_obj_t *label_load_daily = nullptr;
 static lv_obj_t *ev_charge_group = nullptr;
 static lv_obj_t *car_icon = nullptr;
 static lv_obj_t *label_ev_charge_power = nullptr;
+static UiEvBadges ev_badges;
 static lv_obj_t *tempo_card = nullptr;
 static lv_obj_t *label_tempo = nullptr;
 
@@ -532,7 +534,7 @@ static void ui_main_create() {
 
   // Groupe VE centre dans la tuile : l'icone et la puissance partagent le
   // meme axe vertical, independamment de la hauteur de leur police.
-  ev_charge_group = ui_main_make_icon_container(load_card, 130, 24);
+  ev_charge_group = ui_main_make_icon_container(load_card, 190, 24);
   lv_obj_align(ev_charge_group, LV_ALIGN_BOTTOM_MID, 0, -5);
   lv_obj_add_flag(ev_charge_group, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(ev_charge_group, ui_show_ev_charger, LV_EVENT_CLICKED, nullptr);
@@ -600,11 +602,12 @@ static void ui_main_create() {
     lv_obj_set_style_radius(hub, LV_RADIUS_CIRCLE, LV_PART_MAIN);
     lv_obj_clear_flag(hub, LV_OBJ_FLAG_CLICKABLE);
   }
+  ev_badges = ui_ev_badges_create(ev_charge_group);
   label_ev_charge_power = ui_main_label(
-    ev_charge_group, "VE: --", 86, &lv_font_montserrat_14,
+    ev_charge_group, "VE: --", 110, &lv_font_montserrat_14,
     ui_main_theme_color(theme.muted_text), LV_TEXT_ALIGN_LEFT
   );
-  lv_obj_align(label_ev_charge_power, LV_ALIGN_LEFT_MID, 40, 0);
+  lv_obj_align(label_ev_charge_power, LV_ALIGN_LEFT_MID, 77, 0);
   lv_label_set_long_mode(label_ev_charge_power, LV_LABEL_LONG_CLIP);
   if (!cfg_ev_charger_enabled) lv_obj_add_flag(ev_charge_group, LV_OBJ_FLAG_HIDDEN);
 
@@ -949,9 +952,13 @@ static void ui_main_update() {
   if (cfg_ev_charger_enabled) {
     if (ev_vetronic_enabled()) {
       const VtSnapshot ev = vt_snapshot();
+      ui_ev_badges_update(ev_badges, ev_dashboard_indicators(cfg_ev_backend, ev, EvDeyeData{}));
       if (ev.online && ev.measured) snprintf(text, sizeof(text), "~%u W", vt_power_w(ev.amps));
       else snprintf(text, sizeof(text), "VE: --");
     } else {
+      EvDeyeData ev = {};
+      deye_copy_ev_snapshot(&ev);
+      ui_ev_badges_update(ev_badges, ev_dashboard_indicators(cfg_ev_backend, VtSnapshot{}, ev));
       // R490 is a charge ceiling, not an instantaneous power measurement.
       // Keep the unavailable badge until native power telemetry is verified.
       snprintf(text, sizeof(text), "VE: --");
