@@ -1,5 +1,13 @@
 # Historique
 
+## Publication v4.3.9 — 6 octobre 2026
+
+- Correction d’un réveil spontané de 60 secondes en veille : la lecture de l’heure système ne dépend plus du délai zéro de `getLocalTime`.
+- Même lecture fiable utilisée pour la luminosité, les tarifs et les données journalières GEN.
+- Réveil tactile confirmé par trois trames valides sur au moins 80 ms ; rejet des contacts isolés, coordonnées hors écran et trames dont l’acquittement I2C échoue.
+- Traces série indiquant la cause du réveil et le retour en veille. Numéro de version du message de démarrage aligné sur le firmware.
+- Tests de reproduction du défaut d’horloge, de stabilité de la veille et du filtrage tactile. Indicateurs de recharge, GEN MO/PV5 et vérification GitHub conservés.
+
 ## Publication v4.3.8 — 6 octobre 2026
 
 - Restauration du soleil jaune et de la coche verte près de la voiture du tableau de bord unifié.

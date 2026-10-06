@@ -5,6 +5,7 @@
 #include <atomic>
 #include <esp_sntp.h>
 #include "settings.h"
+#include "clock_local_time.h"
 
 static std::atomic<bool> ntp_received{false};
 static void ntp_time_received(struct timeval *) { ntp_received.store(true); }
@@ -19,5 +20,5 @@ static void ntp_manager_begin() {
 }
 
 static bool ntp_manager_get_local_time(struct tm *timeinfo) {
-  return getLocalTime(timeinfo, 10);
+  return clock_get_local_time(timeinfo);
 }

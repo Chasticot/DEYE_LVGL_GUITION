@@ -27,7 +27,7 @@ struct V2Tariff {
 };
 static V2Tariff v2_tariff() {
   struct tm local = {};
-  const bool clock_ok = ntp_received.load() && getLocalTime(&local, 0);
+  const bool clock_ok = ntp_received.load() && clock_get_local_time(&local);
   const unsigned minute = local.tm_hour * 60 + local.tm_min;
   const TempoNow tempo = tempo_api_get_now();
   bool tempo_ok = tempo.valid && clock_ok && tempo.observed_at > 0;
@@ -71,7 +71,7 @@ static bool v2_daily_kwh(uint16_t pv_raw, bool pv_valid, float &result) {
   if (include_gen) {
     const V2Measurements m = v2_measure_snapshot();
     struct tm local = {};
-    gen_valid = ntp_received.load() && getLocalTime(&local, 0) && m.energy_valid &&
+    gen_valid = ntp_received.load() && clock_get_local_time(&local) && m.energy_valid &&
       m.energy_day == v2_day_key(local) && m.gen_valid;
     gen_kwh = m.gen_kwh;
   }

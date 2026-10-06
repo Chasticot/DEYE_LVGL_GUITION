@@ -11,7 +11,7 @@ static void v2_read_auxiliary(bool core_sample_ok) {
   static V2EnergyIntegrator meter;
   static uint32_t last_save_ms = 0;
   struct tm local = {};
-  const bool clock_ok = ntp_received.load() && getLocalTime(&local, 0);
+  const bool clock_ok = ntp_received.load() && clock_get_local_time(&local);
   bool energy_ok = false;
   if (clock_ok && inverter_profile().gen_supported && !cfg_gen_smartload) {
     const int today = v2_day_key(local);

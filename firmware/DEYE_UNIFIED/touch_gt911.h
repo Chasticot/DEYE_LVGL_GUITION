@@ -33,12 +33,12 @@ static bool gt911_read_register(uint16_t reg, uint8_t *buffer, uint8_t length) {
   return true;
 }
 
-static void gt911_clear_status() {
+static bool gt911_clear_status() {
   Wire.beginTransmission(GT911_ADDR);
   Wire.write((uint8_t)(GT911_STATUS_REG >> 8));
   Wire.write((uint8_t)(GT911_STATUS_REG & 0xFF));
   Wire.write((uint8_t)0x00);
-  Wire.endTransmission(true);
+  return Wire.endTransmission(true) == 0;
 }
 
 static void touch_gt911_begin() {
@@ -52,35 +52,32 @@ static void touch_gt911_begin() {
   DBG.println(gt911_available ? "GT911 OK" : "GT911 non detecte");
 }
 
-static bool touch_gt911_read() {
-  if (!gt911_available) return false;
+static TouchSample touch_gt911_read() {
+  if (!gt911_available) return TouchSample::Invalid;
 
   uint8_t status = 0;
-  if (!gt911_read_register(GT911_STATUS_REG, &status, 1)) return false;
+  if (!gt911_read_register(GT911_STATUS_REG, &status, 1)) return TouchSample::Invalid;
 
-  if ((status & 0x80) == 0 || (status & 0x0F) == 0) {
-    if (status & 0x80) gt911_clear_status();
-    return false;
+  const TouchSample sample = gt911_status_sample(status);
+  if (sample == TouchSample::Pending) return sample;
+  if (sample != TouchSample::Pressed) {
+    return gt911_clear_status() ? sample : TouchSample::Invalid;
   }
 
   uint8_t point[8];
   if (!gt911_read_register(GT911_POINT1_REG, point, 8)) {
     gt911_clear_status();
-    return false;
+    return TouchSample::Invalid;
   }
 
-  uint16_t raw_x = (uint16_t)point[1] | ((uint16_t)point[2] << 8);
-  uint16_t raw_y = (uint16_t)point[3] | ((uint16_t)point[4] << 8);
-
-  // =============================================
-  // PAS DE ROTATION : coordonnées brutes
-  // (l'affichage est en rotation 0)
-  // =============================================
-  touch_x = constrain((int16_t)raw_x, 0, LCD_W - 1);
-  touch_y = constrain((int16_t)raw_y, 0, LCD_H - 1);
-
-  gt911_clear_status();
-  return true;
+  // Rotation 0: use raw coordinates only after validating the frame.
+  int16_t x = 0, y = 0;
+  const bool valid = gt911_decode_point(point, LCD_W, LCD_H, x, y);
+  // A failed acknowledgement can leave the same frame ready on every poll.
+  if (!gt911_clear_status() || !valid) return TouchSample::Invalid;
+  touch_x = x;
+  touch_y = y;
+  return TouchSample::Pressed;
 }
 
 // ==================== GESTION DE L'ACTIVITÉ TACTILE ====================
@@ -108,8 +105,9 @@ static void lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
 
   static bool last_pressed = false;
 
-  bool pressed = touch_gt911_read();
-  if (display_touch(pressed)) pressed = false;
+  const TouchSample sample = touch_gt911_read();
+  bool pressed = sample == TouchSample::Pressed;
+  if (display_touch(sample)) pressed = false;
   uint32_t now = millis();
 
   // Pause the reader directly from the touch driver so the UI remains responsive.

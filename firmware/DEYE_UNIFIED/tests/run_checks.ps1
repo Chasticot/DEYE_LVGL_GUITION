@@ -8,7 +8,7 @@ $testDir = $PSScriptRoot
 $projectDir = (Resolve-Path (Join-Path $testDir '..\..\..')).Path
 $env:ZIG_GLOBAL_CACHE_DIR = Join-Path $env:TEMP 'deye-v3-435-zig-cache'
 $includes = @(('-I' + (Join-Path $testDir 'nvs_compat')), ('-I' + (Join-Path $testDir 'compat')), ('-I' + (Join-Path $projectDir '.pio\libdeps\deye_unified\ArduinoJson\src')))
-foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
+foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'clock_sleep_test', 'touch_wake_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
   $output = Join-Path $testDir ($test + '.exe')
   & $Zig c++ -std=c++17 -O1 @includes (Join-Path $testDir ($test + '.cpp')) -o $output
   if ($LASTEXITCODE -ne 0) { throw "Compilation failed: $test" }

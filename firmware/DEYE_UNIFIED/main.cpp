@@ -87,7 +87,7 @@ void setup() {
   DBG.begin(115200);
   delay(300);
   DBG.println();
-  DBG.println("=== DEYE V3 UNIFIE - 4.3.5 ===");
+  DBG.println("=== DEYE V3 UNIFIE - " FIRMWARE_VERSION " ===");
 
   if (!psramFound()) {
     DBG.println("ERREUR : PSRAM absente ou desactivee (OPI PSRAM requis).");

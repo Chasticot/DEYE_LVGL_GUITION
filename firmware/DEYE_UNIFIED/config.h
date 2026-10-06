@@ -26,7 +26,7 @@
 
 // Version semantique visible dans l'interface Web, les diagnostics et l'export.
 // Chaque publication GitHub doit utiliser le tag "v" + cette valeur (ex. v4.1.0).
-#define FIRMWARE_VERSION "4.3.8"
+#define FIRMWARE_VERSION "4.3.9"
 
 #define VETRONIC_HOST "192.168.1.130"
 #define VETRONIC_HTTP_PORT 80

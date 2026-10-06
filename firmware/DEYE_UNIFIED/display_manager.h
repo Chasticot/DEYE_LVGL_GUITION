@@ -6,12 +6,13 @@
 #include "config.h"
 #include "settings.h"
 #include "ntp_manager.h"
+#include "touch_logic.h"
 
 static V2SleepState display_sleep;
 
 static bool display_sleep_due() {
   struct tm local = {};
-  if (!cfg_v2.sleep_enabled || !ntp_received.load() || !getLocalTime(&local, 0)) return false;
+  if (!cfg_v2.sleep_enabled || !ntp_received.load() || !clock_get_local_time(&local)) return false;
   return v2_in_window(local.tm_hour * 60 + local.tm_min, cfg_v2.sleep_start, cfg_v2.sleep_end);
 }
 
@@ -59,7 +60,7 @@ static bool display_sunrise_sunset_minutes(const struct tm &local, int &sunrise,
 static uint8_t display_effective_brightness() {
   if (!cfg_display.night_enabled) return cfg_display.day_brightness;
   struct tm now = {};
-  if (!getLocalTime(&now, 0)) return cfg_display.day_brightness;
+  if (!clock_get_local_time(&now)) return cfg_display.day_brightness;
   if (cfg_display.sunset_mode) {
     int sunrise = 0, sunset = 0;
     if (display_sunrise_sunset_minutes(now, sunrise, sunset)) {
@@ -85,24 +86,40 @@ static uint8_t display_effective_brightness() {
 
 static void display_manager_apply() {
   const bool due = display_sleep_due();
+  const bool was_sleeping = display_sleep.sleeping;
   display_sleep.update(due, millis(), uint32_t(cfg_v2.wake_seconds) * 1000);
+  if (was_sleeping != display_sleep.sleeping) {
+    DBG.println(display_sleep.sleeping ? "[DISPLAY] Veille : delai de reveil expire"
+      : "[DISPLAY] Reveil : plage de veille inactive ou heure indisponible");
+  }
   const uint8_t brightness = display_sleep.sleeping ? 0 : display_effective_brightness();
   if (brightness == display_applied_brightness) return;
   display_applied_brightness = brightness;
   ledcWrite(DISPLAY_PWM_CHANNEL, display_sleep.sleeping ? 0 : max(brightness, DISPLAY_BACKLIGHT_MIN_DUTY));
 }
 
-static bool display_touch(bool pressed) {
+static bool display_touch(TouchSample sample) {
+  static TouchWakeFilter wake_filter;
   static bool swallow = false;
   static uint32_t last_contact = 0;
+  const uint32_t now = millis();
+  const bool pressed = sample == TouchSample::Pressed;
+  if (display_sleep.sleeping) {
+    // Filter only the wake gesture; visible-screen controls stay immediate.
+    if (!wake_filter.update(sample, now)) return true;
+    swallow = true;
+    wake_filter.reset();
+    DBG.println("[DISPLAY] Reveil : contact tactile confirme");
+  } else {
+    wake_filter.reset();
+  }
   if (pressed) {
-    if (display_sleep.sleeping) swallow = true;
-    last_contact = millis();
-    display_sleep.touch(display_sleep_due(), millis());
+    last_contact = now;
+    display_sleep.touch(display_sleep_due(), now);
     display_manager_apply();
   }
   // GT911 may have no new sample while the finger stays down.
-  if (!pressed && uint32_t(millis() - last_contact) > 250) swallow = false;
+  if (!pressed && uint32_t(now - last_contact) > 250) swallow = false;
   return swallow;
 }
 
