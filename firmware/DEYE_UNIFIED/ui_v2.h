@@ -200,6 +200,7 @@ void ui_show_v2_sources(lv_event_t *) {
   if (inverter_profile().pv_count >= 3) v2_field("Afficher PV3", &v2_draft.pv_visible[2], V2_BOOL);
   if (inverter_profile().pv_count >= 4) v2_field("Afficher PV4", &v2_draft.pv4_visible, V2_BOOL);
   if (inverter_profile().gen_supported) v2_field("Cumuler GEN MO + PV", &v2_draft.add_gen, V2_BOOL);
+  if (inverter_profile().gen_supported) v2_field("Afficher les kWh GEN Daily", &v2_draft.show_gen_daily, V2_BOOL);
   if (inverter_profile().gen_supported) v2_label(v2_body, "Sans registre : estimation GEN (~ kWh)", 0, v2_row_y, 420);
   v2_save_button();
 }

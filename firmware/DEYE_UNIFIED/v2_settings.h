@@ -5,6 +5,16 @@
 
 static V2Config cfg_v2;
 static const char *v2_storage_key() { return deye_is_aiw51() ? "config_p1" : "config"; }
+static bool v2_read_config(Preferences &nvs, const char *key, V2Config &saved, bool legacy_v2 = false) {
+  const size_t size = nvs.getBytesLength(key);
+  const size_t previous_size = offsetof(V2Config, show_gen_daily);
+  const size_t legacy_size = (offsetof(V2Config, pv4_visible) + 3) & ~size_t(3);
+  if (size != sizeof(saved) && size != previous_size && !(legacy_v2 && size == legacy_size)) return false;
+  if (nvs.getBytes(key, &saved, size) != size) return false;
+  if (size < sizeof(saved)) saved.show_gen_daily = false;
+  if (legacy_v2 && size == legacy_size) saved.pv4_visible = true;
+  return v2_config_valid(saved);
+}
 static bool v2_correct_gen_daily(V2Config &value) {
   if (!inverter_profile().available || inverter_profile().gen_daily != 62 ||
       value.gen_daily_register != 536) return false;
@@ -31,11 +41,9 @@ static void v2_load() {
   Preferences nvs;
   if (nvs.begin(inverter_profile().options_storage, true)) {
     V2Config saved;
-    const bool valid = nvs.getBytesLength(v2_storage_key()) == sizeof(saved) &&
-      nvs.getBytes(v2_storage_key(), &saved, sizeof(saved)) == sizeof(saved) && v2_config_valid(saved);
+    const bool valid = v2_read_config(nvs, v2_storage_key(), saved);
     const bool legacy_ai = !valid && deye_is_aiw51() &&
-      nvs.getBytesLength("config") == sizeof(saved) &&
-      nvs.getBytes("config", &saved, sizeof(saved)) == sizeof(saved) && v2_config_valid(saved);
+      v2_read_config(nvs, "config", saved);
     nvs.end();
     if (valid) {
       cfg_v2 = saved;
@@ -50,12 +58,8 @@ static void v2_load() {
     }
   }
   if (cfg_inverter_model != 0 || !nvs.begin("deye-v2", true)) return;
-  // pv4_visible is appended; copy only the old struct's bytes, preserving its default.
   V2Config saved;
-  const size_t old_size = (offsetof(V2Config, pv4_visible) + 3) & ~size_t(3);
-  if (nvs.getBytesLength("config") == old_size &&
-      nvs.getBytes("config", &saved, old_size) == old_size && v2_config_valid(saved)) {
-    saved.pv4_visible = true;
+  if (v2_read_config(nvs, "config", saved, true)) {
     cfg_v2 = saved;
   }
   nvs.end();

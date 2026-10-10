@@ -13,8 +13,10 @@ static void v2_read_auxiliary(bool core_sample_ok) {
   struct tm local = {};
   const bool clock_ok = ntp_received.load() && clock_get_local_time(&local);
   bool energy_ok = false;
-  if (clock_ok && inverter_profile().gen_supported && !cfg_gen_smartload) {
-    const int today = v2_day_key(local);
+  if (inverter_profile().gen_supported && ((clock_ok && !cfg_gen_smartload) ||
+      (cfg_v2.show_gen_daily && v2_gen_daily_uses_register(cfg_v2)))) {
+    // The inverter's daily register is also useful in SmartLoad mode, without NTP.
+    const int today = clock_ok ? v2_day_key(local) : 0;
     if (meter.day != today) {
       meter.kwh = 0;
       meter.previous_valid = false;

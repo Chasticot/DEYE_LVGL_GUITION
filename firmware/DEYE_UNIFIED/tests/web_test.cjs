@@ -39,7 +39,7 @@ async function dashboardChecks() {
     return values.get(id);
   };
   const data = {valid: true, pv_w: 1234, grid_w: 100, load_w: 400, battery_w: -100,
-    soc: 75, daily_pv_dkwh: 42, relay_on: true, ev_enabled: false, ev_backend: 'none',
+    soc: 75, daily_pv_dkwh: 42, relay_enabled: false, relay_on: false, ev_enabled: false, ev_backend: 'none',
     ev_grid_allowed: true, ev_backend_name: 'Aucune borne', vetronic: {...state}};
   const requests = [];
   const dashboard = {document: {getElementById: get}, setInterval() {}, fetch: async (url, options) => {
@@ -52,6 +52,16 @@ async function dashboardChecks() {
   assert.equal(get('chargerLink').hidden, true);
   assert.doesNotMatch(get('data').innerHTML, /Recharge reseau|Charge manuelle|Borne/);
   assert.match(get('data').innerHTML, /1234 W/);
+  assert.doesNotMatch(get('data').innerHTML, /Relais/);
+  data.relay_enabled = true;
+  await vm.runInContext('u()', dashboard);
+  assert.match(get('data').innerHTML, /Relais<br><b>OFF/);
+  data.relay_on = true;
+  await vm.runInContext('u()', dashboard);
+  assert.match(get('data').innerHTML, /Relais<br><b>ON/);
+  data.relay_enabled = false;
+  await vm.runInContext('u()', dashboard);
+  assert.doesNotMatch(get('data').innerHTML, /Relais/);
   data.ev_enabled = true; data.ev_backend = 'deye_lora'; data.ev_backend_name = 'Deye LoRa';
   await vm.runInContext('u()', dashboard);
   assert.equal(get('chargerLink').hidden, false);

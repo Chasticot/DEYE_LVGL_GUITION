@@ -1,4 +1,4 @@
-# Deye LVGL — firmware unifié 4.3.9
+# Deye LVGL — firmware unifié 4.3.10
 
 Un seul firmware pour l'écran Guition ESP32-S3 480 × 480, avec choix du modèle
 d'onduleur et du système de recharge. Il réunit le catalogue multi-onduleurs
@@ -6,6 +6,21 @@ de la V3 et le client VE TRONIC WB01 de la variante Vetronic V3.
 
 Les versions précédentes restent dans leurs dossiers. Le projet PlatformIO
 à la racine du dépôt compile désormais `deye_unified` par défaut.
+
+## Afficher les kWh GEN Daily et l’état du relais
+
+Dans **DEYE / SOLARMAN > PRODUCTION PV / GEN**, activer **Afficher les kWh GEN Daily**, puis enregistrer et laisser l’écran redémarrer. L’option est désactivée par défaut et indépendante du cumul GEN MO + PV.
+
+- Mode SMARTLOAD : `SMARTLOAD : ON / 278 kWh` ou `SMARTLOAD : OFF / 278 kWh`.
+- Mode GEN MO : `GEN : 2650 W / 278 kWh`.
+
+Le compteur utilise le registre **GEN Daily** et son coefficient configurés dans les registres personnalisés. Sa lecture est disponible dans les deux modes, même avant la synchronisation NTP. Un registre non configuré ou une mesure indisponible affiche `-- kWh` ; l’affichage du bandeau ne remplace pas cette valeur par une estimation.
+
+Les kWh et les températures restent sur une seule ligne. La police du libellé SMARTLOAD/GEN passe à 14 quand les kWh sont activés ; l’affichage sans l’option conserve sa police habituelle. Le rendu est vérifié jusqu’à 999,9 kWh.
+
+L’indication ON/OFF du relais n’apparaît sur le tableau de bord tactile et Web que si **RELAIS INTÉGRÉ > Activer la règle** est activé. Le masquage ne modifie pas le fonctionnement du relais.
+
+Les anciens réglages sont repris, avec l’affichage GEN Daily désactivé. Les exports JSON incluent cette option ; les anciens exports restent importables.
 
 ## Choix des équipements
 
@@ -44,7 +59,7 @@ Deye LoRa compatibles avec un autre modèle.
 ## Installation et migration
 
 1. Sauvegarder la configuration JSON de l'écran avant la mise à jour.
-2. Installer le firmware 4.3.9 sur l'écran, puis vérifier le modèle Deye dans
+2. Installer le firmware 4.3.10 sur l'écran, puis vérifier le modèle Deye dans
    les réglages. Le modèle mémorisé par la V3 est conservé.
 3. Dans les réglages du véhicule, choisir explicitement Aucune, Deye LoRa ou
    VE TRONIC WB01, enregistrer et laisser l'écran redémarrer.
@@ -132,7 +147,7 @@ Depuis la racine du dépôt, compiler les sources firmware/DEYE_UNIFIED/ :
 pio run -e deye_unified
 ```
 
-Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.3.9](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.9). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
+Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.3.10](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.10). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
 
 Configuration matérielle : ESP32-S3, PSRAM OPI, écran 480 × 480, USB CDC actif,
 flash 4 MB et partition Minimal SPIFFS avec OTA.

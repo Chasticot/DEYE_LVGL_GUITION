@@ -61,6 +61,7 @@ static V2Measurements v2_measure_snapshot() {
   portEXIT_CRITICAL(&v2_measure_lock);
   const uint32_t now = millis();
   result.gen_valid = result.gen_valid && uint32_t(now - result.gen_ms) < 45000;
+  result.energy_valid = result.energy_valid && uint32_t(now - result.gen_ms) < 45000;
   return result;
 }
 

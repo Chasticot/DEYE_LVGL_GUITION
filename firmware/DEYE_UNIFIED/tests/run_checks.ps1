@@ -8,9 +8,9 @@ $testDir = $PSScriptRoot
 $projectDir = (Resolve-Path (Join-Path $testDir '..\..\..')).Path
 $env:ZIG_GLOBAL_CACHE_DIR = Join-Path $env:TEMP 'deye-v3-435-zig-cache'
 $includes = @(('-I' + (Join-Path $testDir 'nvs_compat')), ('-I' + (Join-Path $testDir 'compat')), ('-I' + (Join-Path $projectDir '.pio\libdeps\deye_unified\ArduinoJson\src')))
-foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'clock_sleep_test', 'touch_wake_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
+foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'gen_reader_test', 'clock_sleep_test', 'touch_wake_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
   $output = Join-Path $testDir ($test + '.exe')
-  & $Zig c++ -std=c++17 -O1 @includes (Join-Path $testDir ($test + '.cpp')) -o $output
+  & $Zig c++ -std=c++17 -O1 -UNDEBUG @includes (Join-Path $testDir ($test + '.cpp')) -o $output
   if ($LASTEXITCODE -ne 0) { throw "Compilation failed: $test" }
   & $output
   if ($LASTEXITCODE -ne 0) { throw "Test failed: $test" }
@@ -23,7 +23,7 @@ if ($SkipPreview) { return }
 $lvgl = Join-Path $projectDir '.pio\libdeps\deye_unified\lvgl'
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $lvgl 'src') -Filter '*.c' -Recurse | ForEach-Object FullName)
 $configPath = (Join-Path $testDir 'preview_lv_conf.h').Replace('\', '/')
-$arguments = @('cc', '-O1', ('-DLV_CONF_PATH=' + $configPath), ('-I' + $lvgl), ('-I' + (Join-Path $testDir 'compat')))
+$arguments = @('cc', '-O1', '-UNDEBUG', ('-DLV_CONF_PATH=' + $configPath), ('-I' + $lvgl), ('-I' + (Join-Path $testDir 'compat')))
 $arguments += $sources
 $arguments += @((Join-Path $testDir 'ui_preview.cpp'), '-o', (Join-Path $testDir 'ui_preview.exe'))
 & $Zig @arguments

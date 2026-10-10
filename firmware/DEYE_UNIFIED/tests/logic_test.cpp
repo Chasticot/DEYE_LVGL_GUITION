@@ -96,6 +96,7 @@ int main() {
 
   V2Config config;
   assert(v2_config_valid(config));
+  assert(!config.show_gen_daily);
   assert(config.gen_daily_register == 62 && config.gen_daily_scale == 0.1f);
   assert(v2_gen_daily_uses_register(config));
   config.gen_daily_register = 65535;

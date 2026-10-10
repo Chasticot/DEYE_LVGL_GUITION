@@ -1,5 +1,14 @@
 # Historique
 
+## Publication v4.3.10 — 10 octobre 2026
+
+- Option « Afficher les kWh GEN Daily » dans Production PV / GEN, désactivée par défaut.
+- Lecture du registre journalier dans les modes SMARTLOAD et GEN MO ; affichage à côté de ON/OFF ou de la puissance GEN.
+- Bandeau sur une seule ligne avec les températures, vérifié jusqu’à 999,9 kWh. Une mesure absente ou périmée affiche « -- kWh ».
+- Indication du relais masquée sur le tactile et le Web quand sa règle est désactivée.
+- Reprise des réglages existants et compatibilité des anciens exports JSON ; option conservée après sauvegarde/redémarrage.
+- Assertions des tests hôte/LVGL activées explicitement avec Zig ; vérification de lecture GEN, migration, interfaces et rendu clair/sombre.
+
 ## Publication v4.3.9 — 6 octobre 2026
 
 - Correction d’un réveil spontané de 60 secondes en veille : la lecture de l’heure système ne dépend plus du délai zéro de `getLocalTime`.

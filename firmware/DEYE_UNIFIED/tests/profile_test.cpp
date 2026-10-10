@@ -59,6 +59,23 @@ int main() {
   v2_load();
   assert(cfg_v2.relay_threshold==1234 && !cfg_v2.pv_visible[1] && cfg_v2.pv4_visible);
   assert(cfg_v2.gen_daily_register==62 && cfg_v2.gen_daily_scale==0.1f);
+  assert(!cfg_v2.show_gen_daily);
+  // Existing unified blobs may contain arbitrary tail padding: never enable the new option.
+  cfg_inverter_model=2;
+  V2Config previous; previous.pv4_visible=false; previous.relay_threshold=4321;
+  previous.relay_register=inverter_profile().registers.battery_soc;
+  previous.show_gen_daily=true;
+  const size_t previous_size=offsetof(V2Config,show_gen_daily);
+  static_assert(sizeof(V2Config)>offsetof(V2Config,show_gen_daily), "Separate appended NVS slot");
+  memset(reinterpret_cast<uint8_t *>(&previous)+offsetof(V2Config,pv4_visible)+1,0xff,
+    previous_size-offsetof(V2Config,pv4_visible)-1);
+  legacy.begin(inverter_profile().options_storage,false);
+  legacy.putBytes("config",&previous,previous_size);
+  v2_load();
+  assert(!cfg_v2.show_gen_daily && !cfg_v2.pv4_visible && cfg_v2.relay_threshold==4321);
+  cfg_v2.show_gen_daily=true; assert(v2_save(cfg_v2)); v2_load();
+  assert(cfg_v2.show_gen_daily && !cfg_v2.pv4_visible && cfg_v2.relay_threshold==4321);
+  cfg_inverter_model=0; v2_load();
   auto custom=settings_load_registers(); custom.gen_power=164;
   assert(settings_save_registers(custom));
   assert(settings_save_model(2)); assert(cfg_inverter_model==0); // deferred until reboot

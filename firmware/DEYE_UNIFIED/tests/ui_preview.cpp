@@ -101,6 +101,7 @@ static bool vt_save_host(const char *host) { cfg_vetronic_host = host; return tr
 #include "../ui_vetronic.h"
 #include "../ui_v2.h"
 #include "../ui_ev_badges.h"
+#include "../ui_gen_footer.h"
 
 static lv_color_t pixels[480 * 480], draw_buffer[480 * 40];
 static void flush(lv_disp_drv_t *driver, const lv_area_t *area, lv_color_t *colors) {
@@ -156,7 +157,7 @@ static void check_ev_badges(UiThemeId theme) {
   update();
   assert(!lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_HIDDEN));
   assert(!strcmp(lv_label_get_text(badges.cable), LV_SYMBOL_OK));
-  assert(lv_color_eq(lv_obj_get_style_text_color(badges.cable, 0), lv_color_hex(0x22C55E)));
+  assert(lv_obj_get_style_text_color(badges.cable, 0).full == lv_color_hex(0x22C55E).full);
   assert(!lv_obj_has_flag(badges.solar, LV_OBJ_FLAG_CLICKABLE));
   assert(!lv_obj_has_flag(badges.cable, LV_OBJ_FLAG_CLICKABLE));
   assert(lv_obj_has_flag(group, LV_OBJ_FLAG_CLICKABLE));
@@ -177,12 +178,70 @@ static void check_ev_badges(UiThemeId theme) {
   assert(lv_obj_has_flag(badges.cable, LV_OBJ_FLAG_HIDDEN));
   lv_scr_load(lv_obj_create(nullptr)); lv_obj_del(screen);
 }
+static void check_gen_footer(UiThemeId theme) {
+  auto screen = lv_obj_create(nullptr);
+  const auto &palette = ui_theme_palette(theme);
+  lv_obj_set_style_bg_color(screen, lv_color_hex(palette.dashboard_bg), 0);
+  auto card = lv_obj_create(screen);
+  lv_obj_set_pos(card, 10, 430); lv_obj_set_size(card, 460, 42);
+  lv_obj_set_style_pad_all(card, 8, 0);
+  lv_obj_set_style_border_width(card, 1, 0);
+  lv_obj_set_style_border_color(card, lv_color_hex(palette.border), 0);
+  lv_obj_set_style_radius(card, 12, 0);
+  lv_obj_set_style_bg_color(card, lv_color_hex(palette.card_bg), 0);
+  lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
+  auto status = lv_label_create(card), temperatures = lv_label_create(card);
+  lv_obj_set_style_text_font(status, &lv_font_montserrat_16, 0);
+  lv_obj_set_style_text_color(status, lv_color_hex(palette.accent), 0);
+  lv_obj_set_style_text_font(temperatures, &lv_font_montserrat_12, 0);
+  lv_obj_set_style_text_color(temperatures, lv_color_hex(palette.text), 0);
+  lv_obj_set_style_text_align(temperatures, LV_TEXT_ALIGN_RIGHT, 0);
+  lv_label_set_text(temperatures, "DC 42.0C  AC 38.5C  BAT 26.0C");
+  lv_scr_load(screen);
+  const char *bases[] = {"SMARTLOAD : ON", "SMARTLOAD : OFF", "GEN : 2650 W", "GEN : 99999 W", "GEN : -- W"};
+  const float readings[] = {0, 278, 999, 999.9f};
+  for (const char *base : bases) for (float reading : readings) {
+    char text[64]; snprintf(text, sizeof(text), "%s", base);
+    ui_gen_footer_append_daily(text, sizeof(text), true, reading);
+    if (reading == 278) assert(strstr(text, " / 278 kWh") && !strstr(text, "278.0"));
+    lv_label_set_text(status, text);
+    ui_gen_footer_layout(status, temperatures, true);
+    lv_obj_update_layout(screen);
+    lv_area_t a, b, c;
+    lv_obj_get_coords(status, &a); lv_obj_get_coords(temperatures, &b); lv_obj_get_coords(card, &c);
+    assert(a.x1 > c.x1 && a.x2 < c.x2 && b.x1 > c.x1 && b.x2 < c.x2);
+    assert(a.x2 < b.x1 && a.y1 > c.y1 && a.y2 < c.y2 && b.y1 > c.y1 && b.y2 < c.y2);
+    assert(abs((a.y1 + a.y2) - (b.y1 + b.y2)) <= 1);
+    assert(lv_txt_get_width(text, strlen(text), &lv_font_montserrat_14, 0, LV_TEXT_FLAG_NONE) <= lv_obj_get_width(status));
+    const char *temperature_text = lv_label_get_text(temperatures);
+    assert(lv_txt_get_width(temperature_text, strlen(temperature_text), &lv_font_montserrat_12, 0, LV_TEXT_FLAG_NONE) <= lv_obj_get_width(temperatures));
+  }
+  lv_label_set_text(status, "SMARTLOAD : OFF / 999.9 kWh");
+  snapshot(theme == UI_THEME_DARK ? "gen-daily-footer-dark.bmp" : "gen-daily-footer-light.bmp");
+  char fraction[64] = "GEN : 2650 W";
+  ui_gen_footer_append_daily(fraction, sizeof(fraction), true, 278.3f);
+  assert(strcmp(fraction, "GEN : 2650 W / 278.3 kWh") == 0);
+  const float invalid_values[] = {-1.0f, NAN, INFINITY};
+  for (float value : invalid_values) {
+    char invalid[64] = "SMARTLOAD : ON";
+    ui_gen_footer_append_daily(invalid, sizeof(invalid), true, value);
+    assert(strcmp(invalid, "SMARTLOAD : ON / -- kWh") == 0);
+  }
+  char missing[64] = "GEN : -- W";
+  ui_gen_footer_append_daily(missing, sizeof(missing), false, 278);
+  assert(strcmp(missing, "GEN : -- W / -- kWh") == 0);
+  lv_label_set_text(status, "SMARTLOAD : ON");
+  ui_gen_footer_layout(status, temperatures, false); lv_obj_update_layout(screen);
+  assert(lv_obj_get_width(status) == 175 && lv_obj_get_width(temperatures) == 270);
+  assert(lv_obj_get_style_text_font(status, 0) == &lv_font_montserrat_16);
+}
 int main() {
   lv_init();
   static lv_disp_draw_buf_t buffer; lv_disp_draw_buf_init(&buffer, draw_buffer, nullptr, 480 * 40);
   static lv_disp_drv_t driver; lv_disp_drv_init(&driver);
   driver.hor_res = 480; driver.ver_res = 480; driver.draw_buf = &buffer; driver.flush_cb = flush; lv_disp_drv_register(&driver);
   check_ev_badges(UI_THEME_DARK); check_ev_badges(UI_THEME_LIGHT);
+  check_gen_footer(UI_THEME_DARK); check_gen_footer(UI_THEME_LIGHT);
   ui_show_v2_deye(nullptr); snapshot("menu-deye.bmp");
   ui_show_inverter_model(nullptr); snapshot("modele-deye.bmp");
   assert(lv_dropdown_get_option_cnt(model_dropdown) == DEYE_PROFILE_COUNT);
@@ -195,7 +254,7 @@ int main() {
   }
   cfg_inverter_model = 2;
   ui_show_v2_sources(nullptr); check_form(); snapshot("sources-hp3.bmp");
-  assert(v2_field_count == 5);
+  assert(v2_field_count == 6);
   cfg_inverter_model = 3;
   ui_show_v2_sources(nullptr); check_form(); snapshot("sources-aiw51.bmp");
   assert(v2_field_count == 2);
@@ -203,6 +262,10 @@ int main() {
   cfg_inverter_model = 0;
   ui_show_v2_sources(nullptr); check_form(); snapshot("sources.bmp");
   assert(v2_sources_page && v2_gen_mode_draft == 0);
+  assert(v2_field_count == 5 && !v2_draft.show_gen_daily);
+  lv_obj_add_state(v2_fields[4].object, LV_STATE_CHECKED);
+  assert(v2_parse_form() && v2_draft.show_gen_daily);
+  snapshot("sources-gen-daily.bmp");
   auto gen_selector = lv_obj_get_child(v2_body, 1);
   lv_btnmatrix_set_selected_btn(gen_selector, 1);
   lv_event_send(gen_selector, LV_EVENT_VALUE_CHANGED, nullptr);

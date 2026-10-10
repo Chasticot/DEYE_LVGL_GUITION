@@ -13,6 +13,7 @@
 #include "ve_deye.h"
 #include "vetronic.h"
 #include "ui_ev_badges.h"
+#include "ui_gen_footer.h"
 #include "ui_v2_navigation.h"
 
 // ==================== VARIABLES STATIQUES ====================
@@ -342,6 +343,7 @@ static void ui_main_create() {
   label_relay = ui_main_label(header, "OFF", 34, &lv_font_montserrat_14,
     lv_palette_main(LV_PALETTE_RED), LV_TEXT_ALIGN_RIGHT);
   lv_obj_align(label_relay, LV_ALIGN_TOP_RIGHT, -90, 8);
+  if (!cfg_v2.relay_enabled) lv_obj_add_flag(label_relay, LV_OBJ_FLAG_HIDDEN);
 
   inverter_icon = ui_main_make_icon_container(header, 24, 21);
   lv_obj_align(inverter_icon, LV_ALIGN_TOP_RIGHT, -4, 4);
@@ -693,6 +695,8 @@ static void ui_main_create() {
     LV_TEXT_ALIGN_RIGHT
   );
   lv_obj_align(label_temp, LV_ALIGN_RIGHT_MID, -3, 0);
+  ui_gen_footer_layout(label_smartload, label_temp,
+    inverter_profile().gen_supported && cfg_v2.show_gen_daily);
 
   // Avertissement statique, sans transformation graphique ni bitmap.
   label_monitoring_unavailable = lv_label_create(screen_main);
@@ -857,6 +861,8 @@ static void ui_main_update() {
     lv_obj_move_foreground(label_monitoring_unavailable);
   }
   if (WiFi.status() == WL_CONNECTED) lv_label_set_text(label_wifi, text);
+  if (cfg_v2.relay_enabled) lv_obj_clear_flag(label_relay, LV_OBJ_FLAG_HIDDEN);
+  else lv_obj_add_flag(label_relay, LV_OBJ_FLAG_HIDDEN);
   lv_label_set_text(label_relay, v2_relay.output ? "ON" : "OFF");
   lv_obj_set_style_text_color(label_relay,
     lv_palette_main(v2_relay.output ? LV_PALETTE_GREEN : LV_PALETTE_RED), LV_PART_MAIN);
@@ -1041,7 +1047,8 @@ static void ui_main_update() {
   // SMARTLOAD ET TEMPÉRATURES
   // SMARTLOAD / GEN MO
   bool gen_smartload = settings_get_gen_mode();
-  char smart_text[32];
+  const V2Measurements gen_measurements = v2_measure_snapshot();
+  char smart_text[64];
   if (!inverter_profile().gen_supported) {
     smart_text[0] = 0;
   } else if (gen_smartload) {
@@ -1053,10 +1060,13 @@ static void ui_main_update() {
                                 LV_PART_MAIN);
   } else {
     // Mode GEN MO : afficher la puissance
-    if (v2_measure_snapshot().gen_valid) snprintf(smart_text, sizeof(smart_text), "GEN : %lu W", (unsigned long)v2_gen_production_w(data.gen_power));
+    if (gen_measurements.gen_valid) snprintf(smart_text, sizeof(smart_text), "GEN : %lu W", (unsigned long)v2_gen_production_w(data.gen_power));
     else snprintf(smart_text, sizeof(smart_text), "GEN : -- W");
     lv_obj_set_style_text_color(label_smartload, ui_main_theme_color(theme.accent), LV_PART_MAIN);
   }
+  if (inverter_profile().gen_supported && cfg_v2.show_gen_daily)
+    ui_gen_footer_append_daily(smart_text, sizeof(smart_text),
+      v2_gen_daily_uses_register(cfg_v2) && gen_measurements.energy_valid, gen_measurements.gen_kwh);
   lv_label_set_text(label_smartload, smart_text);
 
   snprintf(

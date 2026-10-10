@@ -39,6 +39,8 @@ struct V2Config {
   uint16_t sleep_end = 420;
   uint16_t wake_seconds = 60;
   bool pv4_visible = true;
+  // Keep a distinct appended NVS slot so older blobs cannot supply padding as a bool.
+  alignas(4) bool show_gen_daily = false;
 };
 static inline bool v2_gen_daily_uses_register(const V2Config &c) {
   return c.gen_daily_register != 0;

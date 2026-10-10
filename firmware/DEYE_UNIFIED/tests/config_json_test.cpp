@@ -41,6 +41,7 @@ int main() {
   assert(!web_ev_backend_parse(charging.as<JsonObjectConst>(), true, backend, ambiguous));
   cfg_v2.pv_visible[1] = false;
   cfg_v2.pv4_visible = false;
+  cfg_v2.show_gen_daily = true;
   cfg_v2.tariff_mode = 1;
   cfg_v2.sleep_enabled = true;
   cfg_v2.relay_coefficient = -0.125f;
@@ -52,6 +53,12 @@ int main() {
   assert(web_v2_parse(doc.as<JsonObjectConst>(), restored));
   assert(!restored.pv_visible[1] && restored.pv_visible[0]);
   assert(!restored.pv4_visible);
+  assert(restored.show_gen_daily);
+  doc["show_gen_daily"] = "true";
+  assert(!web_v2_parse(doc.as<JsonObjectConst>(), restored));
+  doc.remove("show_gen_daily");
+  restored.show_gen_daily = true;
+  assert(web_v2_parse(doc.as<JsonObjectConst>(), restored) && !restored.show_gen_daily);
   doc.remove("pv4_visible");
   restored.pv4_visible = true;
   assert(web_v2_parse(doc.as<JsonObjectConst>(), restored) && restored.pv4_visible);

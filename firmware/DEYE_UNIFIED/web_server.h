@@ -123,6 +123,7 @@ static String web_dashboard_json() {
   payload += ",\"daily_pv_dkwh\":" + (energy_valid ? String(kwh * 10, 2) : String("null")) + ",\"daily_load_dkwh\":" + String(daily_load);
   payload += ",\"gen_estimated\":" + String(v2_gen_included() && !v2_gen_daily_uses_register(cfg_v2) ? "true" : "false");
   payload += ",\"relay_on\":" + String(v2_relay.output ? "true" : "false");
+  payload += ",\"relay_enabled\":" + String(cfg_v2.relay_enabled ? "true" : "false");
   payload += ",\"ev_grid_allowed\":" + String(v2_tariff().grid_allowed ? "true" : "false");
   payload += ",\"ev_backend\":\"" + String(ev_backend_key(cfg_ev_backend)) + "\",\"ev_backend_name\":\"" + web_json_escape(ev_backend_name(cfg_ev_backend)) + "\"";
   payload += ",\"ev_enabled\":" + String(cfg_ev_charger_enabled ? "true" : "false");
@@ -260,7 +261,7 @@ let power=v=>d.valid?v+' W':'-- W';
 let day=d.daily_pv_dkwh===null?'-- kWh':(d.gen_estimated?'~ ':'')+(d.daily_pv_dkwh/10).toFixed(1)+' kWh';
 let x=[['Production',power(d.pv_w)],['Reseau',power(d.grid_w)],['Conso',power(d.load_w)],
 ['Batterie',d.valid?d.soc+'% / '+d.battery_w+' W':'--'],['Production jour',day],
-['Relais',d.relay_on?'ON':'OFF'],['Etat',d.valid?'Connecte':'Indisponible']];
+...(d.relay_enabled?[['Relais',d.relay_on?'ON':'OFF']]:[]),['Etat',d.valid?'Connecte':'Indisponible']];
 const link=document.getElementById('chargerLink');link.hidden=!d.ev_enabled;
 if(d.ev_backend==='vetronic_wb01'){const v=d.vetronic;link.href='/vetronic';link.textContent=' | Piloter VE TRONIC';
 x.push(['Borne',v.mode_label],['Recharge VE',v.measured?'~'+v.power_w+' W':'-- W'],['Charge manuelle',v.manual_allowed?'Autorisee':'Interdite']);}

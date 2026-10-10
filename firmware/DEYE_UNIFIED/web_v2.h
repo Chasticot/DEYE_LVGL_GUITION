@@ -29,6 +29,7 @@ static const V2WebField v2_web_fields[] = {
   {"pv3", "Afficher PV3", offsetof(V2Config, pv_visible) + 2, 0},
   V2_WEB(pv4_visible, "Afficher PV4", 0),
   V2_WEB(add_gen, "Cumuler GEN MO avec PV", 0),
+  V2_WEB(show_gen_daily, "Afficher les kWh GEN Daily", 0),
   V2_WEB(gen_daily_register, "Registre energie GEN du jour", 1),
   V2_WEB(gen_daily_scale, "Coefficient GEN kWh", 2),
   V2_WEB(tariff_mode, "Heures creuses", 3),
@@ -69,6 +70,10 @@ static bool web_v2_parse(JsonObjectConst object, V2Config &config) {
   if (object.isNull()) return false;
   for (const auto &field : v2_web_fields) {
     if (strcmp(field.key, "pv4_visible") == 0 && !object.containsKey(field.key)) continue;
+    if (strcmp(field.key, "show_gen_daily") == 0 && !object.containsKey(field.key)) {
+      config.show_gen_daily = false; // Older exports predate this optional display.
+      continue;
+    }
     const JsonVariantConst value = object[field.key];
     uint8_t *p = reinterpret_cast<uint8_t *>(&config) + field.offset;
     if (field.kind == 0) {
