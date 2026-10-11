@@ -213,6 +213,23 @@ static bool settings_save_deye(const String &host, uint32_t logger_serial) {
   return ok;
 }
 
+// DHCP recovery changes only the IP key. The saved serial is checked and never
+// rewritten; a user edit made during discovery invalidates this result.
+static bool settings_save_discovered_deye_host(const String &host, const String &previous, uint32_t serial) {
+  uint32_t address = 0;
+  if (!serial || serial == 123456789UL || !network_parse_ipv4(host.c_str(), address) ||
+      !network_unicast(address) || host == previous || cfg_logger_serial != serial || cfg_deye_host != previous)
+    return false;
+  Preferences storage;
+  if (!storage.begin("deye-ui", false)) return false;
+  bool ok = storage.getUInt("logger", 0) == serial && storage.getString("deye_host", "") == previous;
+  ok = ok && storage.putString("deye_host", host) == host.length();
+  ok = ok && storage.getString("deye_host", "") == host && storage.getUInt("logger", 0) == serial;
+  storage.end();
+  if (ok) cfg_deye_host = host;
+  return ok;
+}
+
 static bool settings_vetronic_host_valid(const String &host) {
   uint32_t address = 0;
   return host.length() >= 7 && host.length() <= 15 &&

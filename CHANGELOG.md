@@ -1,5 +1,15 @@
 # Historique
 
+## Publication v4.4.0 — 11 octobre 2026
+
+- Recherche manuelle du logger depuis l’écran et le Web : UDP WIFIKIT puis identification TCP/V5 avec le numéro de série fourni.
+- Récupération automatique après perte durable de connexion : au moins trois échecs et 60 secondes sans réponse V5, avec Wi-Fi connecté et numéro de série réel enregistré.
+- Nouvelle IP du même logger sauvegardée seule, sans réécriture du numéro de série ; redémarrage automatique uniquement après vérification de la sauvegarde.
+- Pas de redémarrage pour une IP identique, un logger différent, une recherche infructueuse ou un échec de sauvegarde. Nouvelles tentatives espacées de cinq minutes après un balayage automatique.
+- Respect des modifications manuelles intervenues pendant la recherche ; application des résultats et sauvegarde dans la boucle principale, report pendant l’OTA.
+- Correction du blocage UDP après un paquet trop long, attente V5 de 10 secondes, phases et traces de diagnostic.
+- Fonctions de la 4.3.10 conservées ; tests du réseau simulé, NVS, interfaces et firmware unifié.
+
 ## Publication v4.3.10 — 10 octobre 2026
 
 - Option « Afficher les kWh GEN Daily » dans Production PV / GEN, désactivée par défaut.

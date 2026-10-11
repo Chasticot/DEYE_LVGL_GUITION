@@ -19,3 +19,6 @@ __pycache__/
 *.bmp
 *.log
 config.local.h
+**/tests/logger_protocol_under_test.h
+**/tests/logger_settings_under_test.h
+**/tests/logger_ui_under_test.h

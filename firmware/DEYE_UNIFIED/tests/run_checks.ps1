@@ -8,7 +8,7 @@ $testDir = $PSScriptRoot
 $projectDir = (Resolve-Path (Join-Path $testDir '..\..\..')).Path
 $env:ZIG_GLOBAL_CACHE_DIR = Join-Path $env:TEMP 'deye-v3-435-zig-cache'
 $includes = @(('-I' + (Join-Path $testDir 'nvs_compat')), ('-I' + (Join-Path $testDir 'compat')), ('-I' + (Join-Path $projectDir '.pio\libdeps\deye_unified\ArduinoJson\src')))
-foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'gen_reader_test', 'clock_sleep_test', 'touch_wake_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
+foreach ($test in @('logger_discovery_test', 'profile_test', 'backend_test', 'logic_test', 'gen_reader_test', 'clock_sleep_test', 'touch_wake_test', 'production_test', 'ev_dashboard_test', 'deye_tariff_test', 'config_json_test', 'vetronic_test', 'vetronic_json_test')) {
   $output = Join-Path $testDir ($test + '.exe')
   & $Zig c++ -std=c++17 -O1 -UNDEBUG @includes (Join-Path $testDir ($test + '.cpp')) -o $output
   if ($LASTEXITCODE -ne 0) { throw "Compilation failed: $test" }
@@ -19,7 +19,11 @@ foreach ($test in @('profile_test', 'backend_test', 'logic_test', 'gen_reader_te
 if ($LASTEXITCODE -ne 0) { throw 'Production Web tests failed' }
 & $Node (Join-Path $testDir 'ota_version_test.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'OTA release version tests failed' }
+& $Node (Join-Path $testDir 'logger_web_test.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Logger Web tests failed' }
+& (Join-Path $testDir 'run_logger_service_test.ps1') -Zig $Zig
 if ($SkipPreview) { return }
+& (Join-Path $testDir 'run_logger_preview.ps1') -Zig $Zig -LibraryDir (Join-Path $projectDir '.pio\libdeps\deye_unified')
 $lvgl = Join-Path $projectDir '.pio\libdeps\deye_unified\lvgl'
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $lvgl 'src') -Filter '*.c' -Recurse | ForEach-Object FullName)
 $configPath = (Join-Path $testDir 'preview_lv_conf.h').Replace('\', '/')

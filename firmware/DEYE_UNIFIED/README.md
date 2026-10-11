@@ -1,4 +1,23 @@
-# Deye LVGL — firmware unifié 4.3.10
+# Deye LVGL — firmware unifié 4.4.0
+
+## Retrouver automatiquement l’adresse IP du logger
+
+Renseigner **le vrai numéro de série du logger** dans **DEYE / SOLARMAN > CONNEXION / LOGGER**, puis **SAUVEGARDER**. Le numéro doit être enregistré dans l’écran ; une saisie laissée dans un formulaire ne suffit pas. Avec ce numéro, le bouton **RECHERCHER LOGGER** permet aussi de trouver l’IP à la première configuration. La recherche manuelle propose les champs avant sauvegarde.
+
+La récupération automatique est active dès qu’un numéro de série réel est enregistré. Elle utilise ce numéro pour identifier le même logger et conserve sa valeur, même si le DHCP change son adresse IP.
+
+1. L’écran attend **au moins trois lectures échouées et 60 secondes sans réponse Solarman V5 valide**, avec son Wi-Fi connecté. Une réponse du logger signalant une erreur Modbus confirme encore sa présence et ne déclenche pas cette recherche.
+2. Il recherche ce logger sur le réseau local : broadcast UDP, puis TCP/V5 avec son numéro de série, puis unicast UDP si nécessaire. Les lectures Deye sont suspendues pendant le balayage ; les tâches de l’interface et de la passerelle WB01 restent actives.
+3. Si **une IP différente** est trouvée pour **le même numéro de série**, seule l’adresse IP est remplacée dans les paramètres enregistrés. Le numéro de série n’est pas réécrit. Après vérification de la sauvegarde, l’écran redémarre automatiquement et utilise la nouvelle IP.
+4. Si l’IP reste identique, si aucun logger correspondant n’est trouvé ou si la sauvegarde échoue, aucun redémarrage n’est déclenché. Les lectures reprennent et une nouvelle recherche peut partir **cinq minutes après la fin de la précédente**, si la liaison reste perdue.
+
+Une coupure Wi-Fi suspend l’automatisme : après reconnexion, plusieurs échecs et le délai de perte sont de nouveau nécessaires. Une mise à jour OTA ou un redémarrage déjà programmé reporte l’application d’un résultat. Un changement manuel d’IP ou de numéro pendant la recherche invalide le résultat automatique.
+
+Le numéro vide, nul ou factice `123456789` désactive la récupération automatique. L’écran ne peut pas deviner un numéro de série inconnu par TCP. La recherche UDP manuelle peut le retrouver si le logger répond.
+
+Le balayage suit le masque réseau pour les /24 ou plus petits ; sur un réseau plus grand, il reste limité au /24 de l’écran. L’écran et le logger doivent être joignables sur ce réseau, sans isolation entre clients. Un balayage peut prendre plusieurs minutes. La page de connexion affiche la phase UDP/TCP et le redémarrage lorsqu’une nouvelle adresse a été sauvegardée. Les traces série détaillent les sondes et les réponses rejetées.
+
+Exemple : le logger enregistré avec son numéro de série répondait sur `192.168.1.12`, puis le DHCP lui attribue `192.168.1.45`. Après perte durable de liaison, l’écran retrouve `192.168.1.45` pour ce même numéro, enregistre uniquement cette IP et redémarre. Les autres réglages restent conservés.
 
 Un seul firmware pour l'écran Guition ESP32-S3 480 × 480, avec choix du modèle
 d'onduleur et du système de recharge. Il réunit le catalogue multi-onduleurs
@@ -59,7 +78,7 @@ Deye LoRa compatibles avec un autre modèle.
 ## Installation et migration
 
 1. Sauvegarder la configuration JSON de l'écran avant la mise à jour.
-2. Installer le firmware 4.3.10 sur l'écran, puis vérifier le modèle Deye dans
+2. Installer le firmware 4.4.0 sur l'écran, puis vérifier le modèle Deye dans
    les réglages. Le modèle mémorisé par la V3 est conservé.
 3. Dans les réglages du véhicule, choisir explicitement Aucune, Deye LoRa ou
    VE TRONIC WB01, enregistrer et laisser l'écran redémarrer.
@@ -147,7 +166,7 @@ Depuis la racine du dépôt, compiler les sources firmware/DEYE_UNIFIED/ :
 pio run -e deye_unified
 ```
 
-Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.3.10](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.3.10). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
+Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.4.0](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.4.0). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
 
 Configuration matérielle : ESP32-S3, PSRAM OPI, écran 480 × 480, USB CDC actif,
 flash 4 MB et partition Minimal SPIFFS avec OTA.

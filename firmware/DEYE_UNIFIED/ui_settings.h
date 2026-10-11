@@ -46,6 +46,8 @@ static lv_obj_t *switch_sunset_mode = nullptr;
 static lv_obj_t *dropdown_night_start = nullptr;
 static lv_obj_t *dropdown_night_end = nullptr;
 static lv_obj_t *label_deye_blocks = nullptr;
+static lv_obj_t *label_deye_discovery = nullptr;
+static uint32_t ui_deye_discovery_applied_generation = 0;
 static lv_timer_t *wifi_scan_timer = nullptr;
 static lv_obj_t *keyboard_wifi = nullptr;
 static lv_obj_t *keyboard_ntp = nullptr;
@@ -427,6 +429,18 @@ static void ui_save_ntp(lv_event_t *e) {
 }
 
 // ==================== SAUVEGARDE DEYE / SOLARMAN V5 ====================
+static void ui_discover_deye_logger(lv_event_t *e) {
+  (void)e;
+  uint32_t serial = 0;
+  logger_discovery_serial(lv_textarea_get_text(textarea_logger_serial), &serial);
+  if (deye_logger_discovery_start(serial)) {
+    lv_label_set_text(label_deye_discovery, "Recherche du logger en attente...");
+  } else {
+    lv_label_set_text(label_deye_discovery, WiFi.status() == WL_CONNECTED
+      ? "Recherche deja en cours ou lecteur indisponible."
+      : "Connectez d'abord l'ecran au Wi-Fi.");
+  }
+}
 static void ui_save_deye(lv_event_t *e) {
   (void)e;
 
@@ -474,6 +488,43 @@ static void ui_save_theme(lv_event_t *e) {
 }
 
 static void ui_settings_update_deye_status() {
+  if (label_deye_discovery) {
+    DeyeLoggerDiscoveryStatus discovery;
+    deye_logger_discovery_copy_status(&discovery);
+    char message[180];
+    switch (discovery.state) {
+      case DEYE_LOGGER_DISCOVERY_QUEUED:
+        snprintf(message, sizeof(message), "Recherche en attente de la lecture en cours..."); break;
+      case DEYE_LOGGER_DISCOVERY_RUNNING:
+        snprintf(message, sizeof(message), "Recherche %s%s : %u / %u. Patientez...",
+          discovery.automatic ? "auto " : "", logger_discovery_phase_name(discovery.phase),
+          discovery.scanned_hosts, discovery.total_hosts); break;
+      case DEYE_LOGGER_DISCOVERY_FOUND:
+        if (discovery.automatic) {
+          snprintf(message, sizeof(message), discovery.restart_pending
+            ? "Nouvelle IP : %s\nSauvegardee. Redemarrage..." : discovery.save_failed
+            ? "IP trouvee : %s\nSauvegarde impossible. Pas de redemarrage."
+            : "Logger retrouve : %s\nNumero de serie enregistre conserve.", discovery.host);
+          break;
+        }
+        snprintf(message, sizeof(message), "Trouve : %s  SN %lu\nVerifier puis SAUVEGARDER.",
+          discovery.host, (unsigned long)discovery.serial);
+        if (discovery.generation != ui_deye_discovery_applied_generation) {
+          char serial[16]; snprintf(serial, sizeof(serial), "%lu", (unsigned long)discovery.serial);
+          lv_textarea_set_text(textarea_deye_host, discovery.host);
+          lv_textarea_set_text(textarea_logger_serial, serial);
+          ui_deye_discovery_applied_generation = discovery.generation;
+        }
+        break;
+      case DEYE_LOGGER_DISCOVERY_NOT_FOUND:
+        snprintf(message, sizeof(message), "Aucun logger trouve. Verifier Wi-Fi et numero de serie."); break;
+      case DEYE_LOGGER_DISCOVERY_ERROR:
+        snprintf(message, sizeof(message), "Recherche interrompue : verifier la connexion Wi-Fi."); break;
+      default:
+        snprintf(message, sizeof(message), "Rechercher pour remplir l'IP et le numero de serie."); break;
+    }
+    lv_label_set_text(label_deye_discovery, message);
+  }
   if (label_deye_blocks == nullptr) return;
   DeyeDiagnostics diagnostic = {};
   if (!deye_copy_diagnostics(&diagnostic)) return;
@@ -884,10 +935,16 @@ static void ui_settings_create() {
   );
 
   label_deye_blocks = lv_label_create(screen_deye);
-  lv_obj_set_pos(label_deye_blocks, 20, 275);
+  lv_obj_set_pos(label_deye_blocks, 20, 266);
   lv_obj_set_width(label_deye_blocks, 440);
   lv_obj_set_style_text_font(label_deye_blocks, &lv_font_montserrat_12, LV_PART_MAIN);
   lv_obj_set_style_text_color(label_deye_blocks, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
+  label_deye_discovery = lv_label_create(screen_deye);
+  lv_obj_set_pos(label_deye_discovery, 20, 302);
+  lv_obj_set_width(label_deye_discovery, 440);
+  lv_obj_set_style_text_font(label_deye_discovery, &lv_font_montserrat_12, LV_PART_MAIN);
+  lv_obj_set_style_text_color(label_deye_discovery, ui_settings_color(ui_settings_theme().accent), LV_PART_MAIN);
+  ui_settings_make_button(screen_deye, "RECHERCHER LOGGER", 20, 346, 430, 36, ui_discover_deye_logger);
   ui_settings_update_deye_status();
 
   ui_settings_make_button(screen_deye, "RETOUR", 20, 390, 190, 55, ui_show_v2_deye);

@@ -179,6 +179,12 @@ void loop() {
   lv_timer_handler();
   wifi_manager_process();
   web_server_process();
+  const bool recovery_paused = Update.isRunning() || web_restart_at != 0;
+  logger_recovery_paused.store(recovery_paused);
+  if (!recovery_paused && deye_logger_recovery_apply()) {
+    web_restart_at = millis() + 1500;
+    logger_recovery_paused.store(true);
+  }
   display_manager_apply();
   v2_relay_process();
   tempo_api_process(cfg_tempo_enabled || cfg_v2.tariff_mode == 1);

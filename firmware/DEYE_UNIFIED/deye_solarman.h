@@ -156,6 +156,7 @@ static volatile bool reader_running = false;
 static uint32_t last_data_success_ms = 0;
 static std::atomic<uint32_t> last_read_response_ms{0};
 static std::atomic<bool> read_response_received{false};
+static bool solarman_last_exchange_replied = false;
 
 // ==================== DÉCLARATIONS ====================
 static void solarman_reader_task(void *pvParameters);
@@ -187,7 +188,8 @@ static void build_modbus_rtu_read(uint16_t start_reg, uint16_t count, uint8_t *o
   out[7] = (uint8_t)(crc >> 8);
 }
 
-static size_t build_solarman_v5_request(const uint8_t *rtu, size_t rtu_len, uint8_t *out) {
+static size_t build_solarman_v5_request(const uint8_t *rtu, size_t rtu_len, uint8_t *out,
+                                       uint32_t logger_serial = cfg_logger_serial) {
   size_t pos = 0;
   uint16_t payload_len = 15 + rtu_len;
   out[pos++] = 0xA5;
@@ -198,7 +200,7 @@ static size_t build_solarman_v5_request(const uint8_t *rtu, size_t rtu_len, uint
   static uint8_t sequence = 0;
   out[pos++] = sequence++;
   out[pos++] = 0x00;
-  write_u32_le(&out[pos], cfg_logger_serial);
+  write_u32_le(&out[pos], logger_serial);
   pos += 4;
   out[pos++] = 0x02;
   for (uint8_t i = 0; i < 14; i++) out[pos++] = 0x00;
@@ -221,15 +223,18 @@ static bool read_exact(WiFiClient &client, uint8_t *buffer, size_t wanted, uint3
   return received == wanted;
 }
 
-static bool receive_one_v5_frame(WiFiClient &client, uint8_t *frame, size_t *frame_len) {
+static bool receive_one_v5_frame(WiFiClient &client, uint8_t *frame, size_t *frame_len,
+                                 size_t capacity = 320, uint32_t timeout_ms = FRAME_TIMEOUT_MS) {
+  const uint32_t started = millis();
   uint8_t header[11];
-  if (!read_exact(client, header, sizeof(header), FRAME_TIMEOUT_MS)) return false;
+  if (!read_exact(client, header, sizeof(header), timeout_ms)) return false;
   if (header[0] != 0xA5) return false;
   uint16_t payload_len = (uint16_t)header[1] | ((uint16_t)header[2] << 8);
   size_t total = 11 + payload_len + 2;
-  if (total > 320 || payload_len == 0) return false;
+  if (total > capacity || payload_len == 0) return false;
   memcpy(frame, header, 11);
-  if (!read_exact(client, frame + 11, payload_len + 2, FRAME_TIMEOUT_MS)) return false;
+  const uint32_t elapsed = millis() - started;
+  if (elapsed >= timeout_ms || !read_exact(client, frame + 11, payload_len + 2, timeout_ms - elapsed)) return false;
   *frame_len = total;
   return true;
 }
@@ -242,6 +247,7 @@ static uint16_t modbus_get_u16_be(const uint8_t *data, uint16_t index) {
 // Toutes les transactions sont executees par la meme tache, jamais dans LVGL.
 static bool solarman_exchange(const uint8_t *request, size_t request_len,
   uint16_t reg, uint16_t count, uint8_t *response, size_t capacity, uint8_t *exception = nullptr) {
+  solarman_last_exchange_replied = false;
   if (exception) *exception = 0;
   if (!deye_modbus_range_valid(reg, count)) return false;
   WiFiClient client;
@@ -258,6 +264,7 @@ static bool solarman_exchange(const uint8_t *request, size_t request_len,
     size_t frame_len = 0;
     if (!receive_one_v5_frame(client, frame, &frame_len)) break;
     if (!deye_v5_reply_matches(frame, frame_len, v5_request)) continue;
+    solarman_last_exchange_replied = true; // A Modbus exception is still a live logger.
     const DeyeRtuResult result = deye_modbus_response(frame + 11, frame_len - 13,
       DEYE_MODBUS_SLAVE_ID, request[1], reg, count, response, capacity, exception);
     if (result == DEYE_RTU_EXCEPTION) {
@@ -802,6 +809,8 @@ static bool deye_process_ev_command() {
 }
 
 #include "v2_reader.h"
+#include "logger_discovery.h"
+#include "logger_recovery.h"
 
 // ==================== TACHE DE LECTURE ====================
 static void solarman_reader_task(void *pvParameters) {
@@ -811,8 +820,16 @@ static void solarman_reader_task(void *pvParameters) {
   const uint32_t startup_time = millis();
   bool first_read_done = false;
   bool previous_ev_enabled = !ev_deye_enabled();
+  logger_recovery_policy.reset(startup_time);
   randomSeed(analogRead(0) + millis());
   while (true) {
+    if (logger_recovery_waiting_for_apply.load()) { vTaskDelay(pdMS_TO_TICKS(10)); continue; }
+    if (deye_logger_discovery_process()) {
+      last_read_time = millis();
+      deye_logger_recovery_scan_finished(last_read_time);
+      continue;
+    }
+    if (deye_logger_recovery_maybe_start()) continue;
     if (previous_ev_enabled != ev_deye_enabled()) {
       previous_ev_enabled = ev_deye_enabled();
       deye_configure_block2(previous_ev_enabled);
@@ -826,6 +843,7 @@ static void solarman_reader_task(void *pvParameters) {
     if (deye_process_probe_snapshot()) { last_read_time = millis(); continue; }
     v2_enforce_tariff();
     if (WiFi.status() != WL_CONNECTED) {
+      logger_recovery_policy.wifi_unavailable(millis());
       vTaskDelay(pdMS_TO_TICKS(100));
       continue;
     }
@@ -844,6 +862,7 @@ static void solarman_reader_task(void *pvParameters) {
     // Aucun mutex de donnees n'est garde durant les delais TCP/Modbus.
     const bool ok = solarman_read_block(start, count, rtu, &exception);
     last_read_time = millis(); // Temporisation aussi apres un echec.
+    logger_recovery_policy.observe(last_read_time, solarman_last_exchange_replied);
     xSemaphoreTake(data_mutex, portMAX_DELAY);
     if (ok) {
       ++deye_diagnostics.block_success[current_block];
