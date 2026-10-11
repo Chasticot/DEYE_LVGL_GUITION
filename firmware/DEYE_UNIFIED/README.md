@@ -1,4 +1,4 @@
-# Deye LVGL — firmware unifié 4.4.0
+# Deye LVGL — firmware unifié 4.4.1
 
 ## Retrouver automatiquement l’adresse IP du logger
 
@@ -78,7 +78,7 @@ Deye LoRa compatibles avec un autre modèle.
 ## Installation et migration
 
 1. Sauvegarder la configuration JSON de l'écran avant la mise à jour.
-2. Installer le firmware 4.4.0 sur l'écran, puis vérifier le modèle Deye dans
+2. Installer le firmware 4.4.1 sur l'écran, puis vérifier le modèle Deye dans
    les réglages. Le modèle mémorisé par la V3 est conservé.
 3. Dans les réglages du véhicule, choisir explicitement Aucune, Deye LoRa ou
    VE TRONIC WB01, enregistrer et laisser l'écran redémarrer.
@@ -166,7 +166,7 @@ Depuis la racine du dépôt, compiler les sources firmware/DEYE_UNIFIED/ :
 pio run -e deye_unified
 ```
 
-Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.4.0](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.4.0). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
+Le binaire applicatif OTA est .pio/build/deye_unified/firmware.bin. Les livrables sont disponibles dans la [release v4.4.1](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.4.1). Voir le [guide PlatformIO](../../docs/COMPILATION_PLATFORMIO.md) et la [validation de publication](../../docs/VALIDATION.md).
 
 Configuration matérielle : ESP32-S3, PSRAM OPI, écran 480 × 480, USB CDC actif,
 flash 4 MB et partition Minimal SPIFFS avec OTA.

@@ -521,7 +521,7 @@ static void ui_settings_update_deye_status() {
       case DEYE_LOGGER_DISCOVERY_ERROR:
         snprintf(message, sizeof(message), "Recherche interrompue : verifier la connexion Wi-Fi."); break;
       default:
-        snprintf(message, sizeof(message), "Rechercher pour remplir l'IP et le numero de serie."); break;
+        snprintf(message, sizeof(message), "Renseigner le numero de serie avant de lancer\nla recherche de l'adresse IP du logger."); break;
     }
     lv_label_set_text(label_deye_discovery, message);
   }

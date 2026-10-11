@@ -1,5 +1,11 @@
 # Historique
 
+## Publication v4.4.1 — 11 octobre 2026
+
+- Consigne de Configuration Deye corrigée : renseigner le numéro de série avant de rechercher l’adresse IP du logger.
+- Affichage sur deux lignes au-dessus du bouton, vérifié dans les thèmes clair et sombre.
+- Récupération automatique de l’IP, sauvegarde et redémarrage de la 4.4.0 conservés.
+
 ## Publication v4.4.0 — 11 octobre 2026
 
 - Recherche manuelle du logger depuis l’écran et le Web : UDP WIFIKIT puis identification TCP/V5 avec le numéro de série fourni.
