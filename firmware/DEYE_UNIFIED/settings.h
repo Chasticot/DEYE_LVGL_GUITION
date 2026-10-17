@@ -8,6 +8,7 @@
 #include "config.h"
 #include "ui_theme.h"
 #include "network_config.h"
+#include "logger_connection.h"
 #include "inverter_profiles.h"
 #include "charging_settings.h"
 #include "v2_settings.h"
@@ -84,6 +85,11 @@ static String cfg_wifi_password;
 static String cfg_deye_host;
 static String cfg_vetronic_host;
 static uint32_t cfg_logger_serial = DEFAULT_LOGGER_SERIAL;
+static DeyeTransport cfg_deye_transport = DeyeTransport::SolarmanV5;
+static LoggerModel cfg_logger_model = LoggerModel::Lsw;
+static String cfg_logger_identity;
+static uint16_t cfg_deye_port = 8899;
+static uint8_t cfg_deye_unit = 1;
 static String cfg_ntp_primary;
 static String cfg_ntp_secondary;
 static String cfg_tz_rule;
@@ -203,14 +209,37 @@ static bool settings_save_ntp(
   return ok;
 }
 
-static bool settings_save_deye(const String &host, uint32_t logger_serial) {
-  if (host.isEmpty() || !logger_serial || !preferences.begin("deye-ui", false)) return false;
+static bool settings_save_logger(const String &host, const char *identity, LoggerModel model,
+    uint16_t port, uint8_t unit, bool allow_legacy_zero = false) {
+  char normalized[33]; uint32_t logger_serial = 0;
+  const DeyeTransport transport = logger_transport(model);
+  if (host.isEmpty() || host.length() > 253 ||
+      !logger_identity_parse(identity, model, normalized, sizeof(normalized), logger_serial, allow_legacy_zero) ||
+      !deye_connection_valid(transport, logger_serial, port, unit) ||
+      !preferences.begin("deye-ui", false)) return false;
   const bool ok = preferences.putString("deye_host", host) == host.length() &&
     preferences.putUInt("logger", logger_serial) == sizeof(logger_serial) &&
-    preferences.getString("deye_host", "") == host && preferences.getUInt("logger", 0) == logger_serial;
+    preferences.putUChar("transport", uint8_t(transport)) == 1 &&
+    preferences.putUShort("deye_port", port) == 2 && preferences.putUChar("deye_unit", unit) == 1 &&
+    preferences.putUChar("log_model", uint8_t(model)) == 1 &&
+    preferences.putString("logger_sn", normalized) == strlen(normalized) &&
+    preferences.getString("deye_host", "") == host && preferences.getUInt("logger", 0) == logger_serial &&
+    preferences.getUChar("transport", 255) == uint8_t(transport) &&
+    preferences.getUShort("deye_port", 0) == port && preferences.getUChar("deye_unit", 0) == unit &&
+    preferences.getUChar("log_model", 255) == uint8_t(model) && preferences.getString("logger_sn", "") == normalized;
   preferences.end();
-  if (ok) { cfg_deye_host = host; cfg_logger_serial = logger_serial; }
+  if (ok) {
+    cfg_deye_host = host; cfg_logger_serial = logger_serial;
+    cfg_deye_transport = transport; cfg_deye_port = port; cfg_deye_unit = unit;
+    cfg_logger_model = model; cfg_logger_identity = normalized;
+  }
   return ok;
+}
+static bool settings_save_deye(const String &host, uint32_t logger_serial,
+    DeyeTransport transport = cfg_deye_transport, uint16_t port = cfg_deye_port, uint8_t unit = cfg_deye_unit) {
+  if (!deye_connection_valid(transport, logger_serial, port, unit)) return false;
+  char identity[33]; snprintf(identity, sizeof(identity), "%lu", (unsigned long)logger_serial);
+  return settings_save_logger(host, identity, logger_infer_model(transport, port), port, unit, true);
 }
 
 // DHCP recovery changes only the IP key. The saved serial is checked and never
@@ -292,6 +321,24 @@ static void settings_load() {
   cfg_vetronic_host = preferences.getString("vetronic_host", VETRONIC_HOST);
   if (!settings_vetronic_host_valid(cfg_vetronic_host)) cfg_vetronic_host = VETRONIC_HOST;
   cfg_logger_serial = preferences.getUInt("logger", DEFAULT_LOGGER_SERIAL);
+  // Import the old LSE selection when present; existing unified installs stay V5.
+  cfg_deye_transport = DeyeTransport(preferences.getUChar("transport",
+    preferences.getBool("deye_mode_lse", false) ? 1 : 0));
+  cfg_deye_port = preferences.getUShort("deye_port", cfg_deye_transport == DeyeTransport::ModbusTcp ? 502 : 8899);
+  cfg_deye_unit = preferences.getUChar("deye_unit", 1);
+  if (!deye_connection_valid(cfg_deye_transport, cfg_logger_serial, cfg_deye_port, cfg_deye_unit)) {
+    cfg_deye_transport = DeyeTransport::SolarmanV5; cfg_deye_port = 8899; cfg_deye_unit = 1;
+  }
+  cfg_logger_model = LoggerModel(preferences.getUChar("log_model", uint8_t(logger_infer_model(cfg_deye_transport, cfg_deye_port))));
+  if (!logger_model_valid(cfg_logger_model) || logger_transport(cfg_logger_model) != cfg_deye_transport)
+    cfg_logger_model = logger_infer_model(cfg_deye_transport, cfg_deye_port);
+  char old_identity[33], normalized_identity[33]; uint32_t numeric_identity = 0;
+  snprintf(old_identity, sizeof(old_identity), "%lu", (unsigned long)cfg_logger_serial);
+  cfg_logger_identity = preferences.getString("logger_sn", old_identity);
+  if (!logger_identity_parse(cfg_logger_identity.c_str(), cfg_logger_model, normalized_identity,
+      sizeof(normalized_identity), numeric_identity, true)) {
+    cfg_logger_identity = old_identity;
+  } else { cfg_logger_identity = normalized_identity; cfg_logger_serial = numeric_identity; }
   // Migration des builds qui avaient sauvegardé le numéro factice utilisé
   // pendant les essais. Ce numéro est placé dans l'en-tête Solarman V5 ; avec
   // lui, le logger ignore les requêtes même si le réseau est correct.

@@ -15,10 +15,11 @@
 #include "settings.h"
 #include "ve_deye.h"
 #include "history.h"
+#include "modbus_tcp_protocol.h"
 
 // ==================== CONSTANTES ====================
-#define DEYE_PORT 8899
-#define DEYE_MODBUS_SLAVE_ID 1
+#define DEYE_PORT cfg_deye_port
+#define DEYE_MODBUS_SLAVE_ID cfg_deye_unit
 
 // ==================== VARIABLES DYNAMIQUES (valeurs par défaut, écrasées par settings) ====================
 uint16_t REG_PV1_POWER = 186;
@@ -245,11 +246,49 @@ static uint16_t modbus_get_u16_be(const uint8_t *data, uint16_t index) {
 }
 
 // Toutes les transactions sont executees par la meme tache, jamais dans LVGL.
+static bool modbus_tcp_exchange(const uint8_t *request, size_t request_len,
+  uint16_t reg, uint16_t count, uint8_t *response, size_t capacity, uint8_t *exception) {
+  static uint16_t transaction = 0;
+  const uint16_t id = ++transaction;
+  uint8_t tx[64], rx[260];
+  const size_t length = deye_tcp_request(request, request_len, id, tx, sizeof(tx));
+  if (!length) return false;
+  WiFiClient client;
+  if (!client.connect(cfg_deye_host.c_str(), cfg_deye_port, TCP_CONNECT_TIMEOUT_MS)) return false;
+  if (client.write(tx, length) != length) { client.stop(); return false; }
+  const uint32_t started = millis();
+  while (uint32_t(millis() - started) < RESPONSE_WINDOW_MS) {
+    if (!client.available()) { delay(2); continue; }
+    const uint32_t header_elapsed = millis() - started;
+    if (header_elapsed >= RESPONSE_WINDOW_MS) break;
+    const uint32_t remaining = RESPONSE_WINDOW_MS - header_elapsed;
+    if (!read_exact(client, rx, 7, remaining)) break;
+    const uint16_t payload = (uint16_t(rx[4]) << 8) | rx[5];
+    if (payload < 3 || payload > sizeof(rx) - 6) break;
+    const uint32_t elapsed = millis() - started;
+    if (elapsed >= RESPONSE_WINDOW_MS || !read_exact(client, rx + 7, payload - 1, RESPONSE_WINDOW_MS - elapsed)) break;
+    const DeyeRtuResult result = deye_tcp_response(rx, 6 + payload, id, cfg_deye_unit,
+      request[1], reg, count, response, capacity, exception);
+    if (result == DEYE_RTU_IGNORE) continue;
+    solarman_last_exchange_replied = true;
+    client.stop();
+    if (result == DEYE_RTU_EXCEPTION) {
+      DBG.printf("Modbus TCP exception FC%02X R%u : %u\n", request[1], reg, exception ? *exception : 0);
+      return false;
+    }
+    return true;
+  }
+  client.stop();
+  return false;
+}
+
 static bool solarman_exchange(const uint8_t *request, size_t request_len,
   uint16_t reg, uint16_t count, uint8_t *response, size_t capacity, uint8_t *exception = nullptr) {
   solarman_last_exchange_replied = false;
   if (exception) *exception = 0;
   if (!deye_modbus_range_valid(reg, count)) return false;
+  if (cfg_deye_transport == DeyeTransport::ModbusTcp)
+    return modbus_tcp_exchange(request, request_len, reg, count, response, capacity, exception);
   WiFiClient client;
   uint8_t v5_request[64];
   uint8_t frame[320]; // 125 registres + RTU + enveloppe V5.
@@ -960,7 +999,7 @@ String deye_probe_report_text() {
 }
 
 void deye_solarman_begin() {
-  DBG.println("=== DEYE SOLARMAN V5 ===");
+  DBG.printf("=== DEYE %s / port %u / unite %u ===\n", deye_transport_key(cfg_deye_transport), cfg_deye_port, cfg_deye_unit);
   load_custom_registers();
 
   main_data_valid = false;

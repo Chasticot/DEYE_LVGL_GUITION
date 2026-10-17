@@ -1,5 +1,7 @@
 # Deye Monitor — firmware unifié 4.4.1
 
+Le code du firmware unifié inclut maintenant le [menu de mise à jour GitHub directement sur l’écran](docs/MISE_A_JOUR_ECRAN_GITHUB.md), installé et démarré sur COM16 (base 4.6.0). Les téléchargements des releases existantes restent ceux indiqués ci-dessous.
+
 ## Retrouver automatiquement l’adresse IP du logger
 
 Renseigner **le vrai numéro de série du logger** dans **DEYE / SOLARMAN > CONNEXION / LOGGER**, puis **SAUVEGARDER**. Le numéro doit être enregistré dans l’écran ; une saisie laissée dans un formulaire ne suffit pas. Avec ce numéro, le bouton **RECHERCHER LOGGER** permet aussi de trouver l’IP à la première configuration. La recherche manuelle propose les champs avant sauvegarde.

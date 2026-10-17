@@ -33,7 +33,7 @@ static bool web_authorized() {
 }
 static bool web_write_allowed() {
   if (!web_authorized()) return false;
-  if (web_restart_at || config_web.header("X-CSRF-Token") != web_csrf) {
+  if (ota_busy() || web_restart_at || config_web.header("X-CSRF-Token") != web_csrf) {
     config_web.send(403, "text/plain", "Session invalide. Rechargez la page.");
     return false;
   }
@@ -105,7 +105,9 @@ static String web_json_escape(String value) {
   return value;
 }
 
+static bool web_number(const String &text, uint32_t maximum, uint32_t &value);
 #include "web_logger_discovery.h"
+#include "logger_connection_json.h"
 
 static String web_dashboard_json() {
   DashboardData data = {};
@@ -146,6 +148,8 @@ static String web_config_json() {
   payload += "  \"ev_backend\": \"" + String(ev_backend_key(cfg_ev_backend)) + "\",\n";
   payload += "  \"vetronic_host\": \"" + web_json_escape(cfg_vetronic_host) + "\",\n";
   payload += "  \"logger_host\": \"" + web_json_escape(cfg_deye_host) + "\",\n  \"logger_serial\": " + String(cfg_logger_serial) + ",\n";
+  payload += "  \"logger_transport\": \"" + String(deye_transport_key(cfg_deye_transport)) + "\",\n  \"logger_port\": " + String(cfg_deye_port) + ",\n  \"logger_unit\": " + String(cfg_deye_unit) + ",\n";
+  payload += "  \"logger_model\": \"" + String(logger_model_key(cfg_logger_model)) + "\",\n  \"logger_serial_text\": \"" + web_json_escape(cfg_logger_identity) + "\",\n";
   payload += "  \"timezone\": \"" + web_json_escape(cfg_tz_rule) + "\",\n  \"ntp_primary\": \"" + web_json_escape(cfg_ntp_primary) + "\",\n  \"ntp_secondary\": \"" + web_json_escape(cfg_ntp_secondary) + "\",\n";
   payload += "  \"tempo_enabled\": " + String(cfg_tempo_enabled ? "true" : "false") + ",\n  \"tempo_colorblind\": " + String(cfg_tempo_colorblind_mode ? "true" : "false") + ",\n  \"ev_enabled\": " + String(cfg_ev_charger_enabled ? "true" : "false") + ",\n";
   payload += "  \"theme\": " + String(uint8_t(cfg_ui_theme)) + ",\n  \"day_brightness\": " + String(cfg_display.day_brightness) + ",\n  \"night_brightness\": " + String(cfg_display.night_brightness) + ",\n  \"night_enabled\": " + String(cfg_display.night_enabled ? "true" : "false") + ",\n  \"sunset_mode\": " + String(cfg_display.sunset_mode ? "true" : "false") + ",\n  \"latitude\": " + String(cfg_display.latitude, 5) + ",\n  \"longitude\": " + String(cfg_display.longitude, 5) + ",\n  \"night_start_hour\": " + String(cfg_display.night_start_hour) + ",\n  \"night_end_hour\": " + String(cfg_display.night_end_hour) + ",\n";
@@ -206,8 +210,8 @@ static bool web_apply_config_json(const String &json) {
       !web_json_string(root, "ntp_primary", primary) || primary.isEmpty() || primary.length() > 253 ||
       !web_json_string(root, "ntp_secondary", secondary) || secondary.length() > 253) return false;
   double value = 0;
-  if (!web_json_number(root, "logger_serial", value) || value < 1 || value > UINT32_MAX || floor(value) != value) return false;
-  const uint32_t serial = uint32_t(value);
+  DeyeConnectionImport connection;
+  if (!deye_connection_from_json(root, connection)) return false;
   bool tempo, colorblind, night_enabled, sunset_mode, smartload;
   if (!web_json_bool(root, "tempo_enabled", tempo) || !web_json_bool(root, "tempo_colorblind", colorblind) ||
       !web_json_bool(root, "night_enabled", night_enabled) || !web_json_bool(root, "sunset_mode", sunset_mode) ||
@@ -239,7 +243,7 @@ static bool web_apply_config_json(const String &json) {
     else *reinterpret_cast<uint16_t *>(ptr) = uint16_t(value);
   }
   if (!settings_registers_valid(regs) || !settings_display_valid(display)) return false;
-  return settings_save_registers(regs) && settings_save_deye(host, serial) && settings_save_ntp(tz, primary, secondary) &&
+  return settings_save_registers(regs) && settings_save_logger(host, connection.identity, connection.model, connection.port, connection.unit, true) && settings_save_ntp(tz, primary, secondary) &&
     settings_save_charging(tempo, colorblind, backend) && settings_set_ui_theme(theme) && settings_save_display(display) &&
     settings_set_gen_mode(smartload) && (!has_vt_host || (ev_vetronic_enabled() ? vt_save_host(vt_host.c_str()) : settings_save_vetronic_host(vt_host))) &&
     (!has_v2 || v2_save(v2));
@@ -326,13 +330,32 @@ static void web_home() {
   page += WEB_FORM_END;
   page += web_form("/deye", "Logger Deye");
   page += web_input("host", "Adresse du logger", cfg_deye_host);
-  page += web_input("serial", "Numero de serie", String(cfg_logger_serial), "number");
+  page += "<label>Type de logger<select name='model' id='logger-transport'>";
+  const char *logger_labels[] = {"LSW - Solarman V5", "LSE - Ethernet Modbus TCP", "DL1000B - Modbus TCP"};
+  for (uint8_t i=0; i<3; ++i) page += String("<option value='") + logger_model_key(LoggerModel(i)) + "'" +
+    (cfg_logger_model == LoggerModel(i) ? " selected" : "") + ">" + logger_labels[i] + "</option>";
+  page += "</select></label>";
+  page += web_input("port", "Port TCP", String(cfg_deye_port), "number");
+  page += web_input("unit", "Unite Modbus (1-247)", String(cfg_deye_unit), "number");
+  page += web_input("serial", "Numero de serie du logger (obligatoire)", cfg_logger_identity);
   page += "<button type='button' id='logger-search'>Rechercher le logger</button><p id='logger-status' role='status'></p>";
+  page += "<p>Ports proposes : LSW 8899, LSE 8899, DL1000B 502. Le numero est requis pour rechercher le bon logger. Si son identite ne peut pas etre verifiee, les serveurs Modbus detectes restent des candidats a choisir.</p><div id='logger-candidates'></div>";
   page += WEB_FORM_END;
   page += web_form("/ntp", "Heure / NTP");
   page += web_timezone_select();
   page += web_input("primary", "Serveur principal", cfg_ntp_primary);
   page += web_input("secondary", "Serveur secondaire", cfg_ntp_secondary);
+  page += WEB_FORM_END;
+  page += web_form("/clock/manual", "Regler l'heure sans Internet");
+  page += "<p>" + web_escape(ntp_manager_status()) + ". Fuseau enregistre : " + web_escape(cfg_tz_rule) + "</p>";
+  struct tm local_clock = {}; char manual_date[16] = {}, manual_time[16] = {};
+  if (clock_get_local_time(&local_clock)) {
+    strftime(manual_date, sizeof(manual_date), "%Y-%m-%d", &local_clock);
+    strftime(manual_time, sizeof(manual_time), "%H:%M", &local_clock);
+  }
+  page += web_input("date", "Date locale", manual_date, "date");
+  page += web_input("time", "Heure locale (24 h)", manual_time, "time");
+  page += "<p>Application immediate sans redemarrage. NTP reprend automatiquement. Apres coupure de courant, regler a nouveau si NTP est indisponible.</p>";
   page += WEB_FORM_END;
   page += web_form("/display", "Tempo / VE / Theme / Ecran");
   page += web_check("tempo", "Activer Tempo", cfg_tempo_enabled);
@@ -542,14 +565,24 @@ static void web_server_begin() {
   });
   config_web.on("/deye", HTTP_POST, []() {
     if (!web_write_allowed()) return;
-    uint32_t serial;
+    uint32_t port, unit;
+    LoggerModel model;
     String host = config_web.arg("host");
-    if (host.isEmpty() || host.length() > 253 || !web_number(config_web.arg("serial"), UINT32_MAX, serial) || !serial) {
+    char identity[33]; uint32_t numeric = 0;
+    if (host.isEmpty() || host.length() > 253 || !logger_model_parse(config_web.arg("model").c_str(), model) ||
+        !web_number(config_web.arg("port"), 65535, port) || !web_number(config_web.arg("unit"), 247, unit) ||
+        !logger_identity_parse(config_web.arg("serial").c_str(), model, identity, sizeof(identity), numeric) ||
+        !deye_connection_valid(logger_transport(model), numeric, port, unit)) {
       web_reply(false, "Logger invalide.");
       return;
     }
-    const bool ok = settings_save_deye(host, serial);
+    const bool ok = settings_save_logger(host, identity, model, uint16_t(port), uint8_t(unit));
     web_reply(ok, ok ? "Logger sauvegarde. Redemarrage..." : "Sauvegarde logger impossible.", ok);
+  });
+  config_web.on("/clock/manual", HTTP_POST, []() {
+    if (!web_write_allowed()) return;
+    const bool ok = ntp_manager_set_manual(config_web.arg("date").c_str(), config_web.arg("time").c_str());
+    web_reply(ok, ok ? "Horloge reglee sans redemarrage. NTP reprendra au retour du reseau." : "Date/heure invalide pour le fuseau enregistre.");
   });
   config_web.on("/ntp", HTTP_POST, []() {
     if (!web_write_allowed()) return;
@@ -559,7 +592,8 @@ static void web_server_begin() {
       return;
     }
     const bool ok = settings_save_ntp(tz, primary, secondary);
-    web_reply(ok, ok ? "Heure sauvegardee. Redemarrage..." : "Sauvegarde NTP impossible.", ok);
+    if (ok) ntp_manager_begin();
+    web_reply(ok, ok ? "Parametres NTP appliques, horloge conservee sans redemarrage." : "Sauvegarde NTP impossible.");
   });
   config_web.on("/display", HTTP_POST, []() {
     if (!web_write_allowed()) return;

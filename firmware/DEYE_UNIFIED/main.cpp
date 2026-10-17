@@ -179,12 +179,14 @@ void loop() {
   lv_timer_handler();
   wifi_manager_process();
   web_server_process();
-  const bool recovery_paused = Update.isRunning() || web_restart_at != 0;
+  if (ota_state.load()==OTA_DONE && !web_restart_at) web_restart_at=millis()+1800;
+  const bool recovery_paused = ota_busy() || Update.isRunning() || web_restart_at != 0;
   logger_recovery_paused.store(recovery_paused);
   if (!recovery_paused && deye_logger_recovery_apply()) {
     web_restart_at = millis() + 1500;
     logger_recovery_paused.store(true);
   }
+  if (ota_busy()) display_sleep.touch(display_sleep_due(), millis());
   display_manager_apply();
   v2_relay_process();
   tempo_api_process(cfg_tempo_enabled || cfg_v2.tariff_mode == 1);
@@ -193,6 +195,7 @@ void loop() {
   // Mise à jour de l'affichage - toutes les 500ms
   if (now - last_display_update >= 500) {
     last_display_update = now;
+    ui_ota_refresh();
     ui_main_update();
     ui_wifi_update_ip();
     ui_ve_deye_update();

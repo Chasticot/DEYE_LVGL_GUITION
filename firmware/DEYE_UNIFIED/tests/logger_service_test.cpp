@@ -6,6 +6,9 @@
 #include <deque>
 #include <algorithm>
 #include "../ve_modbus_codec.h"
+#include "../logger_connection.h"
+#include "../modbus_tcp_protocol.h"
+static DeyeTransport cfg_deye_transport = DeyeTransport::SolarmanV5;
 using String = std::string;
 static uint32_t now_ms, cfg_logger_serial = 2712345678UL;
 static uint32_t FRAME_TIMEOUT_MS = 7000;
@@ -57,6 +60,8 @@ public:
       datagrams.push_back("192.168.1.2,AABBCCDDEEFF,2712345678");
     }
     if (scenario == 11) datagrams.push_back("192.168.1.2,AABBCCDDEEFF,2712345679");
+    if (scenario == 16) datagrams.push_back("192.168.1.2,AABBCCDDEEFF,D123456789012\r\n");
+    if (scenario == 17) datagrams.push_back("192.168.1.2,AABBCCDDEEFF,2712345679");
     return true;
   }
   int parsePacket() {
@@ -73,10 +78,20 @@ public:
   size_t position = 0;
   uint32_t ready_at = 0;
   bool connect(IPAddress ip, int port, int timeout) {
-    ++tcp_probes; assert(ip[3] == 2 && port == 8899 && timeout == 500);
-    return scenario == 2 || scenario == 4 || scenario == 5 || scenario == 9 || scenario == 10 || scenario == 12 || scenario == 13;
+    ++tcp_probes; assert(ip[3] == 2 && (port == 8899 || port == 502) && timeout == 500);
+    return scenario == 2 || scenario == 4 || scenario == 5 || scenario == 9 || scenario == 10 || scenario == 12 || scenario == 13 || scenario >= 14;
   }
   size_t write(const uint8_t *request, size_t size) {
+    if (size==12) {
+      assert(request[7]==3 && request[10]==0 && request[11]==1);
+      assert(((uint16_t(request[8])<<8)|request[9])==REG_BATTERY_SOC);
+      received={request[0],request[1],0,0,0,5,request[6],3,2,0,72};
+      if (scenario==15) received={request[0],request[1],0,0,0,3,request[6],0x83,2};
+      if (scenario==18) received[1]^=1;
+      if (scenario==19) received[6]^=1;
+      if (scenario==20) received.clear();
+      return size;
+    }
     assert(size == 36 && request[27] == 0x03); // All probes are FC03.
     assert(((uint16_t(request[28]) << 8) | request[29]) == REG_BATTERY_SOC);
     assert(sends == 4); // TCP starts after broadcast, before full UDP unicast.
@@ -108,17 +123,18 @@ static void reset(int selected) {
 }
 int main() {
   reset(0);
-  assert(deye_logger_discovery_start(0));
-  assert(!deye_logger_discovery_start(0)); // Prevent duplicate starts.
+  assert(!deye_logger_discovery_start(0));
+  assert(deye_logger_discovery_start(cfg_logger_serial));
+  assert(!deye_logger_discovery_start(cfg_logger_serial)); // Prevent duplicate starts.
   assert(deye_logger_discovery_process());
   assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_FOUND && sends == 1 && tcp_probes == 0);
   assert(String(logger_discovery_status.host) == "192.168.1.2" && logger_discovery_status.serial == 2712345678UL);
   assert(!deye_logger_discovery_process());
   const auto generation=logger_discovery_status.generation;
-  assert(deye_logger_discovery_start(0) && logger_discovery_status.generation == generation+1);
-  reset(1); assert(deye_logger_discovery_start(0)); deye_logger_discovery_process();
+  assert(deye_logger_discovery_start(cfg_logger_serial) && logger_discovery_status.generation == generation+1);
+  reset(1); assert(deye_logger_discovery_start(cfg_logger_serial)); deye_logger_discovery_process();
   assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_FOUND && sends == 5);
-  reset(7); assert(deye_logger_discovery_start(0)); deye_logger_discovery_process();
+  reset(7); assert(deye_logger_discovery_start(cfg_logger_serial)); deye_logger_discovery_process();
   assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_FOUND && sends == 1);
   reset(8); assert(deye_logger_discovery_start(cfg_logger_serial)); deye_logger_discovery_process();
   assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_FOUND && sends == 1);
@@ -137,8 +153,7 @@ int main() {
     assert(logger_discovery_status.scanned_hosts == logger_discovery_status.total_hosts);
     if (invalid == 12) assert(now_ms >= 15000 && now_ms < 16000);
   }
-  reset(2); assert(deye_logger_discovery_start(123456789UL)); deye_logger_discovery_process();
-  assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_NOT_FOUND && tcp_probes == 0);
+  reset(2); assert(!deye_logger_discovery_start(123456789UL));
   reset(6); assert(deye_logger_discovery_start(cfg_logger_serial)); deye_logger_discovery_process();
   assert(logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_ERROR && now_ms < 100);
   assert(!deye_logger_discovery_start(0));
@@ -153,5 +168,37 @@ int main() {
   client.received.assign(11,0); client.received[0]=0xA5; client.received[1]=1; client.position=0; now_ms=0;
   assert(!receive_one_v5_frame(client,guarded,&len,sizeof(guarded),30) && now_ms <= 30);
   puts("Discovery service: oversized UDP recovery, TCP priority, delayed V5, logger identity, rejected SN/sequence/checksum, deadlines and Wi-Fi loss passed.");
+  for (LoggerModel model : {LoggerModel::Lse,LoggerModel::Dl1000B}) {
+    reset(model==LoggerModel::Lse ? 0 : 16);
+    const char *sn=model==LoggerModel::Lse ? "2712345678" : "D123456789012";
+    assert(deye_logger_discovery_start(sn,model,logger_default_port(model),1));deye_logger_discovery_process();
+    assert(logger_discovery_status.state==DEYE_LOGGER_DISCOVERY_FOUND && !strcmp(logger_discovery_status.identity,sn));
+  }
+  for (int valid : {14,15}) {
+    reset(valid);assert(deye_logger_discovery_start("D123456789012",LoggerModel::Dl1000B,502,2));
+    deye_logger_discovery_process();
+    assert(logger_discovery_status.state==DEYE_LOGGER_DISCOVERY_CANDIDATES && logger_discovery_status.candidate_count==1);
+    assert(logger_discovery_status.host[0]==0 && !strcmp(logger_discovery_status.candidates[0],"192.168.1.2"));
+    assert(logger_discovery_status.model==LoggerModel::Dl1000B && logger_discovery_status.port==502 && logger_discovery_status.unit==2);
+  }
+  for (int invalid : {17,18,19,20}) {
+    reset(invalid);assert(deye_logger_discovery_start("2712345678",LoggerModel::Lse,8899,1));deye_logger_discovery_process();
+    assert(logger_discovery_status.state==DEYE_LOGGER_DISCOVERY_NOT_FOUND && !logger_discovery_status.candidate_count);
+  }
+  reset(14);assert(!deye_logger_discovery_start("",LoggerModel::Dl1000B,502,1));
+  assert(!deye_logger_discovery_start("D123",LoggerModel::Lse,8899,1));
+  assert(!deye_logger_discovery_start("D123",LoggerModel::Dl1000B,0,1));
+  assert(!deye_logger_discovery_start("D123",LoggerModel::Dl1000B,502,0));
+  assert(!deye_logger_discovery_start("D123",LoggerModel::Dl1000B,502,1,true));
+  reset(14);
+  for (int i=1;i<=20;++i) { char host[16];snprintf(host,sizeof(host),"192.168.1.%d",i);logger_discovery_add_candidate(host);logger_discovery_add_candidate(host); }
+  assert(logger_discovery_status.candidate_count==8 && !strcmp(logger_discovery_status.candidates[7],"192.168.1.8"));
+  reset(14);logger_discovery_local_network=0xC0A80100UL;
+  memset(logger_discovery_rejected_identity,0,sizeof(logger_discovery_rejected_identity));
+  logger_discovery_add_candidate("192.168.1.2",0xC0A80102UL);assert(logger_discovery_status.candidate_count==1);
+  logger_discovery_reject_identity(0xC0A80102UL);assert(!logger_discovery_status.candidate_count);
+  logger_discovery_add_candidate("192.168.1.2",0xC0A80102UL);assert(!logger_discovery_status.candidate_count);
+  puts("Three logger models: mandatory SN, UDP identity, numeric/alphanumeric matches, validated Modbus candidates, mismatch rejection, limits and no implicit selection passed.");
+  cfg_deye_transport = DeyeTransport::SolarmanV5;
   return 0;
 }

@@ -11,6 +11,7 @@ static bool logger_recovery_apply_pending = false; // Protected by discovery mux
 
 // Called in the reader task, after processing any queued manual discovery.
 static bool deye_logger_recovery_maybe_start() {
+  if (cfg_deye_transport != DeyeTransport::SolarmanV5) return false;
   DeyeLoggerDiscoveryStatus status;
   deye_logger_discovery_copy_status(&status);
   if (!logger_recovery_policy.due(millis(), cfg_logger_serial, WiFi.status() == WL_CONNECTED,
@@ -32,6 +33,9 @@ static bool deye_logger_recovery_maybe_start() {
 
 static void deye_logger_recovery_scan_finished(uint32_t now) {
   portENTER_CRITICAL(&logger_discovery_mux);
+  // Leave manual results visible; a due V5 recovery must not replace a scan
+  // that was just run for another (not yet saved) logger model.
+  if (!logger_discovery_status.automatic) logger_recovery_policy.attempt_finished(now);
   if (logger_discovery_status.automatic && logger_discovery_status.generation == logger_recovery_generation) {
     logger_recovery_policy.attempt_finished(now);
     logger_recovery_apply_pending = logger_discovery_status.state == DEYE_LOGGER_DISCOVERY_FOUND &&

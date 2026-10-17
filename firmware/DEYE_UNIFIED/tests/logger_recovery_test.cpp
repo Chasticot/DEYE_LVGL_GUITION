@@ -113,5 +113,6 @@ int main() {
   prepare(); assert(deye_logger_discovery_start(cfg_logger_serial));
   deye_logger_discovery_process(); deye_logger_recovery_scan_finished(millis());
   assert(!deye_logger_recovery_apply() && !Preferences::host_writes);
+  assert(!deye_logger_recovery_maybe_start()); // Keep manual results visible through the cooldown.
   puts("Automatic DHCP recovery: loss/cooldown/wraparound, exact SN, verified IP-only persistence, edit races, OTA pause and no reboot on failure passed.");
 }

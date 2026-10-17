@@ -1,4 +1,6 @@
-# Deye LVGL — firmware unifié 4.4.1
+# Deye LVGL — firmware unifié 4.6.0
+
+Mise à jour depuis l’écran : [guide et validation](../../docs/MISE_A_JOUR_ECRAN_GITHUB.md).
 
 ## Retrouver automatiquement l’adresse IP du logger
 

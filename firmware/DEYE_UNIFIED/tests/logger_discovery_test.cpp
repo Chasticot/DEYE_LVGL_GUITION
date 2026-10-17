@@ -38,5 +38,18 @@ int main() {
   assert(logger_discovery_busy(DEYE_LOGGER_DISCOVERY_QUEUED));
   assert(logger_discovery_busy(DEYE_LOGGER_DISCOVERY_RUNNING));
   assert(!logger_discovery_busy(DEYE_LOGGER_DISCOVERY_FOUND));
+  char identity[33];uint32_t numeric=0;LoggerModel model;
+  assert(logger_model_parse("dl1000b",model) && model==LoggerModel::Dl1000B);
+  assert(!logger_model_parse("other",model));
+  assert(logger_identity_parse("0002101769527",LoggerModel::Lse,identity,sizeof(identity),numeric) &&
+    numeric==2101769527UL && !strcmp(identity,"2101769527"));
+  assert(!logger_identity_parse("4294967296",LoggerModel::Lse,identity,sizeof(identity),numeric));
+  assert(logger_identity_parse("d123456789012",LoggerModel::Dl1000B,identity,sizeof(identity),numeric) &&
+    !strcmp(identity,"D123456789012") && numeric==0);
+  assert(!logger_identity_parse("D123!",LoggerModel::Dl1000B,identity,sizeof(identity),numeric));
+  assert(!logger_identity_parse("D123",LoggerModel::Lsw,identity,sizeof(identity),numeric));
+  char packet[]="192.168.1.12,aa:bb:cc:dd:ee:ff,D123456789012\r\n",mac[18];
+  assert(logger_discovery_parse_identity_reply(packet,"192.168.1.12",identity,sizeof(identity),mac,sizeof(mac)) &&
+    !strcmp(identity,"D123456789012"));
   puts("Logger reply parsing and subnet tests passed.");
 }

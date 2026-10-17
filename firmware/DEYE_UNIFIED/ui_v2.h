@@ -240,7 +240,7 @@ void ui_show_v2_sleep(lv_event_t *) {
   v2_field("Debut de veille", &v2_draft.sleep_start, V2_TIME);
   v2_field("Fin de veille", &v2_draft.sleep_end, V2_TIME);
   v2_field("Duree de reveil (s)", &v2_draft.wake_seconds, V2_UINT);
-  v2_label(v2_body, ntp_received.load() ? "Heure NTP synchronisee" : "En attente de l'heure NTP", 0, 250, 420);
+  v2_label(v2_body, ntp_received.load() ? "Horloge reglee (NTP ou manuelle)" : "Horloge non reglee", 0, 250, 420);
   v2_save_button();
 }
 void ui_show_v2_ev_options(lv_event_t *) {

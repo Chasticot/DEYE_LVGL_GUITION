@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "ui_registres_perso.h"
 #include "ui_v2_navigation.h"
+#include "github_ota.h"
 
 // ==================== DÉCLARATIONS EXTERNES ====================
 extern void deye_solarman_set_ui_active(bool active);
@@ -18,6 +19,9 @@ extern bool deye_copy_diagnostics(DeyeDiagnostics *out);
 static lv_obj_t *screen_settings = nullptr;
 static lv_obj_t *screen_wifi = nullptr;
 static lv_obj_t *screen_ntp = nullptr;
+static lv_obj_t *screen_manual_clock = nullptr;
+static lv_obj_t *textarea_manual_date = nullptr, *textarea_manual_time = nullptr;
+static lv_obj_t *keyboard_manual_clock = nullptr;
 static lv_obj_t *screen_deye = nullptr;
 static lv_obj_t *screen_tempo = nullptr;
 static lv_obj_t *screen_theme = nullptr;
@@ -35,6 +39,10 @@ static lv_obj_t *textarea_ntp_secondary = nullptr;
 
 static lv_obj_t *textarea_deye_host = nullptr;
 static lv_obj_t *textarea_logger_serial = nullptr;
+static lv_obj_t *dropdown_deye_transport = nullptr, *textarea_deye_port = nullptr, *textarea_deye_unit = nullptr;
+static lv_obj_t *button_deye_results=nullptr, *screen_logger_candidates=nullptr, *dropdown_logger_candidates=nullptr,
+  *label_logger_candidates=nullptr;
+static lv_obj_t *button_deye_discovery = nullptr;
 static lv_obj_t *switch_tempo = nullptr;
 static lv_obj_t *switch_tempo_colorblind = nullptr;
 static lv_obj_t *label_ev_backend_status = nullptr;
@@ -216,6 +224,8 @@ void ui_show_settings_screen(lv_event_t *e) {
   if (screen_settings == nullptr) return;
   lv_scr_load(screen_settings);
 }
+
+#include "ui_github_ota.h"
 
 static void ui_wifi_password_length_changed(lv_event_t *e) {
   if (label_wifi_password_length == nullptr) return;
@@ -425,15 +435,48 @@ static void ui_save_ntp(lv_event_t *e) {
     ui_settings_show_error("Sauvegarde NTP impossible.");
     return;
   }
-  ui_settings_restart_message();
+  ntp_manager_begin();
+  lv_obj_t *message = lv_msgbox_create(nullptr, "Heure / NTP", "Parametres appliques. Horloge conservee sans redemarrage.", nullptr, true);
+  lv_obj_center(message);
 }
 
 // ==================== SAUVEGARDE DEYE / SOLARMAN V5 ====================
+static void ui_show_manual_clock(lv_event_t *) {
+  struct tm now = {};
+  char date[16] = {}, clock[16] = {};
+  if (clock_get_local_time(&now)) {
+    strftime(date, sizeof(date), "%Y-%m-%d", &now);
+    strftime(clock, sizeof(clock), "%H:%M", &now);
+  }
+  lv_textarea_set_text(textarea_manual_date, date);
+  lv_textarea_set_text(textarea_manual_time, clock);
+  lv_scr_load(screen_manual_clock);
+}
+static void ui_apply_manual_clock(lv_event_t *) {
+  if (!ntp_manager_set_manual(lv_textarea_get_text(textarea_manual_date), lv_textarea_get_text(textarea_manual_time))) {
+    ui_settings_show_error("Date ou heure invalide. Utiliser AAAA-MM-JJ et HH:MM."); return;
+  }
+  lv_obj_add_flag(keyboard_manual_clock, LV_OBJ_FLAG_HIDDEN);
+  lv_scr_load(screen_ntp);
+  lv_obj_t *message = lv_msgbox_create(nullptr, "Heure", "Horloge reglee. NTP prendra le relais au retour du reseau.", nullptr, true);
+  lv_obj_center(message);
+}
+static void ui_deye_transport_changed(lv_event_t *) {
+  const LoggerModel model=LoggerModel(lv_dropdown_get_selected(dropdown_deye_transport));
+  lv_textarea_set_text(textarea_deye_port,String(logger_default_port(model)).c_str());
+  lv_obj_clear_state(button_deye_discovery,LV_STATE_DISABLED);
+}
 static void ui_discover_deye_logger(lv_event_t *e) {
   (void)e;
-  uint32_t serial = 0;
-  logger_discovery_serial(lv_textarea_get_text(textarea_logger_serial), &serial);
-  if (deye_logger_discovery_start(serial)) {
+  uint32_t port=0,unit=0,numeric=0;char identity[33];
+  const LoggerModel model=LoggerModel(lv_dropdown_get_selected(dropdown_deye_transport));
+  if (!logger_identity_parse(lv_textarea_get_text(textarea_logger_serial),model,identity,sizeof(identity),numeric) ||
+      (model!=LoggerModel::Dl1000B && numeric==123456789UL) ||
+      !ui_parse_u32(lv_textarea_get_text(textarea_deye_port),1,65535,&port) ||
+      !ui_parse_u32(lv_textarea_get_text(textarea_deye_unit),1,247,&unit)) {
+    ui_settings_show_error("Choisir le type et renseigner son vrai numero de serie, le port et l'unite.");return;
+  }
+  if (deye_logger_discovery_start(identity,model,uint16_t(port),uint8_t(unit))) {
     lv_label_set_text(label_deye_discovery, "Recherche du logger en attente...");
   } else {
     lv_label_set_text(label_deye_discovery, WiFi.status() == WL_CONNECTED
@@ -445,13 +488,16 @@ static void ui_save_deye(lv_event_t *e) {
   (void)e;
 
   const char *host = lv_textarea_get_text(textarea_deye_host);
-  uint32_t serial = 0;
+  uint32_t serial = 0, port = 0, unit = 0; char identity[33];
+  const auto model = LoggerModel(lv_dropdown_get_selected(dropdown_deye_transport));
   if (host == nullptr || *host == '\0' || strlen(host) > 63 ||
-      !ui_parse_u32(lv_textarea_get_text(textarea_logger_serial), 1, UINT32_MAX, &serial)) {
-    ui_settings_show_error("Verifier l'hote et le serial du logger.");
+      !ui_parse_u32(lv_textarea_get_text(textarea_deye_port), 1, 65535, &port) ||
+      !ui_parse_u32(lv_textarea_get_text(textarea_deye_unit), 1, 247, &unit) ||
+      !logger_identity_parse(lv_textarea_get_text(textarea_logger_serial),model,identity,sizeof(identity),serial)) {
+    ui_settings_show_error("Verifier IP, port, unite et numero V5 si utilise.");
     return;
   }
-  if (!settings_save_deye(host, serial)) {
+  if (!settings_save_logger(host, identity, model, uint16_t(port), uint8_t(unit))) {
     ui_settings_show_error("Sauvegarde Deye impossible.");
     return;
   }
@@ -487,6 +533,33 @@ static void ui_save_theme(lv_event_t *e) {
   ui_settings_restart_message();
 }
 
+static bool ui_logger_result_current(const DeyeLoggerDiscoveryStatus &status) {
+  char identity[33];uint32_t numeric;
+  return status.model==LoggerModel(lv_dropdown_get_selected(dropdown_deye_transport)) &&
+    logger_identity_parse(lv_textarea_get_text(textarea_logger_serial),status.model,identity,sizeof(identity),numeric) &&
+    !strcmp(identity,status.identity) &&
+    !strcmp(lv_textarea_get_text(textarea_deye_port),String(status.port).c_str()) &&
+    !strcmp(lv_textarea_get_text(textarea_deye_unit),String(status.unit).c_str());
+}
+static void ui_show_logger_candidates(lv_event_t *) {
+  DeyeLoggerDiscoveryStatus status;deye_logger_discovery_copy_status(&status);
+  if (!ui_logger_result_current(status) || status.state!=DEYE_LOGGER_DISCOVERY_CANDIDATES || !status.candidate_count) return;
+  char options[160]={},description[128];
+  for (uint8_t i=0;i<status.candidate_count;++i) {
+    if (i) strcat(options,"\n");strcat(options,status.candidates[i]);
+  }
+  lv_dropdown_set_options(dropdown_logger_candidates,options);
+  snprintf(description,sizeof(description),"Numero demande : %s\nPort %u ; unite %u",status.identity,status.port,status.unit);
+  lv_label_set_text(label_logger_candidates,description);
+  lv_scr_load(screen_logger_candidates);
+}
+static void ui_use_logger_candidate(lv_event_t *) {
+  DeyeLoggerDiscoveryStatus status;deye_logger_discovery_copy_status(&status);
+  const uint16_t index=lv_dropdown_get_selected(dropdown_logger_candidates);
+  if (!ui_logger_result_current(status) || status.state!=DEYE_LOGGER_DISCOVERY_CANDIDATES || index>=status.candidate_count) return;
+  lv_textarea_set_text(textarea_deye_host,status.candidates[index]);
+  lv_scr_load(screen_deye);
+}
 static void ui_settings_update_deye_status() {
   if (label_deye_discovery) {
     DeyeLoggerDiscoveryStatus discovery;
@@ -507,15 +580,14 @@ static void ui_settings_update_deye_status() {
             : "Logger retrouve : %s\nNumero de serie enregistre conserve.", discovery.host);
           break;
         }
-        snprintf(message, sizeof(message), "Trouve : %s  SN %lu\nVerifier puis SAUVEGARDER.",
-          discovery.host, (unsigned long)discovery.serial);
-        if (discovery.generation != ui_deye_discovery_applied_generation) {
-          char serial[16]; snprintf(serial, sizeof(serial), "%lu", (unsigned long)discovery.serial);
+        snprintf(message, sizeof(message), "Trouve : %s ; numero verifie.\nVerifier puis SAUVEGARDER.",discovery.host);
+        if (discovery.generation != ui_deye_discovery_applied_generation && ui_logger_result_current(discovery)) {
           lv_textarea_set_text(textarea_deye_host, discovery.host);
-          lv_textarea_set_text(textarea_logger_serial, serial);
           ui_deye_discovery_applied_generation = discovery.generation;
         }
         break;
+      case DEYE_LOGGER_DISCOVERY_CANDIDATES:
+        snprintf(message,sizeof(message),"%u serveur(s) Modbus ; numero non verifie.\nOuvrir RESULTATS pour choisir l'adresse IP.",discovery.candidate_count);break;
       case DEYE_LOGGER_DISCOVERY_NOT_FOUND:
         snprintf(message, sizeof(message), "Aucun logger trouve. Verifier Wi-Fi et numero de serie."); break;
       case DEYE_LOGGER_DISCOVERY_ERROR:
@@ -523,7 +595,15 @@ static void ui_settings_update_deye_status() {
       default:
         snprintf(message, sizeof(message), "Renseigner le numero de serie avant de lancer\nla recherche de l'adresse IP du logger."); break;
     }
+    if (!discovery.automatic && (discovery.state==DEYE_LOGGER_DISCOVERY_FOUND || discovery.state==DEYE_LOGGER_DISCOVERY_CANDIDATES) &&
+        !ui_logger_result_current(discovery))
+      snprintf(message,sizeof(message),"Resultat pour un autre type, numero ou port.\nRelancer la recherche avec ces parametres.");
     lv_label_set_text(label_deye_discovery, message);
+    if (button_deye_results) {
+      if (discovery.state==DEYE_LOGGER_DISCOVERY_CANDIDATES && ui_logger_result_current(discovery))
+        lv_obj_clear_state(button_deye_results,LV_STATE_DISABLED);
+      else lv_obj_add_state(button_deye_results,LV_STATE_DISABLED);
+    }
   }
   if (label_deye_blocks == nullptr) return;
   DeyeDiagnostics diagnostic = {};
@@ -554,8 +634,8 @@ static void ui_settings_create() {
   ui_settings_make_title(screen_settings, "CONFIGURATION");
 
   int btn_w = 280;
-  int btn_h = 48;
-  int spacing = 10;
+  int btn_h = 42;
+  int spacing = 7;
   int col_x = (LCD_W - btn_w) / 2;
   int start_y = 55;
   int step_y = btn_h + spacing;
@@ -566,6 +646,8 @@ static void ui_settings_create() {
   ui_settings_make_button(screen_settings, "RELAIS", col_x, start_y + 3 * step_y, btn_w, btn_h, ui_show_v2_relay);
   ui_settings_make_button(screen_settings, "RESEAU / HEURE", col_x, start_y + 4 * step_y, btn_w, btn_h, ui_show_v2_network);
   ui_settings_make_button(screen_settings, "AFFICHAGE", col_x, start_y + 5 * step_y, btn_w, btn_h, ui_show_v2_display);
+
+  ui_settings_make_button(screen_settings, "MISE A JOUR", col_x, start_y + 6 * step_y, btn_w, btn_h, ui_show_ota);
 
   ui_settings_make_button(screen_settings, "RETOUR", col_x, 415, btn_w, 50, ui_show_dashboard);
 
@@ -891,6 +973,27 @@ static void ui_settings_create() {
 
   ui_settings_make_button(screen_ntp, "RETOUR", 20, 370, 190, 55, ui_show_v2_network);
   ui_settings_make_button(screen_ntp, "SAUVEGARDER", 250, 370, 200, 55, ui_save_ntp);
+  ui_settings_make_button(screen_ntp, "REGLER L'HEURE MANUELLEMENT", 20, 312, 430, 42, ui_show_manual_clock);
+
+  screen_manual_clock = lv_obj_create(nullptr);
+  lv_obj_set_style_bg_color(screen_manual_clock, ui_settings_color(ui_settings_theme().screen_bg), 0);
+  lv_obj_clear_flag(screen_manual_clock, LV_OBJ_FLAG_SCROLLABLE);
+  ui_settings_make_title(screen_manual_clock, "HEURE SANS INTERNET");
+  label = lv_label_create(screen_manual_clock);
+  lv_label_set_text(label, "Date locale : AAAA-MM-JJ"); lv_obj_set_pos(label, 20, 65);
+  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().text), 0);
+  textarea_manual_date = ui_settings_make_textarea(screen_manual_clock, "", 20, 92, false, &keyboard_manual_clock);
+  label = lv_label_create(screen_manual_clock);
+  lv_label_set_text(label, "Heure locale : HH:MM (24 h)"); lv_obj_set_pos(label, 20, 155);
+  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().text), 0);
+  textarea_manual_time = ui_settings_make_textarea(screen_manual_clock, "", 20, 182, false, &keyboard_manual_clock);
+  label = lv_label_create(screen_manual_clock);
+  lv_label_set_text(label, "Utilise le fuseau horaire enregistre.\nApplique sans redemarrer.\nApres coupure de courant, regler a nouveau\nsi NTP reste indisponible.");
+  lv_obj_set_pos(label, 20, 245); lv_obj_set_width(label, 440);
+  lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), 0);
+  ui_settings_make_button(screen_manual_clock, "RETOUR", 20, 370, 190, 55, ui_show_ntp_screen);
+  ui_settings_make_button(screen_manual_clock, "APPLIQUER", 250, 370, 200, 55, ui_apply_manual_clock);
 
   // ============================================================
   // ÉCRAN DEYE / SOLARMAN
@@ -904,14 +1007,14 @@ static void ui_settings_create() {
   // Adresse IP
   label = lv_label_create(screen_deye);
   lv_label_set_text(label, "Adresse IP du logger");
-  lv_obj_set_pos(label, 20, 70);
+  lv_obj_set_pos(label, 20, 110);
   lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
   textarea_deye_host = ui_settings_make_textarea(
     screen_deye,
     cfg_deye_host.c_str(),
-    20, 100,
+    20, 130,
     false,
     &keyboard_deye
   );
@@ -919,34 +1022,67 @@ static void ui_settings_create() {
   // Numéro de série
   label = lv_label_create(screen_deye);
   lv_label_set_text(label, "Numero de serie du logger");
-  lv_obj_set_pos(label, 20, 180);
+  lv_obj_set_pos(label, 20, 242);
   lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
 
-  char serial[16];
-  snprintf(serial, sizeof(serial), "%lu", (unsigned long)cfg_logger_serial);
+  char serial[33];
+  snprintf(serial, sizeof(serial), "%s", cfg_logger_identity.c_str());
 
   textarea_logger_serial = ui_settings_make_textarea(
     screen_deye,
     serial,
-    20, 210,
+    20, 262,
     false,
     &keyboard_deye
   );
 
   label_deye_blocks = lv_label_create(screen_deye);
-  lv_obj_set_pos(label_deye_blocks, 20, 266);
+  lv_obj_set_pos(label_deye_blocks, 20, 308);
   lv_obj_set_width(label_deye_blocks, 440);
   lv_obj_set_style_text_font(label_deye_blocks, &lv_font_montserrat_12, LV_PART_MAIN);
   lv_obj_set_style_text_color(label_deye_blocks, ui_settings_color(ui_settings_theme().muted_text), LV_PART_MAIN);
   label_deye_discovery = lv_label_create(screen_deye);
-  lv_obj_set_pos(label_deye_discovery, 20, 302);
+  lv_obj_set_pos(label_deye_discovery, 20, 342);
   lv_obj_set_width(label_deye_discovery, 440);
   lv_obj_set_style_text_font(label_deye_discovery, &lv_font_montserrat_12, LV_PART_MAIN);
   lv_obj_set_style_text_color(label_deye_discovery, ui_settings_color(ui_settings_theme().accent), LV_PART_MAIN);
-  ui_settings_make_button(screen_deye, "RECHERCHER LOGGER", 20, 346, 430, 36, ui_discover_deye_logger);
+  button_deye_discovery = ui_settings_make_button(screen_deye, "RECHERCHER", 20, 378, 205, 32, ui_discover_deye_logger);
+  button_deye_results = ui_settings_make_button(screen_deye,"RESULTATS",245,378,205,32,ui_show_logger_candidates);
+  lv_obj_set_style_bg_opa(button_deye_discovery, LV_OPA_40, LV_STATE_DISABLED);
+  dropdown_deye_transport = lv_dropdown_create(screen_deye);
+  lv_dropdown_set_options(dropdown_deye_transport, "LSW - Solarman V5\nLSE - Ethernet Modbus TCP\nDL1000B - Modbus TCP");
+  lv_obj_set_pos(dropdown_deye_transport, 20, 60); lv_obj_set_size(dropdown_deye_transport, 430, 40);
+  lv_dropdown_set_selected(dropdown_deye_transport, uint8_t(cfg_logger_model));
+  lv_obj_add_event_cb(dropdown_deye_transport, ui_deye_transport_changed, LV_EVENT_VALUE_CHANGED, nullptr);
+  label = lv_label_create(screen_deye); lv_label_set_text(label, "Port TCP"); lv_obj_set_pos(label, 20, 176);
+  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().text), 0);
+  label = lv_label_create(screen_deye); lv_label_set_text(label, "Unite Modbus (1-247)"); lv_obj_set_pos(label, 245, 176);
+  lv_obj_set_style_text_color(label, ui_settings_color(ui_settings_theme().text), 0);
+  textarea_deye_port = ui_settings_make_textarea(screen_deye, String(cfg_deye_port).c_str(), 20, 196, false, &keyboard_deye);
+  textarea_deye_unit = ui_settings_make_textarea(screen_deye, String(cfg_deye_unit).c_str(), 245, 196, false, &keyboard_deye);
+  lv_obj_set_width(textarea_deye_port, 205); lv_obj_set_width(textarea_deye_unit, 205);
   ui_settings_update_deye_status();
 
-  ui_settings_make_button(screen_deye, "RETOUR", 20, 390, 190, 55, ui_show_v2_deye);
-  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 390, 200, 55, ui_save_deye);
+  ui_settings_make_button(screen_deye, "RETOUR", 20, 415, 190, 45, ui_show_v2_deye);
+  ui_settings_make_button(screen_deye, "SAUVEGARDER", 250, 415, 200, 45, ui_save_deye);
+
+  screen_logger_candidates=lv_obj_create(nullptr);
+  lv_obj_set_style_bg_color(screen_logger_candidates,ui_settings_color(ui_settings_theme().screen_bg),0);
+  lv_obj_clear_flag(screen_logger_candidates,LV_OBJ_FLAG_SCROLLABLE);
+  ui_settings_make_title(screen_logger_candidates,"RESULTATS RECHERCHE");
+  label_logger_candidates=lv_label_create(screen_logger_candidates);
+  lv_obj_set_pos(label_logger_candidates,20,85);lv_obj_set_width(label_logger_candidates,430);
+  lv_obj_set_style_text_color(label_logger_candidates,ui_settings_color(ui_settings_theme().text),0);
+  lv_label_set_text(label_logger_candidates,"");
+  dropdown_logger_candidates=lv_dropdown_create(screen_logger_candidates);
+  lv_obj_set_pos(dropdown_logger_candidates,20,150);lv_obj_set_size(dropdown_logger_candidates,430,48);
+  lv_obj_set_style_max_height(dropdown_logger_candidates,160,0);
+  label=lv_label_create(screen_logger_candidates);
+  lv_label_set_text(label,"Ces adresses repondent en Modbus TCP.\nLe numero du logger n'est pas verifie.\nChoisir seulement l'appareil attendu,\npuis sauvegarder sur la page precedente.");
+  lv_obj_set_pos(label,20,235);lv_obj_set_width(label,430);
+  lv_obj_set_style_text_font(label,&lv_font_montserrat_16,0);
+  lv_obj_set_style_text_color(label,ui_settings_color(ui_settings_theme().text),0);
+  ui_settings_make_button(screen_logger_candidates,"RETOUR",20,370,190,55,ui_show_deye_screen);
+  ui_settings_make_button(screen_logger_candidates,"CHOISIR CETTE IP",230,370,220,55,ui_use_logger_candidate);
 }

@@ -6,8 +6,38 @@
 using String = std::string;
 static V2Config cfg_v2;
 #include "../web_v2.h"
+#include "../logger_connection_json.h"
 
 int main() {
+  DynamicJsonDocument logger(512);
+  logger["logger_serial"] = 2712345678UL;
+  DeyeConnectionImport connection;
+  assert(deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  assert(connection.transport == DeyeTransport::SolarmanV5 && connection.port == 8899 && connection.unit == 1);
+  logger["logger_transport"] = "modbus_tcp"; logger["logger_port"] = 502;
+  logger["logger_unit"] = 7; logger["logger_serial"] = 0;
+  assert(deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  assert(connection.transport == DeyeTransport::ModbusTcp && connection.port == 502 && connection.unit == 7);
+  logger["logger_transport"] = "solarman_v5";
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_transport"] = "modbus_tcp"; logger["logger_unit"] = 0;
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_unit"] = 248;
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_unit"] = 1.5;
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_unit"] = 1; logger["logger_port"] = "502";
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_port"] = 65536;
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_port"] = 502; logger.remove("logger_unit");
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_unit"]=1;logger["logger_model"]="dl1000b";logger["logger_serial_text"]="D123456789012";
+  assert(deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  assert(connection.model==LoggerModel::Dl1000B && !strcmp(connection.identity,"D123456789012") && connection.serial==0);
+  logger["logger_serial"]=7;assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
+  logger["logger_serial"]=0;logger["logger_model"]="lsw";
+  assert(!deye_connection_from_json(logger.as<JsonObjectConst>(),connection));
   DynamicJsonDocument charging(512);
   EvBackend backend = EvBackend::None;
   bool ambiguous = false;
