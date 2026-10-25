@@ -1,6 +1,6 @@
 # Deye Monitor - firmware unifié
 
-> Édition 4.6.3 conservée pour les fonctions communes. En 4.7.0, le choix du modèle et du port GEN a changé : consulter le [guide actuel](MISE_A_JOUR_ECRAN_GITHUB.md) et le [guide 4.7.0](GUIDE_UNIFIE_4.7.0.md).
+> **Archive 4.6.3 des fonctions détaillées.** Pour la première mise en route et les versions actuelles, utiliser le [guide à jour](MISE_A_JOUR_ECRAN_GITHUB.md), la [FAQ](FAQ_ECRAN.md) et le [mémo](RECAP_UTILISATEURS_V3.md). Les anciens noms de menus, catalogues, procédures et états de validation ci-dessous décrivent cette édition historique. Le [PDF associé](pdf/GUIDE_UTILISATEUR_V3.pdf) reste lui aussi en édition 4.6.3.
 ## Guide utilisateur complet
 
 **Firmware 4.6.3 - Édition du 20 octobre 2026**
@@ -586,4 +586,5 @@ La 4.6.3 a été compilée et testée par logiciel, avec une coupure Wi-Fi d'une
 - **[S3] Deye, [Guia de Configuração Solarman PRO](https://pt.deyeinverter.com/deyeinverter/2021/03/19/guiasolarmanpro.pdf)**, pages 34 et 45 ; **[Quick Guide DL1000B-ETH](https://www.deyeinverter.com/deyeinverter/2026/05/20/DeyeDataLoggerQuickGuideDL1000B-ETHV11.pdf)**, Device information : distinction AP/STA/LAN. Ces interfaces illustrent les adresses, sans prouver la compatibilité locale du logger.
 
 Cette édition suit les sources et la validation du firmware unifié 4.6.3. Les protocoles de registres GEN sont conservés dans `docs/protocols/`.
+
 

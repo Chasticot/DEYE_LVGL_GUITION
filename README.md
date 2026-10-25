@@ -1,17 +1,29 @@
-# Deye Monitor — mises à jour de l'écran
+# Deye Monitor — démarrage, utilisation et mises à jour
 
-Ce dépôt public distribue les **binaires de mise à jour OTA** et les guides d'utilisation. Le code source et son historique sont conservés dans un dépôt privé.
+Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUITION ESP32-S3 480 × 480. Il fonctionne en local avec un logger compatible, sans Home Assistant ni compte cloud à renseigner dans l’écran.
 
-## Mettre l'écran à jour
+## Commencer ici
 
-1. Sauvegarder les réglages de l'écran depuis sa page Web.
-2. Sur l'écran, ouvrir **Configuration > Mise à jour**, puis **Vérifier sur GitHub** et **Installer**.
-3. Pour une ancienne version sans ce menu, télécharger le fichier **`_OTA.bin`** dans les [Releases](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases), puis le sélectionner dans la page Web OTA de l'écran.
+- **[Première mise en route et guide utilisateur](docs/MISE_A_JOUR_ECRAN_GITHUB.md)** : alimentation, Wi-Fi, modèle, logger, premières mesures.
+- **[Questions fréquentes et dépannage](docs/FAQ_ECRAN.md)** : « DEYE injoignable », connexion directe sans box, IP, GEN, alimentation, encastrement, mises à jour.
+- **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
+- **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-Le fichier OTA contient uniquement l'application de l'écran. Il nécessite un partitionnement OTA compatible et ne remplace pas une première installation USB.
+La dernière version stable vérifiée le **26 octobre 2026** est **4.7.2**. Elle renforce la reconnexion Wi-Fi, notamment en liaison directe avec le point d’accès du logger. [Notes et binaire 4.7.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.7.2).
 
-La version stable actuelle est **4.7.0**. [Télécharger le binaire](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/download/v4.7.0/DEYE_V3_4.7.0_OTA.bin).
+## Mettre un écran déjà installé à jour
 
-[Guide utilisateur complet](docs/MISE_A_JOUR_ECRAN_GITHUB.md) · [Guide 4.7.0](docs/GUIDE_UNIFIE_4.7.0.md).
+1. Exporter ses réglages depuis la page Web de l’écran.
+2. Avec Internet et une heure correcte, ouvrir **Configuration > Mise à jour > Vérifier sur GitHub > Installer**.
+3. Sans ce menu, télécharger le fichier **`_OTA.bin`** de la release adaptée et l’envoyer depuis le formulaire OTA de **l’IP de l’écran**.
+4. Garder l’alimentation jusqu’au redémarrage, puis vérifier version, modèle, logger et mesures.
 
-Les empreintes SHA-256 sont fournies avec les binaires. Les archives automatiques « Source code » de GitHub contiennent uniquement les documents de ce dépôt, aucun code du firmware.
+Le fichier OTA ne remplace pas une première installation USB. Les archives automatiques **Source code** ne sont pas un programme d’installation. [Procédure complète et récupération USB](docs/MISE_A_JOUR_ECRAN_GITHUB.md#mettre-lécran-à-jour).
+
+## Compatibilité et anciennes notices
+
+Le modèle de l’onduleur **et** celui du logger comptent. LSW3/LSW5 et LSE disposent de retours de fonctionnement ; **DL1000B-WIFI reste à valider sur le matériel concerné**, même si un mode existe dans le logiciel. [Vérifier son matériel](docs/MISE_A_JOUR_ECRAN_GITHUB.md#vérifier-la-compatibilité-avant-de-commencer).
+
+Le [manuel détaillé 4.6.3](docs/GUIDE_UTILISATEUR_V3.md) et les [notes 4.7.0](docs/GUIDE_UNIFIE_4.7.0.md) restent disponibles pour les anciennes versions. Les PDF historiques sont datés 4.6.3 ; pour une mise en route actuelle, utiliser les liens ci-dessus.
+
+Ce dépôt public distribue les **binaires OTA**, leurs empreintes SHA-256 et les guides. Les sources du firmware et leur historique restent privés. Les URL existantes des guides sont conservées pour les écrans déjà livrés.

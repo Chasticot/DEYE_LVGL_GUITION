@@ -1,5 +1,7 @@
 # Deye Monitor 4.7.0
 
+> Notes de cette version, conservées comme historique. Pour la mise en route actuelle et les problèmes rencontrés, consulter le [guide à jour](MISE_A_JOUR_ECRAN_GITHUB.md) et la [FAQ](FAQ_ECRAN.md). Le catalogue et les états de validation peuvent évoluer selon la version installée.
+
 ## Choisir son onduleur
 
 1. Relever **Model / Modèle** sur l’étiquette de l’onduleur. Le numéro du logger ne désigne pas le modèle de l’onduleur.
@@ -61,3 +63,4 @@ La mise à jour 4.7.0 utilise les partitions existantes de 4 Mo ; aucun effaceme
 Depuis **Configuration > Mise à jour > Vérifier sur GitHub > Installer**, ou avec le binaire OTA depuis le Web. Un écran neuf nécessite une installation USB initiale, distincte de cette distribution OTA. Exporter les réglages avant mise à jour et garder l’écran alimenté.
 
 [Guide utilisateur](https://github.com/Chasticot/DEYE_LVGL_GUITION/blob/main/docs/MISE_A_JOUR_ECRAN_GITHUB.md).
+
