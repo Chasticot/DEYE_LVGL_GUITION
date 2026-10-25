@@ -4,6 +4,8 @@
 
 Les réponses distinguent les fonctions disponibles, les retours de fonctionnement et les matériels qui restent à tester. Un essai réussi sur un modèle ne valide pas toutes ses révisions ni toutes les fonctions.
 
+**Besoin de voir les boutons ?** Le [guide illustré](MISE_A_JOUR_ECRAN_GITHUB.md#commencer-en-images) accompagne les manipulations avec des captures. Le [mémo illustré](RECAP_UTILISATEURS_V3.md) reprend le parcours de démarrage.
+
 ## Trouver une réponse
 
 | Question | Réponse |
@@ -109,6 +111,10 @@ Le comportement thermique de ce montage n’a pas été caractérisé. Ne pas co
 <a id="adresses-ip"></a>
 ## Les deux adresses IP
 
+![IP du logger pour les mesures, IP de l’écran pour la page Web ; exemples fictifs.](images/demarrage/reseau-maison.svg)
+
+Utiliser les vraies adresses de votre installation. **IP du logger dans les réglages ; IP de l’écran dans le navigateur.**
+
 ### Faut-il entrer l’IP de l’écran ou celle du logger ?
 
 Dans **CONNEXION / LOGGER**, entrer **l’IP du logger**. Dans le navigateur du téléphone/PC, ouvrir **l’IP de l’écran** pour son Web, son diagnostic ou son OTA. Le numéro de série demandé dans la connexion est celui du **logger**, pas celui de l’onduleur.
@@ -119,6 +125,10 @@ Non. C’est l’adresse AP habituelle de certains loggers LSW. Elle sert dans l
 
 <a id="sans-box"></a>
 ## Sans box et sans Internet
+
+![L’écran et le téléphone rejoignent le Wi-Fi AP d’un logger LSW compatible.](images/demarrage/reseau-sans-box.svg)
+
+Le téléphone et l’écran rejoignent le même AP. Pour ouvrir l’écran, relever son IP : ce n’est pas automatiquement 10.10.100.254.
 
 ### Puis-je connecter l’écran directement au Wi-Fi AP du logger ?
 

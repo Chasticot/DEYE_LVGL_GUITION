@@ -4,6 +4,10 @@
 
 [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Questions fréquentes](FAQ_ECRAN.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 
+![Parcours en cinq étapes : alimenter, connecter le Wi-Fi, choisir le modèle, connecter le logger, vérifier.](images/demarrage/parcours-demarrage.svg)
+
+**Première fois ?** Suivre le dessin dans l’ordre, puis les explications ci-dessous. Le [guide illustré](MISE_A_JOUR_ECRAN_GITHUB.md) montre les boutons et les menus en grand. Cliquer sur une image pour l’agrandir.
+
 ## Avant de brancher
 
 - Identifier le matériel : référence complète du DEYE, modèle et numéro du **logger**, version de l’écran.
@@ -18,6 +22,22 @@
 3. **Logger** : **CONNEXION / LOGGER**. Choisir LSW, LSE ou DL1000B, saisir son vrai numéro, rechercher puis sauvegarder le bon résultat. « Numéro non vérifié » exige une identification dans RESULTATS.
 4. **Mesures** : attendre et comparer au LCD du DEYE. Contrôler modèle, unité et coefficients si une valeur est incohérente.
 5. **Heure** : vérifier date, fuseau et NTP. Sans Internet, régler manuellement ; recommencer après coupure d’alimentation si nécessaire.
+
+## Repères en images
+
+Les captures suivantes sont des **aperçus de développement** : les données et le modèle montrés sont des exemples. Leur présentation peut varier selon la version. Ne pas recopier les IP ou les numéros.
+
+![Choisir la puissance puis la référence exacte sur la page MON ONDULEUR.](images/demarrage/mon-onduleur.png)
+
+**Modèle :** choisir sa propre référence, suffixes compris. Le 12 kW illustré n’est pas un réglage universel. Appliquer et laisser redémarrer si le modèle change. [Explication pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md#faire-apparaître-les-mesures-de-londuleur).
+
+![Choisir le logger et renseigner son IP et son vrai numéro, puis rechercher et sauvegarder.](images/demarrage/connexion-lsw.png)
+
+**Logger :** sélectionner son type, son IP et son vrai numéro. L’IP **192.168.255.254** et le numéro **4294967295** de cet aperçu sont des valeurs de simulation à remplacer. Rechercher, vérifier le résultat, puis sauvegarder. [Voir les cas particuliers](MISE_A_JOUR_ECRAN_GITHUB.md#faire-apparaître-les-mesures-de-londuleur).
+
+![L’IP du logger sert aux mesures ; l’IP de l’écran sert à sa page Web. Les adresses sont fictives.](images/demarrage/reseau-maison.svg)
+
+**Deux adresses différentes :** le logger fournit les mesures ; l’écran possède sa propre page Web. Relever les vraies adresses de son installation. [Sans box ? Voir le schéma AP](MISE_A_JOUR_ECRAN_GITHUB.md#connexion-directe-au-logger-sans-box).
 
 ## Repères à garder sous la main
 
@@ -47,6 +67,10 @@
 Dans **PRODUCTION SOLAIRE / GEN**, choisir **Production solaire supplémentaire** (ancien GEN MO), activer le cumul GEN + PV si souhaité et sauvegarder. Vérifier que PV Daily ne comprend pas déjà GEN. W et kWh sont distincts ; **~** indique une estimation et **--** une donnée indisponible. Le groupe électrogène n’est pas du solaire. Ces réglages adaptent l’affichage sans changer le mode du port sur l’onduleur.
 
 ## Mettre à jour
+
+![Choisir une mise à jour par le menu, par le fichier OTA ou une récupération USB guidée.](images/demarrage/choisir-mise-a-jour.svg)
+
+Le menu tactile et la page Web concernent l’écran. Ne pas utiliser l’adresse du logger pour envoyer le fichier OTA.
 
 Exporter le JSON puis **CONFIGURATION > MISE À JOUR > VÉRIFIER SUR GITHUB > INSTALLER**, avec Internet et heure correcte. Ou télécharger le **_OTA.bin** adapté et l’envoyer depuis la page Web de **l’écran**. Garder l’alimentation jusqu’au redémarrage, même si l’affichage scintille.
 

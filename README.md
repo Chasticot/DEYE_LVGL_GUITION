@@ -4,6 +4,10 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 
 ## Commencer ici
 
+![Le parcours de première utilisation en cinq étapes](docs/images/demarrage/parcours-demarrage.svg)
+
+**La notice est illustrée :** des captures montrent où appuyer, et des schémas expliquent l’alimentation, le réseau, les mesures et les mises à jour. Commencer par le guide si c’est votre premier écran.
+
 - **[Première mise en route et guide utilisateur](docs/MISE_A_JOUR_ECRAN_GITHUB.md)** : alimentation, Wi-Fi, modèle, logger, premières mesures.
 - **[Questions fréquentes et dépannage](docs/FAQ_ECRAN.md)** : « DEYE injoignable », connexion directe sans box, IP, GEN, alimentation, encastrement, mises à jour.
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.

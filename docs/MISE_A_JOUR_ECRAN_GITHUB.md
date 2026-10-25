@@ -8,6 +8,14 @@ Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au
 
 [Questions fréquentes et dépannage par symptôme](FAQ_ECRAN.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md).
 
+## Commencer en images
+
+![Les cinq étapes : alimentation, Wi-Fi, modèle DEYE, logger, vérification.](images/demarrage/parcours-demarrage.svg)
+
+Suivre les étapes dans l’ordre. Chaque étape est détaillée ci-dessous ; les options de borne et de relais peuvent attendre.
+
+**Comment lire les images :** les captures proviennent des aperçus créés pendant le développement. Leur thème, leurs libellés et leur version peuvent varier selon votre écran. Les IP, numéros, dates et mesures affichés sont des **exemples de démonstration à ne pas recopier**. Les schémas expliquent le principe et ne représentent pas les branchements électriques. Cliquer sur une image pour l’agrandir.
+
 ## Trouver rapidement une réponse
 
 - [Vérifier la compatibilité](#vérifier-la-compatibilité-avant-de-commencer).
@@ -41,6 +49,10 @@ L’écran concerne le suivi d’un **onduleur hybride DEYE pris en charge**. Un
 
 ## Alimenter et installer l’écran
 
+![Alimentation : USB 5 V si prévu ; 230 V uniquement sur la variante équipée et avec bornes protégées.](images/demarrage/alimentation.svg)
+
+**Avant de brancher :** regarder le dos de votre écran et son marquage. Une façade identique ne garantit pas les mêmes entrées. Le schéma ne montre pas le câblage des bornes. Et la boîte doit être adaptée au dos de votre variante.
+
 | Variante matérielle | Alimentation |
 | --- | --- |
 | Écran USB sans module secteur | Alimentation USB **5 V** adaptée, par exemple un chargeur de téléphone et un câble compatibles. |
@@ -68,6 +80,10 @@ L’accès à Internet sert notamment à consulter les mises à jour, à synchro
 
 ### Deux IP et deux numéros à ne pas confondre
 
+![Le logger et l’écran ont chacun leur IP sur le réseau de la maison. Le téléphone ouvre l’IP de l’écran.](images/demarrage/reseau-maison.svg)
+
+**À retenir :** dans CONNEXION / LOGGER, on renseigne l’adresse du logger. Dans le navigateur du téléphone, on ouvre l’adresse de l’écran. Les adresses dessinées sont fictives ; relever les vôtres.
+
 | Information | Utilisation |
 | --- | --- |
 | Référence DEYE | Choix du modèle dans **MON ONDULEUR**. Ce n’est pas un numéro de série. |
@@ -78,6 +94,10 @@ L’accès à Internet sert notamment à consulter les mises à jour, à synchro
 Les IP données dans cette notice sont des exemples. Sur le réseau de la maison, relever l’adresse **STA/LAN du logger** dans la box ou dans sa page locale, et non son adresse AP de configuration. Une réservation DHCP dans la box aide à garder une adresse stable.
 
 ## Connexion directe au logger, sans box
+
+![Sans box : le logger LSW crée le Wi-Fi AP que rejoignent l’écran et le téléphone.](images/demarrage/reseau-sans-box.svg)
+
+**AP** signifie ici que le logger crée son propre Wi-Fi. L’écran se connecte à ce Wi-Fi pour lire les mesures ; le téléphone le rejoint pour ouvrir la page de l’écran.
 
 Ce mode a été utilisé avec un logger **LSW disposant de son propre point d’accès Wi-Fi**. Il ne constitue pas une validation de tous les LSE/DL1000B ou de toutes les variantes AP.
 
@@ -101,6 +121,34 @@ Les paramètres DHCP ou IP fixe sont conservés et l'interface reste utilisable 
 
 ## Faire apparaître les mesures de l’onduleur
 
+### 1. Ouvrir le bon menu
+
+![Menu DEYE / SOLARMAN avec MON ONDULEUR puis CONNEXION / LOGGER.](images/demarrage/menu-deye.png)
+
+Toucher d’abord **MON ONDULEUR**, puis revenir ici pour **CONNEXION / LOGGER**. **PRODUCTION SOLAIRE / GEN** sert ensuite aux sources supplémentaires. Les registres avancés ne sont pas nécessaires pour démarrer.
+
+### 2. Choisir la puissance et la référence
+
+![Page MON ONDULEUR : puissance, référence sur l’étiquette et bouton APPLIQUER / REDÉMARRER.](images/demarrage/mon-onduleur.png)
+
+Lire la plaque de l’onduleur : choisir la **puissance** en haut, puis la **référence et ses suffixes**. Vérifier le récapitulatif avant d’appliquer. Le 12 kW illustré est un exemple, pas le choix à faire pour tous les écrans. Le bouton peut être grisé si le modèle choisi est déjà actif.
+
+### 3. Renseigner la connexion au logger
+
+![Page de connexion LSW : type de logger, IP, port, unité, numéro, recherche et sauvegarde.](images/demarrage/connexion-lsw.png)
+
+**Capture de démonstration : ne recopier ni l’IP 192.168.255.254 ni le numéro 4294967295.** Ils proviennent du simulateur ; le message « numéro vérifié » concerne cet exemple. Utiliser les informations de votre propre logger.
+
+Sur cette page, lire de haut en bas :
+
+1. **Type de logger** : choisir la famille du module réellement installé.
+2. **Adresse IP du logger** : son adresse sur le réseau que vous utilisez.
+3. **Port / unité** : conserver les valeurs adaptées à votre installation.
+4. **Numéro de série du logger** : celui du module, pas celui du DEYE.
+5. **RECHERCHER**, vérifier la réponse, puis **SAUVEGARDER**.
+
+### Procédure complète
+
 Le **logger** est le module de communication branché sur l’onduleur. Son numéro de série est celui à renseigner dans les réglages de connexion ; il peut être différent du numéro de série de l’onduleur lui-même.
 
 1. Dans **DEYE / SOLARMAN > MON ONDULEUR**, choisir la puissance et la référence exacte, puis **APPLIQUER / REDÉMARRER** et confirmer.
@@ -111,6 +159,10 @@ Le **logger** est le module de communication branché sur l’onduleur. Son num�
 6. Vérifier l’adresse trouvée, puis sauvegarder.
 
 Si le résultat indique **numéro non vérifié**, ouvrir **RESULTATS** et choisir explicitement le bon module avant de sauvegarder. Une réponse sur le réseau ne suffit pas toujours à identifier son numéro.
+
+![Résultats de recherche : avertissement numéro non vérifié, liste d’IP et bouton CHOISIR CETTE IP.](images/demarrage/resultats-recherche.png)
+
+**Cas particulier illustré : une réponse Modbus TCP ne vérifie pas le numéro.** Identifier l’équipement avant de toucher **CHOISIR CETTE IP**, revenir à la page précédente et sauvegarder. Cet aperçu ne prouve pas la compatibilité d’un DL1000B réel.
 
 Si vous connaissez déjà l’adresse IP du logger, vous pouvez la saisir directement. Les ports proposés sont **8899 pour LSW**, **8899 pour LSE** et **502 pour DL1000B** ; conserver un port différent si votre équipement a été configuré ainsi. L’unité doit correspondre à l’adresse de communication configurée sur l’onduleur. Si ces informations ne sont pas connues, les demander à l’installateur.
 
@@ -132,11 +184,19 @@ Si la référence exacte manque, vérifier la version de l’écran et la derni�
 
 Pour des micro-onduleurs **raccordés au port GEN du DEYE**, sélectionner **Production solaire supplémentaire** (ou **GEN MO** sur une ancienne version), puis l’option de cumul GEN + PV si souhaitée. **Sauvegarder** et vérifier après redémarrage. Cela adapte l’affichage, sans reconfigurer physiquement le port de l’onduleur. Une production raccordée ailleurs n’est pas automatiquement une mesure GEN. Ne pas détourner une ligne PV pour afficher GEN quand l’option prévue est disponible.
 
+![Menu GEN : Production solaire supplémentaire, voies PV et option Ajouter GEN au solaire.](images/demarrage/production-gen.png)
+
+Pour des micro-onduleurs **déjà raccordés au port GEN du DEYE**, choisir **Production solaire supplémentaire**. Activer **Ajouter GEN au solaire** seulement si le cumul est souhaité, puis **ENREGISTRER**. Dans cette capture, le cumul est désactivé. Ne pas l’activer pour un groupe électrogène.
+
 Le total instantané en W et le total journalier en kWh sont deux réglages/mesures distincts. Éviter de compter GEN deux fois si le compteur solaire du DEYE l’inclut déjà. Un préfixe **~** signale une énergie estimée par l’écran. L’absence d’un compteur GEN valide ne signifie pas une production nulle.
 
 [Notes historiques 4.7.0](GUIDE_UNIFIE_4.7.0.md) · [FAQ GEN, coefficients et valeurs incohérentes](FAQ_ECRAN.md#mesures-et-production).
 
 ## Comprendre le tableau de bord
+
+![Repères du tableau de bord : PV, batterie, réseau, maison ; différence entre W et kWh.](images/demarrage/lire-mesures.svg)
+
+**Exemple simple :** 1 000 W pendant une heure correspondent à 1 kWh. Une puissance instantanée et un cumul du jour ne se comparent donc pas directement. La disposition réelle et les rubriques visibles dépendent du modèle.
 
 | Indication | Ce qu’elle signifie |
 | --- | --- |
@@ -197,9 +257,17 @@ Dans **AFFICHAGE > THÈME / LUMINOSITÉ**, choisir le thème clair ou sombre et 
 
 Dans **AFFICHAGE > VEILLE HORAIRE**, régler les plages de veille si vous souhaitez que l’écran s’éteigne à certaines heures. Un toucher permet de le réveiller temporairement selon le délai configuré.
 
+![Veille horaire : interrupteur, début, fin, durée de réveil et bouton ENREGISTRER.](images/demarrage/veille-horaire.png)
+
+**Écran noir à heure fixe ?** Vérifier cette page. L’interrupteur en haut active la veille ; choisir les horaires et la durée du réveil au toucher, puis **ENREGISTRER**. La veille coupe le rétroéclairage, pas les lectures ni la page Web. Les horaires montrés sont des exemples.
+
 Dans **RÉSEAU / HEURE > HEURE / NTP**, vérifier le fuseau et la synchronisation. Pour la France métropolitaine, utiliser **Europe/Paris**.
 
 Sans synchronisation Internet, choisir **RÉGLER L’HEURE MANUELLEMENT**, saisir la date et l’heure locales, puis appliquer. Après une coupure d’alimentation, régler de nouveau l’heure si elle ne peut pas se synchroniser automatiquement.
+
+![Heure sans Internet : saisir la date au format AAAA-MM-JJ, l’heure HH:MM puis APPLIQUER.](images/demarrage/heure-manuelle.png)
+
+**Sans Internet :** entrer la date du jour et l’heure locale dans les deux cases, puis **APPLIQUER**. La date et l’heure de la capture sont fictives. Après une coupure, vérifier de nouveau si la synchronisation reste indisponible.
 
 ## Ouvrir l’écran sur un téléphone ou un ordinateur
 
@@ -216,6 +284,10 @@ Pour conserver une copie des réglages, utiliser l’**export de configuration J
 
 La dernière version stable vérifiée le **26/10/2026** est **4.7.2**. Pour les téléchargements futurs, consulter la [dernière release stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest). Une mise à jour du logiciel **de l’écran** ne met pas à jour l’onduleur ni le logger.
 
+![Trois méthodes : menu GitHub, fichier OTA sur la page Web, puis récupération USB si nécessaire.](images/demarrage/choisir-mise-a-jour.svg)
+
+Utiliser la première méthode disponible. Un écran qui fonctionne ne demande pas une réinstallation USB. **OTA** signifie ici une mise à jour par le réseau.
+
 ### Depuis le menu tactile
 
 Sur un écran qui possède le menu **MISE À JOUR** :
@@ -227,6 +299,10 @@ Sur un écran qui possède le menu **MISE À JOUR** :
 5. Attendre la fin de l’installation et le redémarrage.
 
 **L’écran va scintiller pendant l’installation. C’est normal. Ne coupez pas l’alimentation jusqu’au redémarrage.**
+
+![Page MISE À JOUR : VÉRIFIER SUR GITHUB, INSTALLER et barre de progression.](images/demarrage/mise-a-jour.png)
+
+Sur cette ancienne capture de développement, **4.6.0** et **42 %** sont des exemples. Sur votre écran, lire la version réellement proposée ; la référence publique vérifiée pour cette notice est **4.7.2**. Une fois l’installation lancée, laisser l’alimentation jusqu’au redémarrage.
 
 Une mise à jour compatible conserve les réglages. Si l’écran indique qu’il est à jour, aucune installation supplémentaire n’est nécessaire. Si une erreur apparaît, lire le message et réessayer après avoir corrigé la connexion ou l’heure.
 

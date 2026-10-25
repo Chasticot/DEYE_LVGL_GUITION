@@ -1,5 +1,7 @@
 # Deye Monitor 4.7.0
 
+**Pour une première mise en route avec des images :** utiliser le [guide illustré actuel](MISE_A_JOUR_ECRAN_GITHUB.md#commencer-en-images) et le [mémo illustré](RECAP_UTILISATEURS_V3.md).
+
 > Notes de cette version, conservées comme historique. Pour la mise en route actuelle et les problèmes rencontrés, consulter le [guide à jour](MISE_A_JOUR_ECRAN_GITHUB.md) et la [FAQ](FAQ_ECRAN.md). Le catalogue et les états de validation peuvent évoluer selon la version installée.
 
 ## Choisir son onduleur

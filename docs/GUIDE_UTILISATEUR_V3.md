@@ -1,5 +1,7 @@
 # Deye Monitor - firmware unifié
 
+**Pour une première mise en route avec des images :** utiliser le [guide illustré actuel](MISE_A_JOUR_ECRAN_GITHUB.md#commencer-en-images) et le [mémo illustré](RECAP_UTILISATEURS_V3.md).
+
 > **Archive 4.6.3 des fonctions détaillées.** Pour la première mise en route et les versions actuelles, utiliser le [guide à jour](MISE_A_JOUR_ECRAN_GITHUB.md), la [FAQ](FAQ_ECRAN.md) et le [mémo](RECAP_UTILISATEURS_V3.md). Les anciens noms de menus, catalogues, procédures et états de validation ci-dessous décrivent cette édition historique. Le [PDF associé](pdf/GUIDE_UTILISATEUR_V3.pdf) reste lui aussi en édition 4.6.3.
 ## Guide utilisateur complet
 
