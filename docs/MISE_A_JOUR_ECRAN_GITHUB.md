@@ -1,6 +1,6 @@
 # Guide utilisateur — Deye Monitor
 
-**Firmware unifié 4.8.0 — Édition du 26 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [PDF des fonctions communes (édition 4.6.3)](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Firmware unifié 4.8.0 — Édition du 26 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [Guide complet en PDF (édition 4.8.0)](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 

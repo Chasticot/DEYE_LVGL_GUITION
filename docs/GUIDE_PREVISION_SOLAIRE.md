@@ -1,5 +1,7 @@
 # Prévision solaire — Deye Monitor 4.8.0
 
+[Guide complet en PDF, avec cette notice solaire](pdf/GUIDE_UTILISATEUR_V3.pdf).
+
 [Guide utilisateur](MISE_A_JOUR_ECRAN_GITHUB.md) · [Nouveautés 4.8.0](GUIDE_UNIFIE_4.8.0.md).
 
 **Édition du 26 octobre 2026.** Les captures ci-dessous sont des aperçus de développement : leurs coordonnées, dates et productions sont des exemples, à remplacer par les informations de votre installation.

@@ -88,4 +88,4 @@ Ni ZIP, ni archive Source code, ni image USB dans l’OTA. Une première install
 
 Indiquer modèle DEYE, logger/firmware, version de l’écran, type de réseau et symptôme exact. Ajouter une photo du LCD DEYE et de l’écran au même instant si les mesures diffèrent. Masquer mots de passe, QR d’accès et identifiants privés avant publication.
 
-Les anciens [manuel détaillé](GUIDE_UTILISATEUR_V3.md) et [PDF du récapitulatif](pdf/RECAP_UTILISATEURS_V3.pdf) restent en édition **4.6.3**. Pour les procédures et limites actuelles, utiliser ce mémo, le [guide](MISE_A_JOUR_ECRAN_GITHUB.md) et la [FAQ](FAQ_ECRAN.md).
+Ce [mémo en PDF](pdf/RECAP_UTILISATEURS_V3.pdf) et le [guide complet illustré en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) sont à jour pour la **4.8.0**. Le [manuel détaillé historique](GUIDE_UTILISATEUR_V3.md) reste en édition 4.6.3. Voir aussi le [guide](MISE_A_JOUR_ECRAN_GITHUB.md) et la [FAQ](FAQ_ECRAN.md).
