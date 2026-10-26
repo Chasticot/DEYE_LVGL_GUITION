@@ -1,6 +1,6 @@
 # Deye Monitor — questions fréquentes
 
-**Édition du 26 octobre 2026.** Repères pour le firmware public 4.7.2 et les écrans du projet. [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
+**Édition du 26 octobre 2026.** Repères pour le firmware public 4.8.0 et les écrans du projet. [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 
 Les réponses distinguent les fonctions disponibles, les retours de fonctionnement et les matériels qui restent à tester. Un essai réussi sur un modèle ne valide pas toutes ses révisions ni toutes les fonctions.
 
@@ -20,6 +20,7 @@ Les réponses distinguent les fonctions disponibles, les retours de fonctionneme
 | Que faire si « DEYE INJOIGNABLE » apparaît ? | [Diagnostic local](#deye-injoignable) |
 | Pourquoi la liaison coupe ou le cloud perd des données ? | [Stabilité et fréquence](#liaison-instable) |
 | Pourquoi une valeur ou un total est faux ? | [Mesures et GEN](#mesures-et-production) |
+| Comment activer les courbes solaires et l’alternance ? | [Prévision solaire](#prevision-solaire) |
 | Comment mettre à jour ou récupérer un écran ? | [OTA et USB](#mise-a-jour) |
 | Qu’envoyer pour demander de l’aide ? | [Informations utiles](#demande-aide) |
 
@@ -134,7 +135,7 @@ Le téléphone et l’écran rejoignent le même AP. Pour ouvrir l’écran, rel
 
 Oui, ce mode a été utilisé avec des LSW compatibles. Vérifier d’abord depuis un téléphone l’accès au réseau AP et son mot de passe, puis configurer l’écran sur ce réseau, en mode LSW, avec l’adresse AP vérifiée du logger. Le téléphone peut signaler « sans Internet » tout en permettant les échanges locaux.
 
-Régler l’heure manuellement sans NTP. Pour ouvrir le Web de l’écran, connecter le téléphone au même AP et utiliser l’IP propre à l’écran. NTP, Tempo et téléchargement GitHub demandent Internet. Un fichier OTA téléchargé auparavant peut être envoyé sur le réseau local si l’écran reste joignable. [Procédure directe complète](MISE_A_JOUR_ECRAN_GITHUB.md#connexion-directe-au-logger-sans-box).
+Régler l’heure manuellement sans NTP. Pour ouvrir le Web de l’écran, connecter le téléphone au même AP et utiliser l’IP propre à l’écran. NTP, Tempo, prévision solaire et téléchargement GitHub demandent Internet. Un fichier OTA téléchargé auparavant peut être envoyé sur le réseau local si l’écran reste joignable. [Procédure directe complète](MISE_A_JOUR_ECRAN_GITHUB.md#connexion-directe-au-logger-sans-box).
 
 ### Faut-il un autre firmware si je passe plus tard par ma box ?
 
@@ -228,9 +229,32 @@ Une OTA compatible conserve les réglages, mais exporter le JSON avant et vérif
 
 Le QR **DOC / GITHUB** ouvre la documentation sur le téléphone. Il ne déclenche pas une installation. Utiliser **VÉRIFIER SUR GITHUB > INSTALLER** ou le formulaire OTA.
 
-### Météo, prévision solaire, écran plus grand : est-ce déjà disponible ?
+<a id="prevision-solaire"></a>
+## Prévision solaire
 
-Une suggestion ou un développement en cours n’est pas une fonction livrée. Vérifier les notes de **la version stable publique installée**. Cette FAQ n’annonce pas ces fonctions dans la 4.7.2 et ne promet ni date ni compatibilité avec un autre format d’écran.
+### Comment activer les courbes d’aujourd’hui et de demain ?
+
+Installer la **4.8.0**, puis ouvrir **Configuration > Prévision solaire**. Renseigner la position, la puissance des panneaux en kWc, leur inclinaison et leur orientation ; activer et sauvegarder. Toucher ensuite **PV auj. / PV dem.** dans le bandeau pour voir les deux courbes. [Guide illustré](GUIDE_PREVISION_SOLAIRE.md).
+
+### Faut-il un compte, une clé API ou Internet ?
+
+Aucun compte ni clé API n’est demandé pour l’API publique Forecast.Solar utilisée par l’écran. Internet et une date correcte sont nécessaires. L’activation envoie au service la position et les caractéristiques des panneaux. Les mesures locales du DEYE continuent à fonctionner sans cette prévision.
+
+### Comment alterner le bandeau et changer les 5 secondes ?
+
+Sous les deux courbes, toucher **Alternance**. Pour une valeur fixe, choisir **Aujourd’hui** ou **Demain**. Dans **Réglages > Bandeau principal**, choisir Alternance puis régler **Alternance (s)**, de **1 à 300 secondes**. La valeur initiale est **5 secondes**. Le choix et la durée sont mémorisés ; les deux courbes restent visibles. La page Web propose les mêmes options.
+
+### Les kWh indiquent-ils ce qu’il reste à produire ?
+
+Non : ils représentent la prévision de **la journée entière**. La courbe indique la puissance prévue en kW à chaque heure. Les ombres, l’orientation, l’inclinaison et la météo réelle peuvent expliquer un écart avec la production mesurée. Cette première intégration représente un groupe de panneaux de même orientation.
+
+### Pourquoi la courbe est-elle indisponible alors que les mesures fonctionnent ?
+
+Vérifier d’abord Internet, la date, l’activation et les paramètres solaires. Un écran connecté à un AP de logger isolé peut lire le DEYE sans joindre Forecast.Solar. Le service est consulté une fois par heure ; les données trop anciennes sont retirées. `--` ou **Courbe indisponible** ne signifie pas une production prévue nulle.
+
+### Un autre format d’écran ou une météo détaillée est-il inclus ?
+
+La 4.8.0 ajoute la prévision solaire sur l’écran prévu par le projet. Elle n’annonce pas une page de météo générale ni la compatibilité avec un autre format d’écran. Une suggestion n’est pas une fonction livrée.
 
 ## Affichage et heure
 

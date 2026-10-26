@@ -13,7 +13,15 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version stable vérifiée le **26 octobre 2026** est **4.7.2**. Elle renforce la reconnexion Wi-Fi, notamment en liaison directe avec le point d’accès du logger. [Notes et binaire 4.7.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.7.2).
+La dernière version stable est **4.8.0**, publiée le **26 octobre 2026**. Elle ajoute la prévision solaire d’aujourd’hui et de demain, leurs courbes et le choix de la valeur du bandeau. [Notes et binaire 4.8.0](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.0).
+
+## Prévision solaire en 4.8.0
+
+Dans **Configuration > Prévision solaire**, renseigner la position et les panneaux puis activer la fonction. Sans compte ni clé API ; Internet est nécessaire pour recevoir les prévisions.
+
+Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**, **Demain** ou **Alternance** pour le bandeau ; l’alternance est réglable de **1 à 300 secondes**, avec **5 secondes par défaut**.
+
+[Guide illustré de la prévision solaire](docs/GUIDE_PREVISION_SOLAIRE.md) · [Nouveautés et installation de la 4.8.0](docs/GUIDE_UNIFIE_4.8.0.md).
 
 ## Mettre un écran déjà installé à jour
 

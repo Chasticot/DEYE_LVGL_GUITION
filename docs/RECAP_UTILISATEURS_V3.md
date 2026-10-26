@@ -1,6 +1,6 @@
 # Deye Monitor — mémo de démarrage
 
-**Édition du 26 octobre 2026 — version publique de référence : 4.7.2.** Le nom de fichier V3 est conservé pour les anciens liens.
+**Édition du 26 octobre 2026 — version publique de référence : 4.8.0.** Le nom de fichier V3 est conservé pour les anciens liens.
 
 [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Questions fréquentes](FAQ_ECRAN.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 
@@ -65,6 +65,14 @@ Les captures suivantes sont des **aperçus de développement** : les données et
 ## Micro-onduleurs sur GEN
 
 Dans **PRODUCTION SOLAIRE / GEN**, choisir **Production solaire supplémentaire** (ancien GEN MO), activer le cumul GEN + PV si souhaité et sauvegarder. Vérifier que PV Daily ne comprend pas déjà GEN. W et kWh sont distincts ; **~** indique une estimation et **--** une donnée indisponible. Le groupe électrogène n’est pas du solaire. Ces réglages adaptent l’affichage sans changer le mode du port sur l’onduleur.
+
+## Prévision solaire — 4.8.0
+
+**Configuration > Prévision solaire** : saisir position, puissance des panneaux (kWc), inclinaison et orientation ; activer et sauvegarder. Internet et date correcte sont nécessaires, sans compte ni clé API.
+
+Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**, **Demain** ou **Alternance** pour le bandeau. L’alternance vaut **5 secondes par défaut**, réglables de **1 à 300 secondes** dans **Réglages > Bandeau principal > Alternance (s)**. Le choix est mémorisé.
+
+Les kWh sont prévus pour toute la journée, pas seulement pour les heures restantes. [Guide illustré et détails](GUIDE_PREVISION_SOLAIRE.md).
 
 ## Mettre à jour
 

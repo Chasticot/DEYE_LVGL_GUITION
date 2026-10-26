@@ -1,6 +1,6 @@
 # Guide utilisateur — Deye Monitor
 
-**Firmware unifié 4.7.2 — Édition du 26 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [PDF des fonctions communes (édition 4.6.3)](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Firmware unifié 4.8.0 — Édition du 26 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [PDF des fonctions communes (édition 4.6.3)](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 
@@ -24,6 +24,7 @@ Suivre les étapes dans l’ordre. Chaque étape est détaillée ci-dessous ; le
 - [Connexion directe au logger, sans box](#connexion-directe-au-logger-sans-box).
 - [Faire apparaître les mesures de l’onduleur](#faire-apparaître-les-mesures-de-londuleur).
 - [Comprendre le tableau de bord](#comprendre-le-tableau-de-bord).
+- [Prévision solaire et alternance du bandeau](#prévision-solaire).
 - [Se repérer dans les menus](#se-repérer-dans-les-menus).
 - [Configurer une borne de recharge](#configurer-une-borne-de-recharge).
 - [Régler l’affichage et l’heure](#régler-laffichage-et-lheure).
@@ -76,7 +77,7 @@ Utiliser un Wi-Fi **2,4 GHz**. Pour changer de réseau, refaire **SCAN**, sélec
 
 L’écran et le module de communication de l’onduleur doivent pouvoir communiquer sur le **même réseau local**. Ils peuvent être sur des points d’accès différents, ou le logger en Ethernet, à condition que ce réseau permette les échanges entre eux. Un répéteur en mode routeur, un réseau invité ou l’isolation des clients peut empêcher la liaison, même si les deux appareils ont accès à Internet. Pour le premier essai, rapprocher l’écran du point d’accès et simplifier le réseau.
 
-L’accès à Internet sert notamment à consulter les mises à jour, à synchroniser l’heure et aux informations Tempo. Les mesures de l’onduleur passent par le réseau local.
+L’accès à Internet sert notamment à consulter les mises à jour, à synchroniser l’heure et à recevoir les informations Tempo et les prévisions solaires. Les mesures de l’onduleur passent par le réseau local.
 
 ### Deux IP et deux numéros à ne pas confondre
 
@@ -107,7 +108,7 @@ Ce mode a été utilisé avec un logger **LSW disposant de son propre point d’
 4. Utiliser l’IP AP de ce logger. Sur les LSW concernés, l’adresse habituelle est **10.10.100.254** ; la vérifier dans sa notice ou sa page de configuration. Ne pas la recopier pour un autre matériel.
 5. Vérifier la réception des mesures et régler manuellement la date et l’heure si Internet est absent.
 
-Le réseau AP peut signaler « pas d’accès Internet » : cela n’empêche pas les mesures locales. Pour ouvrir la page Web de l’écran, le téléphone doit rejoindre ce même réseau AP et utiliser **l’IP de l’écran**, pas 10.10.100.254. Les mises à jour GitHub, NTP et Tempo nécessitent Internet. Pour mettre à jour, utiliser temporairement le réseau de la maison ou envoyer depuis un PC/téléphone le fichier OTA téléchargé auparavant, si la page Web locale reste joignable.
+Le réseau AP peut signaler « pas d’accès Internet » : cela n’empêche pas les mesures locales. Pour ouvrir la page Web de l’écran, le téléphone doit rejoindre ce même réseau AP et utiliser **l’IP de l’écran**, pas 10.10.100.254. Les mises à jour GitHub, NTP, Tempo et la prévision solaire nécessitent Internet. Pour mettre à jour, utiliser temporairement le réseau de la maison ou envoyer depuis un PC/téléphone le fichier OTA téléchargé auparavant, si la page Web locale reste joignable.
 
 Il s’agit du même firmware que pour le réseau de la maison : aucun programme spécial « sans box » n’est nécessaire. Pour revenir à la box, reconnecter l’écran et le logger au réseau local voulu, puis vérifier de nouveau l’IP du logger. Pour une installation stable, privilégier le réseau de la maison quand sa couverture permet de joindre les deux appareils.
 
@@ -201,6 +202,7 @@ Le total instantané en W et le total journalier en kWh sont deux réglages/mesu
 | Indication | Ce qu’elle signifie |
 | --- | --- |
 | **PV / solaire** | Production des panneaux solaires. |
+| **PV auj. / PV dem.** | Prévision de l’énergie totale d’aujourd’hui ou de demain, si l’option solaire est activée. Toucher pour ouvrir les courbes. |
 | **Batterie / SOC** | Niveau de charge de la batterie, exprimé en pourcentage. Les autres valeurs indiquent son fonctionnement. |
 | **Réseau** | Échanges d’électricité avec le réseau public. |
 | **Maison / consommation** | Électricité utilisée par l’installation. |
@@ -212,6 +214,22 @@ Le total instantané en W et le total journalier en kWh sont deux réglages/mesu
 Un tiret ou une indication indisponible signifie que l’écran ne dispose pas d’une mesure exploitable. Cela ne signifie pas forcément zéro.
 
 Certaines informations dépendent du modèle d’onduleur, des équipements présents et de leur communication. Les compteurs journaliers dépendent aussi d’une heure correcte.
+
+## Prévision solaire
+
+Depuis la **4.8.0**, ouvrir **CONFIGURATION > PRÉVISION SOLAIRE**. Renseigner latitude, longitude, puissance des panneaux en kWc, inclinaison et orientation, puis activer et sauvegarder. Le téléphone peut aussi ouvrir **Prévision solaire** depuis la page Web de l’écran.
+
+![Deux courbes de prévision et choix Aujourd’hui, Demain ou Alternance pour le bandeau.](images/solaire/courbes-alternance.png)
+
+**Aperçu de démonstration :** les valeurs affichées ne sont pas celles de votre installation. La courbe montre la puissance prévue en **kW** selon l’heure ; le nombre en **kWh** correspond à la journée complète, pas à l’énergie restante.
+
+Toucher **PV auj. / PV dem.**, entre l’heure et les paramètres, ouvre les courbes d’aujourd’hui et de demain. Les boutons **Aujourd’hui**, **Demain** et **Alternance** choisissent ce qui apparaît dans le bandeau. Les deux courbes restent visibles et le choix est mémorisé.
+
+En mode Alternance, le bandeau change toutes les **5 secondes par défaut**. Dans **Réglages > Bandeau principal**, la durée **Alternance (s)** se règle de **1 à 300 secondes**. La page Web propose le même réglage, appliqué sans redémarrage.
+
+Le service Forecast.Solar ne demande **ni compte ni clé API**. L’écran doit avoir Internet et une date correcte ; un AP de logger isolé ne suffit pas. L’activation transmet au service la position et les caractéristiques saisies. Les ombres locales et plusieurs pans de toiture peuvent rendre l’estimation différente de la production réelle. Une courbe indisponible n’est pas une production nulle.
+
+[Configurer les panneaux et lire les courbes pas à pas](GUIDE_PREVISION_SOLAIRE.md).
 
 ## Se repérer dans les menus
 
@@ -225,6 +243,7 @@ Le menu **CONFIGURATION** regroupe les réglages :
 | **RELAIS** | Configurer la règle du relais de l’écran, si cette fonction est utilisée. |
 | **RÉSEAU / HEURE** | Connexion Wi-Fi, fuseau et réglage de l’heure. |
 | **AFFICHAGE** | Thème, luminosité et veille horaire. |
+| **PRÉVISION SOLAIRE** | Configurer les panneaux, consulter les deux courbes et choisir la valeur du bandeau. |
 | **MISE À JOUR** | Chercher et installer une nouvelle version ; ouvrir ce guide avec le QR code. |
 
 **RETOUR** quitte la page. **SAUVEGARDER**, **ENREGISTRER** ou **APPLIQUER** valide les modifications selon la page. Laisser le redémarrage se terminer lorsqu’il est annoncé.
@@ -282,7 +301,7 @@ Pour conserver une copie des réglages, utiliser l’**export de configuration J
 
 ## Mettre l’écran à jour
 
-La dernière version stable vérifiée le **26/10/2026** est **4.7.2**. Pour les téléchargements futurs, consulter la [dernière release stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest). Une mise à jour du logiciel **de l’écran** ne met pas à jour l’onduleur ni le logger.
+La dernière version stable vérifiée le **26/10/2026** est **4.8.0**. Pour les téléchargements futurs, consulter la [dernière release stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest). Une mise à jour du logiciel **de l’écran** ne met pas à jour l’onduleur ni le logger.
 
 ![Trois méthodes : menu GitHub, fichier OTA sur la page Web, puis récupération USB si nécessaire.](images/demarrage/choisir-mise-a-jour.svg)
 
@@ -302,18 +321,18 @@ Sur un écran qui possède le menu **MISE À JOUR** :
 
 ![Page MISE À JOUR : VÉRIFIER SUR GITHUB, INSTALLER et barre de progression.](images/demarrage/mise-a-jour.png)
 
-Sur cette ancienne capture de développement, **4.6.0** et **42 %** sont des exemples. Sur votre écran, lire la version réellement proposée ; la référence publique vérifiée pour cette notice est **4.7.2**. Une fois l’installation lancée, laisser l’alimentation jusqu’au redémarrage.
+Sur cette ancienne capture de développement, **4.6.0** et **42 %** sont des exemples. Sur votre écran, lire la version réellement proposée ; la référence publique vérifiée pour cette notice est **4.8.0**. Une fois l’installation lancée, laisser l’alimentation jusqu’au redémarrage.
 
 Une mise à jour compatible conserve les réglages. Si l’écran indique qu’il est à jour, aucune installation supplémentaire n’est nécessaire. Si une erreur apparaît, lire le message et réessayer après avoir corrigé la connexion ou l’heure.
 
 ### Depuis un téléphone ou un ordinateur
 
-1. Télécharger **DEYE_V3_4.7.2_OTA.bin** depuis la [release 4.7.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.7.2), ou le fichier **_OTA.bin** adapté de la dernière version stable.
+1. Télécharger **DEYE_V3_4.8.0_OTA.bin** depuis la [release 4.8.0](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.0), ou le fichier **_OTA.bin** adapté de la dernière version stable.
 2. Relever l’IP **de l’écran** dans sa page Wi-Fi et ouvrir cette IP en **http://** depuis le même réseau.
 3. Dans le formulaire **Mise à jour OTA**, choisir le fichier .bin, puis lancer l’installation.
 4. Attendre le redémarrage sans couper l’alimentation ; vérifier la version et les mesures.
 
-Ne pas envoyer le ZIP, les archives GitHub **Source code**, un bootloader, un fichier de partitions ou une image USB fusionnée dans le formulaire OTA. Le fichier doit correspondre à l’écran et à son partitionnement. La 4.7.2 est fournie avec **SHA256SUMS-4.7.2.txt** pour le contrôle de l’empreinte.
+Ne pas envoyer le ZIP, les archives GitHub **Source code**, un bootloader, un fichier de partitions ou une image USB fusionnée dans le formulaire OTA. Le fichier doit correspondre à l’écran et à son partitionnement. La 4.8.0 est fournie avec **SHA256SUMS-4.8.0.txt** pour le contrôle de l’empreinte.
 
 ### Si l’écran n’est plus joignable : récupération USB
 
@@ -333,6 +352,7 @@ L’option **nouvel écran / installation complète** peut remplacer des réglag
 | Plusieurs adresses sont proposées | Choisir le bon équipement dans **RESULTATS** avant de sauvegarder. |
 | Une mesure affiche un tiret | Vérifier la liaison et la présence de cette mesure sur le modèle utilisé. |
 | Le solaire affiche zéro la nuit | C’est normal en l’absence de production des panneaux. |
+| La prévision solaire manque ou affiche `--` | Vérifier l’activation, Internet, la date et les panneaux dans PRÉVISION SOLAIRE. |
 | L’heure ou les compteurs du jour sont incohérents | Vérifier le fuseau, la date et l’heure. |
 | L’écran est noir à certaines heures | Vérifier la veille horaire et toucher l’écran pour le réveiller. |
 | La page web ne s’ouvre pas | Vérifier l’IP actuelle de l’écran et la connexion du téléphone au réseau de la maison. |
@@ -359,8 +379,9 @@ Masquer les mots de passe Wi-Fi/logger, QR codes d’accès, identifiants privé
 
 - [Dernière version et téléchargements](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 - Mise à jour depuis le menu de l’écran ou sa page Web OTA.
+- [Prévision solaire : configuration, courbes et alternance](GUIDE_PREVISION_SOLAIRE.md).
+- [Nouveautés 4.8.0](GUIDE_UNIFIE_4.8.0.md).
 - [Questions fréquentes](FAQ_ECRAN.md).
 - [Mémo de démarrage](RECAP_UTILISATEURS_V3.md).
 - [Notes historiques de la version 4.7.0](GUIDE_UNIFIE_4.7.0.md).
 - [Projet Deye Monitor sur GitHub](https://github.com/Chasticot/DEYE_LVGL_GUITION).
-
