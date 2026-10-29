@@ -47,7 +47,7 @@ Les captures suivantes sont des **aperçus de développement** : les données et
 | IP de l’écran | Page Web, diagnostic, export JSON et OTA depuis un téléphone/PC. |
 | Numéro du logger | Connexion/logger ; différent du numéro de l’onduleur. |
 | Ports proposés | LSW 8899, LSE 8899, DL1000B 502, à confirmer pour la configuration réelle. |
-| DL1000B-WIFI | Fonctionnement confirmé avec notre écran. Firmware **1.7.2 minimum** demandé ; **Link2 > Enable > Modbus Tcp > Default > Confirm**, puis port **502**. [Captures et demande à Deye](GUIDE_DL1000B_MODBUS_TCP.md). |
+| DL1000B-WIFI | Fonctionnement confirmé avec notre écran. Firmware **1.7.2 minimum** demandé ; **Lien adapté (Link1 ou Link2) > Enable > Modbus Tcp > Default > Confirm**. Conserver un lien déjà fonctionnel et les réglages cloud, puis port **502**. [Captures et demande à Deye](GUIDE_DL1000B_MODBUS_TCP.md). |
 | Sans box | Possible avec un LSW/AP compatible. 10.10.100.254 est l’IP habituelle de certains AP LSW, pas une IP universelle à copier sur le réseau de la box. |
 
 ## Si ça ne fonctionne pas

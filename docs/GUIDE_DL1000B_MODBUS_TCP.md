@@ -24,16 +24,18 @@ Dans **Device Status**, relever **Device serial number**, **Firmware version** e
 
 ## 3. Activer le service local
 
-Ouvrir **Advanced Settings**, puis repérer le bloc **Link2**. Si les libellés diffèrent ou si Link2 manque, faire confirmer le firmware par Deye.
+Ouvrir **Advanced Settings**. **Link1 fonctionne selon le retour utilisateur transmis ; Link2 est l'exemple illustré ci-dessous.** Le numéro du lien n'est pas un réglage à saisir dans Deye Monitor.
 
-1. Cocher **Enable** dans **Link2**.
+**Si Modbus TCP fonctionne déjà sur Link1, conserver ce choix.** Si un lien sert au cloud, conserver ses réglages et utiliser l'autre s'il propose Modbus TCP [S4]. Il n'est pas nécessaire d'activer les deux liens en Modbus TCP.
+
+1. Dans le lien retenu (**Link1 ou Link2**, selon la configuration), cocher **Enable**.
 2. Dans **Protocol** (écrit **Portocol** sur la capture), choisir **Modbus Tcp**.
 3. Dans **Mode**, choisir **Default**. Sur la capture, **IP/URL address** et **Port** sont grisés : ne rien y saisir. Le port **502** se renseignera dans Deye Monitor.
 4. Appuyer sur **Confirm**. Le logger redémarre automatiquement ; attendre son retour puis se reconnecter.
 
 ![Capture réelle de l'interface Link2 publiée par Henris [S2] : Enable, Modbus Tcp, Default, puis Confirm. Recadrage sans modification des réglages affichés ; firmware illustré 1.7.1_crypt, présentation susceptible de varier en 1.7.2.](images/dl1000b/03-link2-modbus-tcp.png)
 
-Rouvrir **Link2** et contrôler que les choix sont conservés. Le fonctionnement du cloud ou la seule présence du bouton ne confirme pas encore la lecture par l'écran.
+Rouvrir **le lien configuré** et contrôler que les choix sont conservés, puis vérifier les lectures sur l'écran et le cloud s'il est utilisé. L'absence de Link2 seule ne justifie pas une mise à jour si Modbus TCP fonctionne sur Link1.
 
 <!-- pagebreak -->
 
@@ -55,14 +57,15 @@ Reconnecter le téléphone au Wi-Fi de la maison si l'accès AP a été utilisé
 3. Saisir directement l'IP connue, puis **SAUVEGARDER** et attendre le redémarrage. La recherche est facultative. Si elle indique **numéro non vérifié**, identifier l'appareil dans **RESULTATS** avant de le choisir.
 4. Vérifier l'arrivée et l'actualisation des mesures. Comparer SOC, tension et puissances à l'afficheur de l'onduleur. Contrôler que les compteurs de lectures OK progressent pour les blocs utilisés.
 
-**Installation vérifiée :** réglages Link2 conservés après redémarrage, mesures actualisées et cohérentes sur l'écran, puis reprise des lectures après un redémarrage normal de l'écran. Les fonctions de commande doivent être vérifiées séparément si elles sont utilisées.
+**Installation vérifiée :** réglages du lien choisi conservés après redémarrage, mesures actualisées et cohérentes sur l'écran, puis reprise des lectures après un redémarrage normal de l'écran. Les fonctions de commande doivent être vérifiées séparément si elles sont utilisées.
 
 ### Si les mesures n'arrivent pas
 
 | Symptôme | Action |
 | --- | --- |
-| Link2 absent / Modbus Tcp absent | Demander à Deye un firmware adapté, **1.7.2 minimum**, et l'ouverture de l'accès local. |
-| Cloud OK, écran sans mesures | Revoir Link2, **Confirm**, IP STA et port **502**. Le cloud et Modbus local sont distincts. |
+| Link2 absent | Vérifier si **Link1** propose Modbus TCP ou fonctionne déjà. Son utilisation est rapportée par un utilisateur. |
+| Aucun lien ne propose Modbus Tcp | Demander à Deye un firmware adapté, **1.7.2 minimum**, et l'ouverture de l'accès local. |
+| Cloud OK, écran sans mesures | Revoir le lien choisi, **Confirm**, IP STA et port **502**. Le cloud et Modbus local sont distincts. |
 | IP introuvable dans la recherche | Saisir l'IP connue de la box ; la découverte par numéro n'est pas une condition de lecture. |
 | Liaison perdue après changement d'IP | Relever la nouvelle IP et créer une réservation DHCP dans la box. |
 | Logger joignable, mesures absentes ou fausses | Contrôler unité Modbus et référence exacte de l'onduleur. |
@@ -81,7 +84,7 @@ Hello Deye Support,
 
 I use a Deye inverter with a DL1000B-WIFI data logger and would like to read its measurements locally with a Deye Monitor display using standard Modbus TCP on port 502.
 
-Please remotely update the data logger to firmware **DYDA_WiBLE 1.7.2 or a newer version compatible with my hardware**, and enable or unlock local Modbus TCP access if required. Please confirm that Link2 can be set to Enable, Protocol = Modbus Tcp and Mode = Default.
+Please remotely update the data logger to firmware **DYDA_WiBLE 1.7.2 or a newer version compatible with my hardware**, and enable or unlock local Modbus TCP access if required. Please confirm which link to use (Link1 or Link2) with Enable, Protocol = Modbus Tcp and Mode = Default, while preserving Deye Cloud if used.
 
 My request concerns the data logger firmware. Please let me know before any inverter firmware update is needed.
 
@@ -101,10 +104,11 @@ Best regards,
 
 [name]
 
-**Après l'intervention :** relever la version réellement affichée, reprendre **Link2 > Enable > Modbus Tcp > Default > Confirm**, puis vérifier les mesures dans Deye Monitor. Une demande envoyée ne signifie pas que la mise à jour a été effectuée.
+**Après l'intervention :** relever la version réellement affichée, reprendre **le lien retenu > Enable > Modbus Tcp > Default > Confirm**, puis vérifier les mesures dans Deye Monitor. Une demande envoyée ne signifie pas que la mise à jour a été effectuée.
 
 ### Sources et captures
 
 - **[S1]** [Deye, DL1000B-WIFI Quick Guide V1.0, page 2](https://www.deyeinverter.com/deyeinverter/2026/05/20/DeyeDataLoggerQuickGuideDL1000B-WIFIV10.pdf) : accès Web, identifiants, Device Status, IP et contact. Images 01 et 02 : extraits de l'interface illustrée dans cette notice, pas des captures de notre installation.
 - **[S2]** [Henris, témoignage et capture Link2, 16 septembre 2026](https://community.home-assistant.io/t/home-assistant-deye-inverters-data-loggers/942625/18) : activation et lecture sur 502 avec firmware 1.7.1_crypt. Image 03 : sa capture, recadrée en bas pour retirer une note tronquée.
-- **[S3]** [Retours directs après mise à jour 1.7.2, 6 et 15 octobre 2026](https://github.com/davidrapan/ha-solarman/discussions/1159) : fonctionnement rapporté avec Home Assistant. Le fonctionnement avec **notre écran** a été confirmé séparément par l'utilisateur le **29 octobre 2026**, sans relevé détaillé du matériel ou de sa version dans ce retour.
+- **[S3]** [Retours après mise à jour 1.7.2](https://github.com/davidrapan/ha-solarman/discussions/1159) : Home Assistant. Retour transmis le **29 octobre 2026** : fonctionnement avec **notre écran**, et fonctionnement rapporté sur **Link1**, sans relevé détaillé du firmware.
+- **[S4]** [adyannu, 9 octobre 2026](https://community.home-assistant.io/t/connecting-to-the-new-deye-logger-to-home-assistant-using-esphome/997672/21) : Modbus TCP sur Link2 et Deye Cloud conservé sur Link1, firmware 1.7.2. C'est un exemple de répartition, pas une obligation.

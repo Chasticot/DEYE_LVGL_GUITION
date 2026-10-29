@@ -52,9 +52,9 @@ LSW3/LSW5 utilisent le choix **LSW — Solarman V5**. Pour un LSE compatible, ch
 
 ### Le DL1000B-WIFI USB est-il compatible ?
 
-**Oui : le fonctionnement avec notre écran a été confirmé par un retour utilisateur le 29 octobre 2026.** Pour le DL1000B-WIFI, demander un firmware du logger **1.7.2 minimum**, puis ouvrir **Advanced Settings > Link2**, cocher **Enable**, choisir **Modbus Tcp** et **Default**, puis **Confirm**. Après le redémarrage, configurer Deye Monitor sur **DL1000B**, l’IP locale du logger et le port **502**, avec le bon modèle d’onduleur et la bonne unité.
+**Oui : le fonctionnement avec notre écran a été confirmé par un retour utilisateur le 29 octobre 2026.** Pour le DL1000B-WIFI, demander un firmware du logger **1.7.2 minimum**, puis ouvrir **Advanced Settings**, choisir le lien adapté (**Link1 ou Link2**), cocher **Enable**, choisir **Modbus Tcp** et **Default**, puis **Confirm**. Après le redémarrage, configurer Deye Monitor sur **DL1000B**, l’IP locale du logger et le port **502**, avec le bon modèle d’onduleur et la bonne unité.
 
-Le [petit mode opératoire avec captures](GUIDE_DL1000B_MODBUS_TCP.md) explique chaque action et fournit une demande de mise à jour à **service@deye.com.cn** si le firmware est ancien ou l’option absente. La mise à jour du logger est distincte de celle de l’écran. Ce retour ne valide pas automatiquement toutes les variantes DL1000B ni toutes les commandes.
+Le [petit mode opératoire avec captures](GUIDE_DL1000B_MODBUS_TCP.md) explique chaque action et fournit une demande de mise à jour à **service@deye.com.cn** si le firmware est ancien ou l’option absente. Un fonctionnement sur **Link1** est rapporté par un utilisateur : s’il fonctionne déjà, le conserver. **Link2** est l’exemple de la capture, pas une obligation ; un autre retour utilise Link2 pour Modbus TCP en conservant le cloud sur Link1. Préserver les réglages du lien cloud utilisé. La mise à jour du logger est distincte de celle de l’écran. Ce retour ne valide pas automatiquement toutes les variantes DL1000B ni toutes les commandes.
 
 ### Et les micro-onduleurs seuls, APsystems, Shelly, Marstek, Izipower, WKS ou Victron ?
 
