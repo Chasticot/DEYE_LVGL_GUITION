@@ -1,8 +1,8 @@
 # Deye Monitor - firmware unifié
 
-**Pour une première mise en route avec des images :** utiliser le [guide illustré actuel](MISE_A_JOUR_ECRAN_GITHUB.md#commencer-en-images) et le [mémo illustré](RECAP_UTILISATEURS_V3.md).
+> Édition 4.6.3 conservée pour les fonctions communes. En 4.7.0, le choix du modèle et du port GEN a changé : consulter le [guide actuel](MISE_A_JOUR_ECRAN_GITHUB.md) et le [guide 4.7.0](GUIDE_UNIFIE_4.7.0.md).
+> **Complément du 29 octobre 2026 :** fonctionnement DL1000B confirmé avec notre écran. Voir le [pas-à-pas illustré DL1000B-WIFI](GUIDE_DL1000B_MODBUS_TCP.md) : firmware 1.7.2 minimum demandé, activation Link2 et port 502, avec modèle de demande à Deye.
 
-> **Archive 4.6.3 des fonctions détaillées.** Pour la première mise en route et les versions actuelles, utiliser le [guide à jour](MISE_A_JOUR_ECRAN_GITHUB.md), la [FAQ](FAQ_ECRAN.md) et le [mémo](RECAP_UTILISATEURS_V3.md). Les anciens noms de menus, catalogues, procédures et états de validation ci-dessous décrivent cette édition historique. Le [PDF associé](pdf/GUIDE_UTILISATEUR_V3.pdf) reste lui aussi en édition 4.6.3.
 ## Guide utilisateur complet
 
 **Firmware 4.6.3 - Édition du 20 octobre 2026**
@@ -48,7 +48,7 @@ Pour les mesures locales, l'écran n'a pas besoin des identifiants de votre comp
 
 - Un écran compatible avec ce firmware ; la variante matérielle prévue pour le relais est l'ESP32-4848S040C à un relais.
 - La référence complète de l'onduleur, avec sa puissance et ses suffixes, relevée sur son étiquette.
-- Un logger LSW/Solarman V5 ou un logger LSE/DL1000B compatible avec le Modbus TCP local proposé par le firmware. Le DL1000B reste vérifié sur simulateur ; un modèle de logger ne garantit pas à lui seul la compatibilité de toutes ses révisions.
+- Un logger LSW/Solarman V5 ou un logger LSE/DL1000B compatible avec le Modbus TCP local proposé par le firmware. Le fonctionnement DL1000B est confirmé par un retour utilisateur avec notre écran ; un modèle de logger ne garantit pas à lui seul la compatibilité de toutes ses révisions. Pour le DL1000B-WIFI, suivre le complément illustré et demander un firmware 1.7.2 minimum.
 - Le nom et le mot de passe du Wi-Fi 2,4 GHz de la maison.
 - L'IP locale et le vrai numéro de série du logger : numérique pour LSW/LSE, éventuellement alphanumérique pour DL1000B.
 - Un téléphone ou un ordinateur sur le réseau local pour la configuration Web.
@@ -566,7 +566,7 @@ Les retours du 1er octobre 2026 concernent neuf références : 8K-SG01LP1, 12K-S
 
 AI-W5.1 P1 conserve les registres confirmés en 4.3.3 ; ce retour ne valide pas les autres révisions ni P3. SG06LP1 reste indisponible. Contrôlez SmartLoad au LCD. Les profils 20/25K HP3 ne valident pas les puissances supérieures.
 
-La 4.6.3 a été compilée et testée par logiciel, avec une coupure Wi-Fi d'une heure simulée. Aucun écran n'a été flashé et aucune commande de recharge envoyée pour cette publication. Retour Wi-Fi après redémarrage réel du routeur, téléchargement complet depuis le menu et scénarios de charge restent à vérifier sur matériel. DL1000B reste testé sur simulateur. Validation 4.6.3.
+La 4.6.3 a été compilée et testée par logiciel, avec une coupure Wi-Fi d'une heure simulée. Aucun écran n'a été flashé et aucune commande de recharge envoyée pour cette publication. Retour Wi-Fi après redémarrage réel du routeur, téléchargement complet depuis le menu et scénarios de charge restent à vérifier sur matériel. À la publication 4.6.3, le DL1000B avait été testé sur simulateur ; son fonctionnement avec notre écran a depuis été confirmé par un retour utilisateur le 29 octobre 2026. Voir le complément DL1000B illustré. Validation 4.6.3.
 
 ### Petit lexique
 
@@ -588,5 +588,4 @@ La 4.6.3 a été compilée et testée par logiciel, avec une coupure Wi-Fi d'une
 - **[S3] Deye, [Guia de Configuração Solarman PRO](https://pt.deyeinverter.com/deyeinverter/2021/03/19/guiasolarmanpro.pdf)**, pages 34 et 45 ; **[Quick Guide DL1000B-ETH](https://www.deyeinverter.com/deyeinverter/2026/05/20/DeyeDataLoggerQuickGuideDL1000B-ETHV11.pdf)**, Device information : distinction AP/STA/LAN. Ces interfaces illustrent les adresses, sans prouver la compatibilité locale du logger.
 
 Cette édition suit les sources et la validation du firmware unifié 4.6.3. Les protocoles de registres GEN sont conservés dans `docs/protocols/`.
-
 

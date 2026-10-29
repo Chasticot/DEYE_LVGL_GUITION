@@ -52,7 +52,9 @@ LSW3/LSW5 utilisent le choix **LSW — Solarman V5**. Pour un LSE compatible, ch
 
 ### Le DL1000B-WIFI USB est-il compatible ?
 
-**À valider sur le matériel réel avant de confirmer une installation.** Le logiciel propose un mode DL1000B et une recherche Modbus TCP, mais cela ne prouve pas que le firmware du logger expose le service local ni que toutes les lectures fonctionnent. Relever sa référence, sa version et vérifier l’activation Modbus TCP dans son interface si elle existe. Le port proposé est 502, à confirmer selon sa configuration. Ne pas annoncer « compatible » à partir du menu, de la seule prise USB ou d’un test sur simulateur.
+**Oui : le fonctionnement avec notre écran a été confirmé par un retour utilisateur le 29 octobre 2026.** Pour le DL1000B-WIFI, demander un firmware du logger **1.7.2 minimum**, puis ouvrir **Advanced Settings > Link2**, cocher **Enable**, choisir **Modbus Tcp** et **Default**, puis **Confirm**. Après le redémarrage, configurer Deye Monitor sur **DL1000B**, l’IP locale du logger et le port **502**, avec le bon modèle d’onduleur et la bonne unité.
+
+Le [petit mode opératoire avec captures](GUIDE_DL1000B_MODBUS_TCP.md) explique chaque action et fournit une demande de mise à jour à **service@deye.com.cn** si le firmware est ancien ou l’option absente. La mise à jour du logger est distincte de celle de l’écran. Ce retour ne valide pas automatiquement toutes les variantes DL1000B ni toutes les commandes.
 
 ### Et les micro-onduleurs seuls, APsystems, Shelly, Marstek, Izipower, WKS ou Victron ?
 

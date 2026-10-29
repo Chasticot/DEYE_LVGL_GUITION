@@ -1,6 +1,6 @@
 # Deye Monitor — mémo de démarrage
 
-**Édition du 26 octobre 2026 — version publique de référence : 4.8.0.** Le nom de fichier V3 est conservé pour les anciens liens.
+**Édition du 29 octobre 2026 — version publique de référence : 4.8.0.** Le nom de fichier V3 est conservé pour les anciens liens.
 
 [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Questions fréquentes](FAQ_ECRAN.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 
@@ -47,7 +47,7 @@ Les captures suivantes sont des **aperçus de développement** : les données et
 | IP de l’écran | Page Web, diagnostic, export JSON et OTA depuis un téléphone/PC. |
 | Numéro du logger | Connexion/logger ; différent du numéro de l’onduleur. |
 | Ports proposés | LSW 8899, LSE 8899, DL1000B 502, à confirmer pour la configuration réelle. |
-| DL1000B-WIFI | Mode prévu dans le logiciel ; compatibilité réelle et Modbus TCP à valider avant installation. |
+| DL1000B-WIFI | Fonctionnement confirmé avec notre écran. Firmware **1.7.2 minimum** demandé ; **Link2 > Enable > Modbus Tcp > Default > Confirm**, puis port **502**. [Captures et demande à Deye](GUIDE_DL1000B_MODBUS_TCP.md). |
 | Sans box | Possible avec un LSW/AP compatible. 10.10.100.254 est l’IP habituelle de certains AP LSW, pas une IP universelle à copier sur le réseau de la box. |
 
 ## Si ça ne fonctionne pas

@@ -1,6 +1,6 @@
 # Guide utilisateur — Deye Monitor
 
-**Firmware unifié 4.8.0 — Édition du 26 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [Guide complet en PDF (édition 4.8.0)](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Firmware unifié 4.8.0 — Édition du 29 octobre 2026.** [Manuel des fonctions communes (édition 4.6.3)](GUIDE_UTILISATEUR_V3.md) · [Récapitulatif](RECAP_UTILISATEURS_V3.md) · [Guide complet en PDF (édition 4.8.0)](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 
@@ -19,6 +19,7 @@ Suivre les étapes dans l’ordre. Chaque étape est détaillée ci-dessous ; le
 ## Trouver rapidement une réponse
 
 - [Vérifier la compatibilité](#vérifier-la-compatibilité-avant-de-commencer).
+- [DL1000B : activer Modbus TCP et demander le firmware 1.7.2 minimum](GUIDE_DL1000B_MODBUS_TCP.md).
 - [Alimentation et installation physique](#alimenter-et-installer-lécran).
 - [Première utilisation : connecter l’écran](#première-utilisation--connecter-lécran).
 - [Connexion directe au logger, sans box](#connexion-directe-au-logger-sans-box).
@@ -40,9 +41,9 @@ Préparer la **référence complète de l’onduleur**, la **référence du logg
 | --- | --- | --- |
 | LSW3 / LSW5 | LSW — Solarman V5 | Retours de fonctionnement avec ces familles. Vérifier le numéro du logger et l’accès local. |
 | LSE, notamment LSE3 Ethernet | LSE — Ethernet Modbus TCP | Fonctionnement testé sur LSE3. Le logger peut être câblé à la box tandis que l’écran utilise le Wi-Fi du même réseau local. |
-| DL1000B / DL1000B-WIFI, notamment les nouveaux modules USB | DL1000B — Modbus TCP | Mode logiciel prévu, mais compatibilité **à valider sur le logger réel**. Vérifier firmware, accès Modbus TCP activé et réponse locale avant de confirmer une installation. |
+| DL1000B / DL1000B-WIFI, notamment les nouveaux modules USB | DL1000B — Modbus TCP | **Fonctionnement confirmé avec notre écran par un retour utilisateur.** Préparer le DL1000B-WIFI avec firmware **1.7.2 minimum**, Modbus TCP local activé et port **502**. [Activation pas à pas avec captures](GUIDE_DL1000B_MODBUS_TCP.md). |
 
-La présence de données dans DeyeCloud ou Solarman ne prouve pas que le logger autorise la lecture locale. La présence du DL1000B dans un menu n’est pas une validation matérielle de toutes ses versions. Si son interface propose **Link2 > Enable > Protocol : Modbus Tcp > Mode : Default**, faire vérifier ces paramètres pour ce matériel ; ne pas appliquer cette procédure à un autre logger.
+La présence de données dans DeyeCloud ou Solarman ne prouve pas que le logger autorise la lecture locale. Pour le **DL1000B-WIFI**, suivre **Advanced Settings > Link2 > Enable > Protocol : Modbus Tcp > Mode : Default > Confirm**, laisser le logger redémarrer, puis configurer l’écran sur **502**. Si le firmware est ancien ou si l’option manque, demander à Deye une mise à jour **1.7.2 minimum**. Le [mode opératoire illustré](GUIDE_DL1000B_MODBUS_TCP.md) contient les captures, les vérifications et le message à envoyer. La confirmation reçue le 29 octobre 2026 ne vaut pas validation de toutes les variantes et commandes ; le modèle d’onduleur reste à vérifier.
 
 Le catalogue couvre des familles DEYE, avec des fonctions et des états de validation différents. Relever tous les suffixes de la plaque : AM2, AM3, SM2, BM3, -P… Un profil disponible ne prouve pas que chaque fonction et chaque firmware d’onduleur ont été testés.
 
@@ -154,7 +155,7 @@ Le **logger** est le module de communication branché sur l’onduleur. Son num�
 
 1. Dans **DEYE / SOLARMAN > MON ONDULEUR**, choisir la puissance et la référence exacte, puis **APPLIQUER / REDÉMARRER** et confirmer.
 2. Ouvrir **DEYE / SOLARMAN > CONNEXION / LOGGER**.
-3. Choisir le type de module : **LSW**, **LSE** ou **DL1000B**, selon l’équipement installé.
+3. Choisir le type de module : **LSW**, **LSE** ou **DL1000B**, selon l’équipement installé. Pour un DL1000B-WIFI, activer d’abord le Modbus TCP du logger selon le [pas-à-pas illustré](GUIDE_DL1000B_MODBUS_TCP.md).
 4. Renseigner le vrai numéro du logger. Les lettres sont acceptées pour le DL1000B.
 5. Toucher **RECHERCHER**. La recherche peut prendre plusieurs minutes ; les mesures peuvent être momentanément suspendues.
 6. Vérifier l’adresse trouvée, puis sauvegarder.
