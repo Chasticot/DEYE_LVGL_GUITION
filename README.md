@@ -14,11 +14,13 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.7**, le **5 novembre 2026**. Elle ajoute la **lecture directe Sossen Wi-Fi Tuya 3.5 en essai**, sans compteur externe ni Home Assistant. Configuration guidée sur la page Web, saisie ou import JSON des paramètres, puissance AC en PV5 à PV8 et addition facultative après comparaison. [Notes et procédure Sossen 4.8.7](docs/NOTES_4.8.7.md) · [Binaire OTA 4.8.7](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.7).
+La dernière version publiée est **4.8.8**, le **5 novembre 2026**. Elle ajoute une option pour **recharger la batterie de la maison la nuit précédant un jour rouge Tempo, de 22h à 6h**, avec une cible réglable de 50 à 100 %. L’option est désactivée par défaut et indépendante de la voiture. [Configuration et prérequis 4.8.8](docs/NOTES_4.8.8.md) · [Binaire OTA 4.8.8](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.8).
 
-Les **tableaux de bord LCD et Web actuels restent conservés à l’identique**, ainsi que les six tuiles de réglages. Les sources Hoymiles, Deye, APsystems, Enphase et Sofar, les compteurs Shelly dédiés, la microSD, UTC/heure d’été et le Time of Use restent disponibles. [Guide des connexions 4.8.6](docs/NOTES_4.8.6.md) · [Guide des sources solaires, de la microSD et des Sofar](docs/GUIDE_MICRO_SD_SOFAR.md).
+Sur l’écran : **Réglages > Pilotage > Batterie / Veille rouge**. Sur le Web : **Pilotage > Time of Use / Batterie**. Le Deye doit utiliser le mode batterie SOC, un TOU actif et des plages comportant des bornes à 22h00 et 06h00. Les horloges doivent correspondre à l’heure de Paris. Les consignes habituelles sont sauvegardées avant intervention et rétablies ensuite.
 
-Compilation et tests logiciels réussis, y compris session chiffrée Sossen simulée et formulaire sur téléphone. Aucun essai de ce portage sur écran relié à un Sossen physique. Les profils directs Sossen restent expérimentaux ; les kWh quotidiens demandent un passage à minuit suivi avec compteur et horloge continus, et peuvent rester indisponibles lorsque le micro-onduleur s’éteint toute la nuit. La compatibilité n’est pas garantie pour toutes les variantes.
+Les **tableaux de bord LCD et Web actuels restent conservés à l’identique**, ainsi que les six tuiles de réglages. La **lecture directe Sossen Tuya 3.5 reste en essai** : [procédure et limites 4.8.7](docs/NOTES_4.8.7.md). Les sources Hoymiles, Deye, APsystems, Enphase et Sofar, la microSD, UTC/heure d’été et les autres fonctions précédentes restent disponibles. [Guide des sources solaires et de la microSD](docs/GUIDE_MICRO_SD_SOFAR.md).
+
+Compilation et tests logiciels réussis : nuit et dates Tempo, sauvegarde/reprise TOU, coupures simulées, modifications externes, formulaires et rendus de l’écran. Aucun essai physique de cette nouvelle option sur écran relié à un Deye. Vérifier le premier cycle réel et la restauration des consignes sur le LCD de l’onduleur. Les profils Sossen et les autres compatibilités en essai conservent leurs limites documentées.
 
 ## Prévision solaire en 4.8.0
 
