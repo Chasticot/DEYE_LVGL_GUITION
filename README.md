@@ -14,15 +14,15 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.5**, le **5 novembre 2026**. Les **tableaux de bord LCD et Web actuels sont conservés à l’identique**. Les réglages sont regroupés en six rubriques : Installation, Énergie, Pilotage, Réseau et heure, Écran, Système. L’écran propose des tuiles ; le Web dispose d’une navigation adaptée à l’ordinateur et au téléphone. [Notes et binaire 4.8.5](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.5).
+La dernière version publiée est **4.8.6**, le **5 novembre 2026**. Elle ajoute les sources **Hoymiles** via OpenDTU, AhoyDTU ou DTU-Pro Modbus compatible, et les **micro-onduleurs Deye V118** en V5 ou Modbus TCP. **Sossen est suivi via un compteur Shelly de production dédié ; la lecture directe du micro-onduleur Sossen n’est pas intégrée.** [Notes et binaire 4.8.6](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.6).
 
-Un profil d’essai **Sofar 3000TL-G3 + LSW3** permet de suivre cet onduleur en complément du Deye comme une source PV5 à PV8, avec ajout au total facultatif. Les productions APsystems/Enphase, l’historique et la microSD, les fuseaux UTC, l’heure d’été et le Time of Use Deye sont conservés. [Nouveaux menus et essai Sofar pas à pas](docs/NOTES_4.8.5.md) · [Guide des sources solaires, de la microSD et des Sofar](docs/GUIDE_MICRO_SD_SOFAR.md).
+Les sources supplémentaires apparaissent en **PV5 à PV8**, avec ajout au total facultatif après essai et confirmation. Les doublons entre sources Hoymiles sont détectés grâce aux numéros des micro-onduleurs. Les **tableaux de bord LCD et Web actuels restent conservés à l’identique**, ainsi que les six tuiles de réglages de la 4.8.5. [Guide des connexions et limites 4.8.6](docs/NOTES_4.8.6.md) · [Guide des sources solaires, de la microSD et des Sofar](docs/GUIDE_MICRO_SD_SOFAR.md).
 
-Les tests logiciels et les aperçus sont réussis. Aucun essai sur écran, carte SD ou Sofar physique pendant cette validation ; la correction du redémarrage signalé en 4.8.2 et la compatibilité des matériels restent à confirmer en situation réelle. Le profil TL est réservé à la famille A3 ; toutes les variantes APsystems, Enphase et Sofar ne sont pas garanties.
+Compilation et tests logiciels réussis, y compris lecteurs simulés et formulaires sur téléphone. Aucun essai sur écran, DTU, micro-onduleur ou compteur physique pendant cette validation. La compatibilité dépend du modèle, du protocole et du firmware ; elle n’est pas garantie pour toutes les variantes. Les fonctions précédentes — APsystems/Enphase, Sofar, historique et microSD, UTC/heure d’été et Time of Use Deye — restent disponibles.
 
 ## Prévision solaire en 4.8.0
 
-En 4.8.5, ouvrir **Réglages > Énergie > Prévision solaire** (dans les anciennes versions : **Configuration > Prévision solaire**) ; renseigner la position et les panneaux puis activer la fonction. Sans compte ni clé API ; Internet est nécessaire pour recevoir les prévisions.
+Depuis la 4.8.5, ouvrir **Réglages > Énergie > Prévision solaire** (dans les anciennes versions : **Configuration > Prévision solaire**) ; renseigner la position et les panneaux puis activer la fonction. Sans compte ni clé API ; Internet est nécessaire pour recevoir les prévisions.
 
 Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**, **Demain** ou **Alternance** pour le bandeau ; l’alternance est réglable de **1 à 300 secondes**, avec **5 secondes par défaut**.
 
@@ -31,7 +31,7 @@ Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**,
 ## Mettre un écran déjà installé à jour
 
 1. Exporter ses réglages depuis la page Web de l’écran.
-2. Avec Internet et une heure correcte, ouvrir **Réglages > Système > Mise à jour > Vérifier sur GitHub > Installer** en 4.8.5 ; sur les versions précédentes, l’accès est dans **Configuration > Mise à jour**.
+2. Avec Internet et une heure correcte, ouvrir **Réglages > Système > Mise à jour > Vérifier sur GitHub > Installer** depuis la 4.8.5 ; sur les versions précédentes, l’accès est dans **Configuration > Mise à jour**.
 3. Sans ce menu, télécharger le fichier **`_OTA.bin`** de la release adaptée et l’envoyer depuis le formulaire OTA de **l’IP de l’écran**.
 4. Garder l’alimentation jusqu’au redémarrage, puis vérifier version, modèle, logger et mesures.
 
