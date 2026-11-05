@@ -14,7 +14,7 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version stable est **4.8.0**, publiée le **26 octobre 2026**. Elle ajoute la prévision solaire d’aujourd’hui et de demain, leurs courbes et le choix de la valeur du bandeau. [Notes et binaire 4.8.0](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.0).
+La dernière version stable est **4.8.1**, publiée le **5 novembre 2026**. La sélection du **DL1000B** affiche un rappel d’activation du Modbus TCP et un QR code vers le guide illustré. Les fonctions de la 4.8.0, dont la prévision solaire, sont conservées. [Notes et binaire 4.8.1](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.1).
 
 ## Prévision solaire en 4.8.0
 
