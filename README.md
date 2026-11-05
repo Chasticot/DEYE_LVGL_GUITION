@@ -14,7 +14,9 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version stable est **4.8.1**, publiée le **5 novembre 2026**. La sélection du **DL1000B** affiche un rappel d’activation du Modbus TCP et un QR code vers le guide illustré. Les fonctions de la 4.8.0, dont la prévision solaire, sont conservées. [Notes et binaire 4.8.1](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.1).
+La dernière version publiée est **4.8.3**, le **5 novembre 2026**. Elle ajoute un correctif mémoire de l’historique Web, les archives sur microSD, la lecture de passerelles APsystems/Enphase avec ajout facultatif au total solaire, et deux familles Sofar expérimentales en lecture seule. Les fuseaux UTC, l’heure d’été désactivable et le Time of Use Deye sont inclus. Paris reste le réglage par défaut. [Notes et binaire 4.8.3](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.3).
+
+Les tests logiciels sont réussis ; la correction sur l’écran concerné et les nouveaux matériels restent à valider en situation réelle. La compatibilité de toutes les variantes APsystems, Enphase et Sofar n’est pas garantie. [Guide micro-onduleurs, microSD et Sofar](docs/GUIDE_MICRO_SD_SOFAR.md) · [Notes détaillées 4.8.3](docs/NOTES_4.8.3.md).
 
 ## Prévision solaire en 4.8.0
 
