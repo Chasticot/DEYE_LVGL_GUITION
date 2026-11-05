@@ -1,0 +1,70 @@
+# Micro-onduleurs, historique et Sofar — à partir de la 4.8.3
+
+## Ouvrir la configuration
+
+Connecter le téléphone et l’écran au même réseau Wi-Fi. Dans **Configuration > DEYE / SOLARMAN**, ouvrir **MICRO-ONDULEURS** ou **HISTORIQUE / CARTE SD**, puis scanner le QR code. L’adresse affichée peut aussi être saisie dans un navigateur. Les réglages restent sur l’écran.
+
+## Ajouter une passerelle de micro-onduleurs
+
+1. Ouvrir une des quatre installations et lui donner un nom.
+2. Choisir le matériel et saisir l’adresse IP ou le nom local de la passerelle, sans `http://` ni chemin.
+3. Garder **Afficher séparément**, enregistrer et attendre **Lecture OK**. **Relire** demande un nouveau test ; les lectures sont espacées pour ne pas surcharger les passerelles.
+4. Vérifier que la puissance correspond à l’application du fabricant. Pour ajouter cette production au total, choisir **Ajouter au total solaire** et confirmer qu’elle n’est déjà comptée ni dans les PV ni dans le GEN de l’onduleur.
+5. Si le GEN mesure déjà cette production, choisir **Déjà mesurée par le port GEN** : la lecture de la passerelle reste visible sans ajout supplémentaire.
+
+Cocher la même journée locale uniquement si la passerelle et l’écran ont la même date et le même changement de journée. Sinon, les watts restent utilisables et les kWh du jour sont indiqués indisponibles. Au changement de date, une énergie d’hier n’est pas présentée comme celle d’aujourd’hui.
+
+### APsystems
+
+- ECU-B/R/Pro/C solaire : connexion locale TCP reconnue par le lecteur, intervalle minimal cinq minutes. Les ECU-C de stockage ne sont pas couvertes.
+- ECU-3/4 : accès à la page locale de production ; l’horloge de l’écran et celle de la passerelle doivent être correctes. Les lignes périmées ou non reconnues provoquent un état indisponible. L’énergie quotidienne n’est pas déduite de ces tableaux.
+- EZ1 : activer le mode local permanent dans l’application APsystems. La lecture utilise l’API locale du matériel ; aucun réglage de puissance n’est envoyé.
+
+La liste vise les protocoles reconnus, et ne constitue pas une certification de toutes les variantes matérielles ou versions de firmware.
+
+### Enphase
+
+Essayer d’abord la lecture locale sans jeton sur les anciennes passerelles. Si un accès refusé ou une redirection HTTPS est signalé, obtenir un jeton depuis le [portail Enphase](https://entrez.enphaseenergy.com/) et le saisir dans **Connexion et options**. L’écran ne demande pas le mot de passe du compte cloud.
+
+Après le premier essai HTTPS, vérifier que l’adresse est celle de la passerelle, puis confirmer son empreinte de certificat. Le jeton est transmis uniquement après correspondance de cette empreinte. Un changement de certificat bloque la lecture et demande une nouvelle vérification. Un jeton expiré doit être renouvelé.
+
+Le champ jeton reste vide après enregistrement ; cela conserve le jeton existant. Utiliser **Effacer le jeton enregistré** pour le supprimer. Les réponses de configuration ne renvoient pas le jeton.
+
+Le lecteur privilégie la production des micro-onduleurs ; un total issu uniquement des pinces de mesure n’est pas ajouté, car il peut aussi contenir la production de l’onduleur principal.
+
+### Une passerelle devient indisponible
+
+La dernière valeur trop ancienne n’est plus ajoutée comme une mesure actuelle. L’écran affiche un total partiel ; la courbe solaire présente une interruption pour ces mesures. Vérifier la connexion locale, le jeton éventuel et le message de l’installation. Ces lectures n’envoient aucune commande aux micro-onduleurs.
+
+## Conserver l’historique sur microSD
+
+Sans carte, l’historique des 24 dernières heures fonctionne en mémoire. Pour archiver après redémarrage, insérer une microSD FAT32 dans l’écran, avec l’heure réglée. Une carte insérée est recherchée périodiquement ; la reconnaissance peut prendre environ une minute. L’état de la carte est indiqué dans la page.
+
+L’enregistrement automatique est activé par défaut, avec 90 jours de conservation. Le formulaire permet de désactiver l’archivage ou de choisir 7, 30, 90 jours ou un an. Le nouveau choix s’applique à la conservation des fichiers de mesure : sauvegarder les CSV utiles avant de réduire la durée.
+
+Les fichiers sont rangés dans `deye-history`, un CSV par journée locale. Sélectionner une journée pour consulter sa courbe ou télécharger son CSV. Le CSV contient l’heure UTC en secondes, la puissance solaire, le réseau, la consommation, la batterie, le SOC et l’indication de total solaire complet. Les heures de la courbe Web suivent le fuseau du navigateur.
+
+La carte n’est jamais formatée et les autres dossiers ne sont pas nettoyés. Une carte absente ou en erreur laisse l’historique en mémoire actif. Une mesure non archivée ne peut pas être recréée après coup. Les mesures sans heure correcte ne sont pas écrites sur la carte. Éviter de retirer la carte pendant un enregistrement.
+
+## Configurer un Sofar
+
+La prise en charge est expérimentale et désactivée par défaut. Identifier d’abord la référence exacte sur l’étiquette de l’onduleur. Sans cette information, conserver le réglage actuel et ne pas choisir une famille au hasard.
+
+Depuis la page de configuration locale, ouvrir **Marque / famille de l’onduleur**. Configurer d’abord le logger LSW3 avec son IP et son véritable numéro, puis choisir une famille :
+
+- **HYD 3–6K ES** ;
+- **HYD G3 : deux MPPT et batterie 1 uniquement**.
+
+Confirmer la famille et appliquer ; l’écran redémarre. Comparer les mesures au LCD, en particulier réseau positif pour un import et batterie positive pour une charge. Les cases d’inversion permettent d’adapter ces deux sens après vérification. Les températures non disponibles restent affichées `--`.
+
+Les autres familles, les MPPT supplémentaires, les batteries supplémentaires et les commandes Sofar ne sont pas pris en charge. Les commandes Deye, le TOU, la recharge et les automatismes de relais sont désactivés lorsque Sofar est choisi. Revenir à **Deye** restaure l’utilisation de son profil conservé.
+
+## Heure et Time of Use
+
+Paris reste **UTC+01:00 + Auto Europe**. Pour les Antilles françaises, choisir **UTC−04:00 + heure d’été désactivée**. La règle d’été doit correspondre à la région.
+
+Le TOU conserve les horaires de l’onduleur. Changer le fuseau de l’écran ne modifie pas l’horloge ni les plages TOU de l’onduleur. Sur Deye, la préparation d’un brouillon ne transmet rien ; l’application demande une confirmation. Vérifier les premières lectures et modifications au LCD.
+
+## Réglages et mise à jour
+
+Les nouvelles options sont enregistrées sur l’écran et conservées lors d’une OTA. L’export JSON historique des réglages ne contient pas les nouvelles configurations de passerelles, leurs jetons, le choix Sofar ni la conservation SD : les noter pour un remplacement d’écran. Les archives sont sur la carte ; le tampon des 24 heures est en mémoire volatile.
