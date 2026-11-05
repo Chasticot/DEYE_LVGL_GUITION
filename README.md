@@ -14,13 +14,15 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.4**, le **5 novembre 2026**. Les micro-onduleurs apparaissent avec les MPPT en **PV5 à PV8**. Toucher **PRODUCTION PV >** ouvre les noms, puissances et modes de comptage de toutes les sources ; le tableau de bord Web propose le même détail. Les fonctions de la 4.8.3 sont conservées : historique et microSD, passerelles APsystems/Enphase, Sofar expérimental en lecture seule, fuseaux UTC et Time of Use Deye. [Notes et binaire 4.8.4](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.4).
+La dernière version publiée est **4.8.5**, le **5 novembre 2026**. Les **tableaux de bord LCD et Web actuels sont conservés à l’identique**. Les réglages sont regroupés en six rubriques : Installation, Énergie, Pilotage, Réseau et heure, Écran, Système. L’écran propose des tuiles ; le Web dispose d’une navigation adaptée à l’ordinateur et au téléphone. [Notes et binaire 4.8.5](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.5).
 
-Les tests logiciels sont réussis ; la correction sur l’écran concerné et les nouveaux matériels restent à valider en situation réelle. La compatibilité de toutes les variantes APsystems, Enphase et Sofar n’est pas garantie. [Guide micro-onduleurs, microSD et Sofar](docs/GUIDE_MICRO_SD_SOFAR.md) · [Notes détaillées 4.8.4](docs/NOTES_4.8.4.md).
+Un profil d’essai **Sofar 3000TL-G3 + LSW3** permet de suivre cet onduleur en complément du Deye comme une source PV5 à PV8, avec ajout au total facultatif. Les productions APsystems/Enphase, l’historique et la microSD, les fuseaux UTC, l’heure d’été et le Time of Use Deye sont conservés. [Nouveaux menus et essai Sofar pas à pas](docs/NOTES_4.8.5.md) · [Guide des sources solaires, de la microSD et des Sofar](docs/GUIDE_MICRO_SD_SOFAR.md).
+
+Les tests logiciels et les aperçus sont réussis. Aucun essai sur écran, carte SD ou Sofar physique pendant cette validation ; la correction du redémarrage signalé en 4.8.2 et la compatibilité des matériels restent à confirmer en situation réelle. Le profil TL est réservé à la famille A3 ; toutes les variantes APsystems, Enphase et Sofar ne sont pas garanties.
 
 ## Prévision solaire en 4.8.0
 
-Dans **Configuration > Prévision solaire**, renseigner la position et les panneaux puis activer la fonction. Sans compte ni clé API ; Internet est nécessaire pour recevoir les prévisions.
+En 4.8.5, ouvrir **Réglages > Énergie > Prévision solaire** (dans les anciennes versions : **Configuration > Prévision solaire**) ; renseigner la position et les panneaux puis activer la fonction. Sans compte ni clé API ; Internet est nécessaire pour recevoir les prévisions.
 
 Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**, **Demain** ou **Alternance** pour le bandeau ; l’alternance est réglable de **1 à 300 secondes**, avec **5 secondes par défaut**.
 
@@ -29,7 +31,7 @@ Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**,
 ## Mettre un écran déjà installé à jour
 
 1. Exporter ses réglages depuis la page Web de l’écran.
-2. Avec Internet et une heure correcte, ouvrir **Configuration > Mise à jour > Vérifier sur GitHub > Installer**.
+2. Avec Internet et une heure correcte, ouvrir **Réglages > Système > Mise à jour > Vérifier sur GitHub > Installer** en 4.8.5 ; sur les versions précédentes, l’accès est dans **Configuration > Mise à jour**.
 3. Sans ce menu, télécharger le fichier **`_OTA.bin`** de la release adaptée et l’envoyer depuis le formulaire OTA de **l’IP de l’écran**.
 4. Garder l’alimentation jusqu’au redémarrage, puis vérifier version, modèle, logger et mesures.
 
