@@ -14,9 +14,9 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.3**, le **5 novembre 2026**. Elle ajoute un correctif mémoire de l’historique Web, les archives sur microSD, la lecture de passerelles APsystems/Enphase avec ajout facultatif au total solaire, et deux familles Sofar expérimentales en lecture seule. Les fuseaux UTC, l’heure d’été désactivable et le Time of Use Deye sont inclus. Paris reste le réglage par défaut. [Notes et binaire 4.8.3](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.3).
+La dernière version publiée est **4.8.4**, le **5 novembre 2026**. Les micro-onduleurs apparaissent avec les MPPT en **PV5 à PV8**. Toucher **PRODUCTION PV >** ouvre les noms, puissances et modes de comptage de toutes les sources ; le tableau de bord Web propose le même détail. Les fonctions de la 4.8.3 sont conservées : historique et microSD, passerelles APsystems/Enphase, Sofar expérimental en lecture seule, fuseaux UTC et Time of Use Deye. [Notes et binaire 4.8.4](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.4).
 
-Les tests logiciels sont réussis ; la correction sur l’écran concerné et les nouveaux matériels restent à valider en situation réelle. La compatibilité de toutes les variantes APsystems, Enphase et Sofar n’est pas garantie. [Guide micro-onduleurs, microSD et Sofar](docs/GUIDE_MICRO_SD_SOFAR.md) · [Notes détaillées 4.8.3](docs/NOTES_4.8.3.md).
+Les tests logiciels sont réussis ; la correction sur l’écran concerné et les nouveaux matériels restent à valider en situation réelle. La compatibilité de toutes les variantes APsystems, Enphase et Sofar n’est pas garantie. [Guide micro-onduleurs, microSD et Sofar](docs/GUIDE_MICRO_SD_SOFAR.md) · [Notes détaillées 4.8.4](docs/NOTES_4.8.4.md).
 
 ## Prévision solaire en 4.8.0
 
