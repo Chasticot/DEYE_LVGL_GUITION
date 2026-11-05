@@ -4,6 +4,14 @@
 
 Connecter le téléphone et l’écran au même réseau Wi-Fi. Dans **Configuration > DEYE / SOLARMAN**, ouvrir **MICRO-ONDULEURS** ou **HISTORIQUE / CARTE SD**, puis scanner le QR code. L’adresse affichée peut aussi être saisie dans un navigateur. Les réglages restent sur l’écran.
 
+## Voir les productions PV5 et PV6 — à partir de la 4.8.4
+
+Les quatre installations correspondent respectivement à **PV5, PV6, PV7 et PV8**. PV1 à PV4 restent réservés aux entrées de l’onduleur. Ces numéros ne changent pas lorsqu’une installation est désactivée. Chaque PV supplémentaire représente la production de toute sa passerelle.
+
+Les puissances apparaissent à côté des MPPT sur l’écran principal. Jusqu’à six sources tiennent ensemble ; avec sept ou huit sources, les valeurs alternent toutes les quatre secondes. Toucher **PRODUCTION PV >** pour consulter toutes les sources dans une liste défilante : numéro, nom choisi, puissance et indication de comptage. Le tableau de bord Web propose également ce détail.
+
+**Afficher séparément** rend la puissance visible sans l’ajouter au total. **Déjà mesurée par le port GEN** conserve le comptage existant sans ajouter la passerelle une deuxième fois. Un doublon est indiqué comme exclu. Une source indisponible affiche `-- W`, tandis que `0 W` signifie qu’une mesure nulle a bien été reçue. Le port GEN garde son propre nom.
+
 ## Ajouter une passerelle de micro-onduleurs
 
 1. Ouvrir une des quatre installations et lui donner un nom.
