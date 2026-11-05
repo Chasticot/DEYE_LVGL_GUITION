@@ -1,4 +1,4 @@
-# Sources solaires supplémentaires, historique et Sofar — 4.8.5
+# Sources solaires supplémentaires, historique et Sofar — 4.8.6
 
 ## Ouvrir la configuration
 
@@ -39,6 +39,14 @@ Après le premier essai HTTPS, vérifier que l’adresse est celle de la passere
 Le champ jeton reste vide après enregistrement ; cela conserve le jeton existant. Utiliser **Effacer le jeton enregistré** pour le supprimer. Les réponses de configuration ne renvoient pas le jeton.
 
 Le lecteur privilégie la production des micro-onduleurs ; un total issu uniquement des pinces de mesure n’est pas ajouté, car il peut aussi contenir la production de l’onduleur principal.
+
+### Hoymiles, Deye micro et Sossen — 4.8.6
+
+Le choix **Marque et connexion locale** regroupe maintenant les profils par marque. Hoymiles peut être lu via OpenDTU, AhoyDTU ou une DTU-Pro Modbus TCP compatible avec la carte `0x1000`. Deye micro dispose de profils V118 en Solarman V5 et Modbus TCP ; le profil vérifie le type micro-onduleur et ne relit pas l’hybride principal.
+
+Pour Sossen, la lecture proposée passe par un **compteur Shelly dédié à sa production**. La lecture directe du micro-onduleur Sossen n’est pas intégrée. Le canal du compteur ne doit pas mesurer la consommation générale ; cette confirmation est obligatoire. Les watts sont lus sans inventer de kWh du jour à partir du compteur cumulé.
+
+Les passerelles Hoymiles qui partagent un même micro-onduleur sont reconnues comme doublons dans les sources ajoutées. Les variantes Wi-Fi propriétaires sans l’API indiquée ne sont pas couvertes. [Profils, limites et mise en service 4.8.6](NOTES_4.8.6.md).
 
 ### Une passerelle devient indisponible
 
