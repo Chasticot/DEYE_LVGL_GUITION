@@ -1,8 +1,8 @@
-# Micro-onduleurs, historique et Sofar — à partir de la 4.8.3
+# Sources solaires supplémentaires, historique et Sofar — 4.8.5
 
 ## Ouvrir la configuration
 
-Connecter le téléphone et l’écran au même réseau Wi-Fi. Dans **Configuration > DEYE / SOLARMAN**, ouvrir **MICRO-ONDULEURS** ou **HISTORIQUE / CARTE SD**, puis scanner le QR code. L’adresse affichée peut aussi être saisie dans un navigateur. Les réglages restent sur l’écran.
+Connecter le téléphone et l’écran au même réseau Wi-Fi. En 4.8.5, ouvrir **Réglages > Installation > Sources solaires / PV5 à PV8** pour une passerelle ou un Sofar supplémentaire, ou **Réglages > Énergie > Historique / Carte SD**, puis scanner le QR code. Sur les versions 4.8.3/4.8.4, ces deux accès sont dans **Configuration > DEYE / SOLARMAN**. L’adresse affichée peut aussi être saisie dans un navigateur. Les réglages restent sur l’écran.
 
 ## Voir les productions PV5 et PV6 — à partir de la 4.8.4
 
@@ -54,7 +54,15 @@ Les fichiers sont rangés dans `deye-history`, un CSV par journée locale. Séle
 
 La carte n’est jamais formatée et les autres dossiers ne sont pas nettoyés. Une carte absente ou en erreur laisse l’historique en mémoire actif. Une mesure non archivée ne peut pas être recréée après coup. Les mesures sans heure correcte ne sont pas écrites sur la carte. Éviter de retirer la carte pendant un enregistrement.
 
-## Configurer un Sofar
+## Ajouter un Sofar 3000TL-G3 au Deye — 4.8.5
+
+Le 3000TL-G3 est suivi comme une source supplémentaire PV5 à PV8. Conserver **Deye** comme onduleur principal. Ouvrir **Installation > Sources PV5 à PV8** sur le Web, choisir une installation libre, puis **Sofar 3000TL-G3 + LSW3**. Renseigner l’IP et le numéro numérique du logger LSW3 ; l’adresse Modbus vaut 1 par défaut.
+
+Enregistrer d’abord en **Afficher séparément**. Après une lecture réussie, comparer la puissance AC et l’énergie du jour au LCD du Sofar. Choisir ensuite **Ajouter au total solaire** avec la confirmation d’absence de double comptage, ou **Déjà mesurée par le port GEN** si GEN mesure déjà cette production.
+
+Ce profil d’essai vérifie la famille TL A3. Il ne couvre pas le 3000TLM-G3, les HYD ou les KTLX. Il ne transmet aucune commande à l’onduleur. Les kWh demandent la même journée locale confirmée. La validation sur un vrai Sofar reste à faire. [Procédure complète 4.8.5](NOTES_4.8.5.md#essayer-un-sofar-3000tl-g3-en-complément-du-deye).
+
+## Configurer un Sofar HYD comme onduleur principal
 
 La prise en charge est expérimentale et désactivée par défaut. Identifier d’abord la référence exacte sur l’étiquette de l’onduleur. Sans cette information, conserver le réglage actuel et ne pas choisir une famille au hasard.
 
@@ -65,7 +73,7 @@ Depuis la page de configuration locale, ouvrir **Marque / famille de l’onduleu
 
 Confirmer la famille et appliquer ; l’écran redémarre. Comparer les mesures au LCD, en particulier réseau positif pour un import et batterie positive pour une charge. Les cases d’inversion permettent d’adapter ces deux sens après vérification. Les températures non disponibles restent affichées `--`.
 
-Les autres familles, les MPPT supplémentaires, les batteries supplémentaires et les commandes Sofar ne sont pas pris en charge. Les commandes Deye, le TOU, la recharge et les automatismes de relais sont désactivés lorsque Sofar est choisi. Revenir à **Deye** restaure l’utilisation de son profil conservé.
+Pour le suivi principal HYD, les autres familles, les MPPT supplémentaires, les batteries supplémentaires et les commandes Sofar ne sont pas pris en charge. Les commandes Deye, le TOU, la recharge et les automatismes de relais sont désactivés lorsque Sofar est choisi. Revenir à **Deye** restaure l’utilisation de son profil conservé.
 
 ## Heure et Time of Use
 
