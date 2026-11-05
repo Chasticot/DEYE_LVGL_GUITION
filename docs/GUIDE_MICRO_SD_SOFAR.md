@@ -1,3 +1,5 @@
+> **4.8.8 :** [recharger la batterie de la maison avant un jour rouge Tempo](NOTES_4.8.8.md).
+
 > Depuis la **4.8.7**, la lecture directe **Sossen Tuya 3.5** est disponible en essai : [configuration et limites](NOTES_4.8.7.md). Les profils Shelly restent disponibles.
 
 # Sources solaires supplémentaires, historique et Sofar — 4.8.6
