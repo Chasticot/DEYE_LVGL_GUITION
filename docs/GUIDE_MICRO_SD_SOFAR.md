@@ -1,3 +1,5 @@
+> **Depuis la version 4.8.9**, la gestion de la microSD comprend le formatage FAT32 confirmé, le retrait sécurisé et les écritures groupées toutes les trente minutes. [Lire le guide 4.8.9 et les règles de recharge anticipée](NOTES_4.8.9.md). Les indications de versions antérieures ci-dessous décrivent leur comportement d’origine.
+
 > **4.8.8 :** [recharger la batterie de la maison avant un jour rouge Tempo](NOTES_4.8.8.md).
 
 > Depuis la **4.8.7**, la lecture directe **Sossen Tuya 3.5** est disponible en essai : [configuration et limites](NOTES_4.8.7.md). Les profils Shelly restent disponibles.
