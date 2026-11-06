@@ -14,7 +14,9 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.9**, le **6 novembre 2026**. Elle ajoute la **gestion de la microSD avec formatage FAT32 confirmé**, le retrait sécurisé et les sauvegardes groupées pour limiter les écritures. La **recharge anticipée de la batterie de la maison** comporte trois seuils solaires facultatifs : avant un jour rouge Tempo ou pendant les heures creuses de tous les contrats. Les réglages TOU précédents sont sauvegardés puis restaurés lorsque la condition cesse. [Guide et exemples 4.8.9](docs/NOTES_4.8.9.md) · [Binaire OTA 4.8.9](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.9).
+La dernière version publiée est **4.8.10**, le **6 novembre 2026**. Elle corrige l’exemple Tempo en **moins de 10/20/30 kWh → 90/60/30 %**, avec priorité à la **première règle remplie**. Le bouton **Exemple Tempo** prépare ces réglages sans activation ni sauvegarde automatique. Les anciens programmes personnalisés conservent leur comportement. [Appliquer la correction 4.8.10](docs/NOTES_4.8.10.md) · [Binaire OTA 4.8.10](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.10).
+
+La gestion de la microSD (formatage FAT32 confirmé, retrait sécurisé et écritures groupées) et la recharge anticipée avec ou sans Tempo restent disponibles. [Guide de ces fonctions](docs/NOTES_4.8.9.md).
 
 Sur l’écran : **Réglages > Énergie > Historique / carte SD** et **Réglages > Pilotage > Batterie / anticipation**. Sur le Web : **Énergie > Historique et carte SD** et **Pilotage > Time of Use · batterie**. Vérifier les horloges, le mode batterie SOC, le TOU actif et au moins une plage entièrement comprise dans les HC. Les notices Deye présentent un début à 00h00 ou 01h00 selon les modèles ; ce n’est pas une confirmation d’un bug universel.
 
