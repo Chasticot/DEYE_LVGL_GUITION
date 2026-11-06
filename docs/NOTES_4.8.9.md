@@ -1,3 +1,5 @@
+> **Correction de l’exemple Tempo :** les seuils demandés sont **moins de 10/20/30 kWh → 90/60/30 %**, avec priorité à la **première** règle remplie. Utiliser l’[exemple corrigé en version 4.8.10](NOTES_4.8.10.md). Le texte ci-dessous décrit le comportement initial de la 4.8.9.
+
 # Version 4.8.9 — carte microSD et recharge anticipée de la batterie
 
 Cette mise à jour conserve le tableau de bord actuel. Elle complète les menus de la carte microSD et la préparation de la batterie de la maison selon la couleur Tempo ou la production solaire prévue. Elle ne pilote pas la recharge de la voiture.
