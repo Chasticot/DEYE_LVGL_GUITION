@@ -1,3 +1,5 @@
+> **4.8.10 :** [exemple Tempo corrigé : moins de 10/20/30 kWh → 90/60/30 %, priorité à la première règle](NOTES_4.8.10.md).
+
 > **Depuis la version 4.8.9**, la gestion de la microSD comprend le formatage FAT32 confirmé, le retrait sécurisé et les écritures groupées toutes les trente minutes. [Lire le guide 4.8.9 et les règles de recharge anticipée](NOTES_4.8.9.md). Les indications de versions antérieures ci-dessous décrivent leur comportement d’origine.
 
 > **4.8.8 :** [recharger la batterie de la maison avant un jour rouge Tempo](NOTES_4.8.8.md).
