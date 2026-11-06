@@ -1,591 +1,569 @@
-# Deye Monitor - firmware unifié
+# Deye Monitor - Guide utilisateur illustré
 
-> Édition 4.6.3 conservée pour les fonctions communes. En 4.7.0, le choix du modèle et du port GEN a changé : consulter le [guide actuel](MISE_A_JOUR_ECRAN_GITHUB.md) et le [guide 4.7.0](GUIDE_UNIFIE_4.7.0.md).
-> **Complément du 29 octobre 2026 :** fonctionnement DL1000B confirmé avec notre écran. Voir le [pas-à-pas illustré DL1000B-WIFI](GUIDE_DL1000B_MODBUS_TCP.md) : firmware 1.7.2 minimum demandé, activation Link2 et port 502, avec modèle de demande à Deye.
+**Édition du 6 novembre 2026 - Menus de référence 4.8.10.**
 
-## Guide utilisateur complet
+Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage avec des captures commentées. Les noms V3 des fichiers sont conservés pour les liens existants.
 
-**Firmware 4.6.3 - Édition du 20 octobre 2026**
+[Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Questions fréquentes](FAQ_ECRAN.md).
 
-Ce guide accompagne l'écran tactile Deye Monitor. Il explique comment relier l'écran au logger de l'onduleur, lire les mesures et utiliser les menus. Les libellés reprennent ceux du logiciel, parfois affichés sans accents.
+**Les illustrations sont des captures de l’interface LVGL avec des données simulées, pas des photos prises sur une installation réelle.** Les adresses, numéros, dates, consignes et versions affichés sont des exemples. Utiliser les informations de votre propre installation. Certains écrans de fonctions communes proviennent de versions antérieures ; les légendes signalent les différences utiles.
 
-Ce guide couvre le firmware unifié : le modèle Deye et la borne se choisissent dans les réglages. Les noms des fichiers V3 sont conservés pour les liens existants. [Récapitulatif des fonctions](RECAP_UTILISATEURS_V3.md) · [PDF du guide](pdf/GUIDE_UTILISATEUR_V3.pdf).
+Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la préparation 4.8.10 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
 
-### Le principe
+La préparation 5.0.0 et son activation commerciale sont distinctes de ce parcours 4.8.10. Une version affichée dans une capture ne signifie pas qu’elle est publiée.
 
-L'onduleur communique avec son logger. L'écran rejoint le réseau de la maison et interroge ce logger pour afficher les mesures. Un téléphone ou un ordinateur connecté au même réseau peut également ouvrir la page Web de l'écran.
+## Démarrer sans se perdre
 
-**Onduleur > logger > réseau de la maison > écran Deye Monitor**
+L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas de batterie intégrée. Avant une première installation USB, utiliser le pack adapté à la carte et au partitionnement ; un écran qui fonctionne se met normalement à jour par OTA.
 
-Pour les mesures locales, l'écran n'a pas besoin des identifiants de votre compte DeyeCloud ou Solarman. Internet sert notamment à récupérer l'heure, les informations Tempo et à rechercher les mises à jour.
+1. Si les mesures sont déjà correctes, utiliser l’écran directement : aucune réinstallation n’est nécessaire.
+2. Pour une première connexion : Wi-Fi, choix de l’onduleur, connexion au logger, contrôle des mesures.
+3. Ajouter ensuite les sources, la prévision ou la borne réellement présentes. Activer les automatismes après vérification.
 
-### Parcours de lecture
+**Deux IP à distinguer :** l’IP du logger relie l’écran à l’onduleur ; l’IP de l’écran ouvre Deye Monitor sur un téléphone. Le téléphone et l’écran doivent pouvoir communiquer sur le même réseau local.
 
-1. Préparer l'installation et installer le firmware unifié.
-2. Retrouver l'adresse IP et le numéro de série du logger.
-3. Connecter l'écran et obtenir les premières mesures.
-4. Choisir le bon modèle Deye.
-5. Comprendre le tableau de bord.
-6. Régler Production PV / GEN et les registres.
-7. Régler les tarifs et la recharge VE.
-8. Configurer le relais, l'affichage et le réseau.
-9. Utiliser le Web, sauvegarder, mettre à jour et dépanner.
-
-### Deux adresses à distinguer
-
-| Adresse | À quoi sert-elle ? |
-|---|---|
-| IP du logger | L'écran l'utilise pour lire l'onduleur. |
-| IP de l'écran | Le téléphone ou l'ordinateur l'utilise pour ouvrir Deye Monitor dans un navigateur. |
-
-**Les adresses données en exemple dans ce guide ne doivent pas être recopiées telles quelles.** Utilisez celles de votre installation.
+**Sans box :** une connexion directe au point d’accès d’un logger compatible reste possible. Rejoindre ce réseau avec l’écran puis le téléphone et conserver la connexion même si elle indique « sans Internet ». L’IP AP souvent rencontrée sur LSW, 10.10.100.254, n’est pas l’IP à recopier dans une installation reliée à la box. Les mesures locales peuvent fonctionner sans cloud ; l’heure manuelle est alors utile. Voir le [parcours réseau détaillé](MISE_A_JOUR_ECRAN_GITHUB.md#connexion-directe-au-logger-sans-box).
 
 <!-- pagebreak -->
 
-## 1. Préparer l'installation
+## Sommaire des menus
 
-### Ce qu'il faut avoir sous la main
-
-- Un écran compatible avec ce firmware ; la variante matérielle prévue pour le relais est l'ESP32-4848S040C à un relais.
-- La référence complète de l'onduleur, avec sa puissance et ses suffixes, relevée sur son étiquette.
-- Un logger LSW/Solarman V5 ou un logger LSE/DL1000B compatible avec le Modbus TCP local proposé par le firmware. Le fonctionnement DL1000B est confirmé par un retour utilisateur avec notre écran ; un modèle de logger ne garantit pas à lui seul la compatibilité de toutes ses révisions. Pour le DL1000B-WIFI, suivre le complément illustré et demander un firmware 1.7.2 minimum.
-- Le nom et le mot de passe du Wi-Fi 2,4 GHz de la maison.
-- L'IP locale et le vrai numéro de série du logger : numérique pour LSW/LSE, éventuellement alphanumérique pour DL1000B.
-- Un téléphone ou un ordinateur sur le réseau local pour la configuration Web.
-
-Le logger doit déjà être relié au réseau de la maison. Si ce n'est pas le cas, suivez sa notice ou l'assistant réseau Solarman/Deye correspondant à son modèle [S1]. La présence de mesures dans le cloud ne prouve pas à elle seule que le logger accepte les lectures locales de l'écran.
-
-### Écran déjà équipé d'une version précédente
-
-1. Exportez la configuration JSON depuis la page Web de l'écran.
-2. Si le menu existe, ouvrez **Configuration > MISE À JOUR > VÉRIFIER SUR GITHUB > INSTALLER**, puis confirmez. Sinon, envoyez le fichier applicatif OTA 4.6.3 depuis le Web (chapitre 12).
-3. Après redémarrage, vérifiez le Wi-Fi, le logger et **DEYE / SOLARMAN > MODELE DEYE**.
-4. Lors de la première migration depuis V3 ou Vetronic V3, choisissez explicitement **Aucune**, **Deye LoRa** ou **Vetronic WB01** dans **VEHICULE ELECTRIQUE > ACTIVATION / TARIFS**. Enregistrez et laissez redémarrer.
-5. Comparez les mesures au LCD et vérifiez la liaison de la borne avant toute commande.
-
-Les réglages communs et les configurations V3 par modèle sont conservés sur une installation compatible sans effacement. L'ancienne activation VE ne permet pas de deviner la borne : elle reste inactive jusqu'au choix explicite. Faites un nouvel export après migration. Le chapitre 12 détaille les restrictions sur les anciens JSON.
-
-Le profil AI-W5.1 ESS P1 conserve la correction monophasée introduite en 4.3.3. Ne réimportez pas un ancien JSON de ce profil avec les adresses 600 ; contrôlez les registres puis créez un nouvel export.
-
-### Écran neuf ou logiciel incompatible
-
-Un écran vierge ou un changement de partitionnement nécessite une installation USB complète. Le dépôt public fournit uniquement les mises à jour OTA pour un écran déjà installé et compatible.
-
-<!-- pagebreak -->
-
-## 2. Retrouver l'IP du logger
-
-### Méthode A - Dans l'interface de votre box
-
-1. Connectez le téléphone ou l'ordinateur au réseau de la maison.
-2. Ouvrez l'application ou la page d'administration de la box.
-3. Cherchez **Appareils connectés**, **Réseau local** ou **Baux DHCP**, selon la box.
-4. Identifiez le logger à l'aide de son nom, de son numéro de série ou de son adresse MAC. Ne choisissez pas l'écran Deye Monitor.
-5. Notez son adresse IPv4, par exemple `192.168.1.45`.
-6. Si la box le permet, réservez cette adresse au logger avec un **bail DHCP fixe** : elle restera la même après redémarrage [S1].
-
-### Méthode B - Depuis le Wi-Fi du logger
-
-Cette procédure concerne les loggers Solarman qui proposent une page Web locale. Les autres modèles peuvent utiliser une procédure différente.
-
-1. Dans les réglages Wi-Fi du téléphone, rejoignez le réseau du logger, souvent nommé **AP_ suivi de son numéro de série**. Utilisez le mot de passe indiqué sur son étiquette ou sa notice [S1].
-2. Acceptez de rester connecté si le téléphone signale « pas d'accès Internet ». Si nécessaire, coupez temporairement les données mobiles pour éviter un changement automatique de réseau.
-3. Ouvrez explicitement **http://10.10.100.254** dans le navigateur. Utilisez les identifiants du logger. Sur les modèles Solarman documentés avec les identifiants d'origine, ils sont `admin` / `admin` ; ils peuvent avoir été changés [S2].
-4. Ouvrez **Status / Device information**. Dans **Wireless STA mode**, relevez **IP address**, ainsi que le nom du routeur connecté. En Ethernet, utilisez l'adresse de la rubrique **Cable / LAN mode** [S3].
-5. Relevez aussi **Device serial number**, le numéro du logger.
-6. Reconnectez le téléphone au Wi-Fi de la maison.
-
-**Ne saisissez pas automatiquement 10.10.100.254 dans Deye Monitor.** C'est l'adresse de configuration du point d'accès du logger. Dans une installation reliée à la box, l'écran doit utiliser l'adresse locale relevée dans STA ou LAN.
-
-Une IP vide, `0.0.0.0` ou un état déconnecté indique qu'il faut d'abord rétablir la connexion du logger à la box. Si le réseau AP est masqué ou absent, utilisez la méthode A ; ne réinitialisez pas le logger simplement pour retrouver son IP.
+- [1. Se repérer dans les réglages](#1-se-repérer-dans-les-réglages)
+- [2. Ouvrir les réglages de l’installation](#2-ouvrir-les-réglages-de-linstallation)
+- [3. Comprendre le choix du modèle](#3-comprendre-le-choix-du-modèle)
+- [4. Confirmer un changement de modèle](#4-confirmer-un-changement-de-modèle)
+- [5. Relier un logger LSW ou LSE](#5-relier-un-logger-lsw-ou-lse)
+- [6. Configurer un DL1000B](#6-configurer-un-dl1000b)
+- [7. Choisir une IP et comprendre la reconnexion](#7-choisir-une-ip-et-comprendre-la-reconnexion)
+- [8. Régler les voies PV et le port GEN](#8-régler-les-voies-pv-et-le-port-gen)
+- [9. Ajouter des sources PV5 à PV8](#9-ajouter-des-sources-pv5-à-pv8)
+- [10. Lire le détail de la production](#10-lire-le-détail-de-la-production)
+- [11. Ouvrir les fonctions Énergie](#11-ouvrir-les-fonctions-énergie)
+- [12. Configurer la prévision solaire](#12-configurer-la-prévision-solaire)
+- [13. Afficher les courbes et l’alternance](#13-afficher-les-courbes-et-lalternance)
+- [14. Gérer la carte microSD](#14-gérer-la-carte-microsd)
+- [15. Comprendre le formatage de la carte](#15-comprendre-le-formatage-de-la-carte)
+- [16. Choisir une fonction de pilotage](#16-choisir-une-fonction-de-pilotage)
+- [17. Régler les tarifs et les heures creuses](#17-régler-les-tarifs-et-les-heures-creuses)
+- [18. Choisir la borne de recharge](#18-choisir-la-borne-de-recharge)
+- [19. Utiliser la recharge Deye LoRa](#19-utiliser-la-recharge-deye-lora)
+- [20. Relier et commander une Vetronic WB01](#20-relier-et-commander-une-vetronic-wb01)
+- [21. Reconnaître une borne hors ligne](#21-reconnaître-une-borne-hors-ligne)
+- [22. Lire et modifier le Time of Use](#22-lire-et-modifier-le-time-of-use)
+- [23. Confirmer les jours et le brouillon TOU](#23-confirmer-les-jours-et-le-brouillon-tou)
+- [24. Préparer la batterie de la maison](#24-préparer-la-batterie-de-la-maison)
+- [25. Vérifier les trois seuils solaires](#25-vérifier-les-trois-seuils-solaires)
+- [26. Utiliser l’exemple Tempo corrigé](#26-utiliser-lexemple-tempo-corrigé)
+- [27. Régler le relais intégré](#27-régler-le-relais-intégré)
+- [28. Connecter le Wi-Fi et ouvrir le Web](#28-connecter-le-wi-fi-et-ouvrir-le-web)
+- [29. Régler la date, l’heure et le fuseau](#29-régler-la-date-lheure-et-le-fuseau)
+- [30. Choisir le thème et la veille](#30-choisir-le-thème-et-la-veille)
+- [31. Utiliser le clavier et les pages longues](#31-utiliser-le-clavier-et-les-pages-longues)
+- [32. Sauvegarder et diagnostiquer](#32-sauvegarder-et-diagnostiquer)
+- [33. Mettre à jour le logiciel de l’écran](#33-mettre-à-jour-le-logiciel-de-lécran)
+- [34. Choisir le bon fichier et retrouver de l’aide](#34-choisir-le-bon-fichier-et-retrouver-de-laide)
 
 <!-- pagebreak -->
 
-## 3. Première mise en route de l'écran
+## 1. Se repérer dans les réglages
 
-### Étape 1 - Connecter le Wi-Fi
+**Chemin :** Tableau de bord > bouton de réglages.
 
-1. Touchez le bouton de configuration en haut à droite du tableau de bord, représenté par des curseurs.
-2. Ouvrez **RESEAU / HEURE > WIFI / RESEAU**.
-3. Touchez **SCAN**, puis sélectionnez le réseau 2,4 GHz de la maison dans la liste.
-4. Saisissez le mot de passe et touchez **SAUVEGARDER**. L'écran redémarre.
-5. Revenez dans ce menu pour relever **IP Serveur Web/Ecran**. Notez cette adresse séparément de celle du logger.
+![Les six familles de réglages, thème clair.](images/menus/navigation-tiles-light.png)
+![Les mêmes accès, thème sombre.](images/menus/navigation-tiles-dark.png)
 
-Si un mot de passe est déjà enregistré, laisser le champ vide le conserve. Pour changer de réseau, saisissez le mot de passe du nouveau réseau. La recherche Wi-Fi peut interrompre temporairement la liaison.
+1. **Installation** : onduleur, logger et sources supplémentaires. **Énergie** : production, prévision et historique.
+2. **Pilotage** : borne, tarifs, batterie et relais. **Réseau / Heure** : Wi-Fi, date et accès Web.
+3. **Écran** : luminosité et veille. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
 
-Depuis la 4.6.3, après une perte du Wi-Fi, l'écran laisse cinq secondes à la reconnexion du pilote, puis relance la connexion avec les identifiants enregistrés toutes les 30 secondes, sans limite de durée. Au démarrage et après un scan, la première tentative dispose de 30 secondes. Les réglages DHCP/IP fixe sont conservés et l'interface reste utilisable ; un scan suspend les relances. Les lectures reprennent au retour du réseau.
-
-### Étape 2 - Choisir l'onduleur
-
-Ouvrez **DEYE / SOLARMAN > MODELE DEYE**, déroulez la liste, choisissez la référence puis **ENREGISTRER**. Attendez le redémarrage avant de poursuivre. La correspondance des modèles est détaillée au chapitre 4.
+**À vérifier :** Sur les anciennes versions, ces accès peuvent encore porter les noms DEYE / SOLARMAN et AFFICHAGE. Les chemins de ce guide suivent la préparation 4.8.10.
 
 <!-- pagebreak -->
 
-### Étape 3 - Renseigner ou rechercher le logger
+## 2. Ouvrir les réglages de l’installation
 
-Ouvrez **DEYE / SOLARMAN > CONNEXION / LOGGER** :
+**Chemin :** Réglages > Installation.
 
-| Champ | Valeur à utiliser |
-|---|---|
-| Type de logger | **LSW - Solarman V5**, **LSE - Ethernet Modbus TCP** ou **DL1000B - Modbus TCP**, selon le module. |
-| Adresse IP | L'adresse STA/LAN locale, sans `http://` ni chemin. |
-| Numéro de série | Celui du logger, pas de l'onduleur. Numérique pour LSW/LSE ; les lettres sont acceptées pour DL1000B. |
-| Port | Valeur proposée : **8899 pour LSW**, **8899 pour LSE**, **502 pour DL1000B**. Modifiable si l'installation utilise un autre port. |
-| Unité Modbus | L'adresse de communication configurée sur l'onduleur ; demandez-la à l'installateur si nécessaire. |
+![Les quatre accès de la rubrique Installation.](images/menus/navigation-group-0-light.png)
+![Choix de la puissance et de la référence de l’onduleur.](images/menus/modele-v5-clair.png)
 
-Renseignez le vrai numéro, puis touchez **RECHERCHER**. La recherche manuelle utilise les champs du formulaire sans devoir les sauvegarder d'abord. Elle peut durer plusieurs minutes et suspend temporairement les lectures Deye.
+1. Commencer par **MON ONDULEUR** : relever la puissance et la référence complète sur la plaque, suffixes compris.
+2. Choisir la puissance, puis la référence. Lire le récapitulatif avant **APPLIQUER / REDÉMARRER**.
+3. Après redémarrage, ouvrir **CONNEXION / LOGGER**. Configurer les sources supplémentaires une fois les mesures principales correctes.
 
-Si l'identité est confirmée, vérifiez l'IP proposée. Si l'écran indique **numéro non vérifié**, ouvrez **RESULTATS**, sélectionnez explicitement le bon équipement, puis sauvegardez. Une réponse Modbus ne prouve pas le numéro du logger. Vous pouvez aussi saisir directement une IP connue.
-
-Touchez **SAUVEGARDER** et attendez le redémarrage. Les exemples préremplis ne correspondent pas à votre installation. Le numéro TCP reste enregistré mais n'est pas envoyé comme identifiant dans les trames Modbus TCP.
-
-### Étape 4 - Régler l'heure et contrôler
-
-Dans **RESEAU / HEURE > HEURE / NTP**, choisissez **Europe/Paris** pour la France métropolitaine. Les serveurs proposés sont `pool.ntp.org` et `time.google.com`. Sans NTP, utilisez **REGLER L'HEURE MANUELLEMENT** et saisissez la date et l'heure locales (chapitre 10).
-
-Comparez SOC, tension, réseau et consommation au LCD de l'onduleur. La nuit, une production PV nulle est normale. Les compteurs OK doivent progresser pour les blocs utilisés ; le bloc VE peut rester sans lecture s'il est désactivé.
+**À vérifier :** Une même puissance ne garantit pas le même protocole. Si la référence manque, faire confirmer le profil plutôt que choisir au hasard.
 
 <!-- pagebreak -->
 
-### Si l'adresse IP du logger change
+## 3. Comprendre le choix du modèle
 
-La reconnexion du Wi-Fi de l'écran et la recherche d'une nouvelle IP du logger sont deux fonctions distinctes. La récupération automatique d'IP concerne uniquement **LSW / Solarman V5**, avec le **vrai numéro de série enregistré** dans l'écran. Une saisie non sauvegardée ne l'active pas. Un numéro vide, nul ou factice `123456789` la désactive.
+**Chemin :** Réglages > Installation > Mon onduleur.
 
-1. Avec le Wi-Fi connecté, l'écran attend au moins **trois lectures échouées et 60 secondes sans réponse V5 valide**. Une erreur Modbus reçue du logger confirme sa présence et ne déclenche pas cette recherche.
-2. Il recherche le même numéro sur le réseau local par UDP et TCP/V5. Les lectures Deye sont suspendues pendant le balayage ; l'interface et la tâche WB01 restent actives.
-3. Si une **nouvelle IP pour ce même numéro** est trouvée, seule l'IP est enregistrée. Après vérification de la sauvegarde, l'écran redémarre automatiquement. Le numéro et les autres réglages restent conservés.
-4. Si l'IP est inchangée, si le logger n'est pas trouvé ou si l'enregistrement échoue, il n'y a pas de redémarrage. Une nouvelle recherche peut partir cinq minutes après la fin de la précédente si la liaison reste perdue.
+![Liste des références pour la puissance sélectionnée.](images/menus/modeles-liste.png)
+![Aide à l’identification du modèle.](images/menus/modele-v5-aide.png)
 
-Une coupure Wi-Fi suspend cet automatisme. Un changement manuel d'IP ou de numéro pendant la recherche invalide son résultat ; une OTA ou un redémarrage déjà prévu reporte son application.
+1. Dérouler la liste et rechercher la référence exacte. Le nombre de voies PV et les fonctions disponibles dépendent de ce choix.
+2. Utiliser l’aide si les suffixes de la plaque sont difficiles à interpréter.
+3. Un bouton grisé peut indiquer que le modèle choisi est déjà actif ou indisponible. Comparer ensuite SOC, tension et puissances au LCD du Deye.
 
-Le balayage suit le masque réseau, au maximum un /24. L'écran et le logger doivent pouvoir communiquer sans isolation entre clients. Pour **LSE et DL1000B**, contrôlez manuellement l'adresse, le port et l'unité si la liaison est perdue. Une réservation DHCP dans la box reste utile pour conserver une IP stable.
-
-Exemple : le logger passe de `192.168.1.12` à `192.168.1.45`. En LSW/V5 avec son vrai numéro enregistré, l'écran peut retrouver cette nouvelle adresse, sauvegarder uniquement l'IP et redémarrer.
+**À vérifier :** Les noms, valeurs et références visibles sur les captures servent d’exemples ; ils ne décrivent pas votre installation.
 
 <!-- pagebreak -->
 
-## 4. Modèles et organisation des menus
+## 4. Confirmer un changement de modèle
 
-Le choix du modèle règle automatiquement les adresses et les conversions. Le nombre de lignes PV indiqué ci-dessous est celui du profil logiciel ; il ne signifie pas que toutes les entrées sont câblées.
+**Chemin :** Réglages > Installation > Mon onduleur.
 
-| Référence proposée dans le menu | Lignes PV | GEN Daily |
-|---|---|---|
-| SUN-12K-SG02LP1-EU-AM2 | 3 | R62 |
-| SUN-12K-SG02LP1-EU-AM3 | 3 | R62 |
-| SUN-8K-SG01LP1-EU | 2 | R62 |
-| SUN-6K-SG03LP1-EU | 2 | R62 |
-| SUN-5K-SG05LP1-EU-AM2-P | 2 | R62 |
-| SUN-6K-SG05LP1 | 2 | R62 |
-| SUN-8K-SG05LP1-EU | 2 | R62 |
-| SUN-12K-SG05LP3-EU-SM2 | 2 | R536 |
-| SUN-10K-SG04LP3-EU | 2 | R536 |
-| SUN-20K-SG01HP3-EU-AM2 | 4 | R536 |
-| SUN-25K-SG01HP3-EU-AM2 | 4 | R536 |
-| AI-W5.1 ESS (P1) | 2 | Sans GEN ; registres confirmés par retour utilisateur |
-| SUN-6K-SG06LP1 | - | Sélection indisponible |
+![Un profil expérimental est explicitement signalé.](images/menus/modele-v5-experimental.png)
+![Confirmation avant application et redémarrage.](images/menus/modele-v5-confirmation.png)
 
-Le libellé court 12KSG05LP3-EU des retours utilisateurs est regroupé avec l'entrée SM2. « SG05LP1 » seul désigne une famille : choisissez aussi la puissance et, lorsqu'il est indiqué, le suffixe. Un modèle absent ne doit pas être considéré compatible sur la seule ressemblance de son nom.
+1. Lire l’avertissement quand un profil est expérimental. La présence dans la liste ne valide pas toutes les fonctions du matériel.
+2. Contrôler la puissance, la référence et les suffixes dans la confirmation.
+3. Après application, laisser redémarrer puis vérifier les premières mesures avant toute commande.
 
-### Les sept rubriques principales
-
-| Menu | Contenu |
-|---|---|
-| DEYE / SOLARMAN | Modèle, connexion/logger, production PV/GEN, registres perso. |
-| TARIFS / HEURES CREUSES | Deux plages ou Tempo, affichage des couleurs. |
-| VEHICULE ELECTRIQUE | Choix Aucune / Deye LoRa / Vetronic WB01, recharge et tarifs. |
-| RELAIS | Règle de commande du relais intégré. |
-| RESEAU / HEURE | Wi-Fi, synchronisation NTP et réglage manuel de l'heure. |
-| AFFICHAGE | Thème, luminosité et veille horaire. |
-| MISE A JOUR | Vérification GitHub, installation et QR code du guide. |
-
-Faites défiler pour voir la suite. **RETOUR** quitte ; **ENREGISTRER / SAUVEGARDER / APPLIQUER** valide. La plupart des réglages redémarrent l'écran.
+**À vérifier :** Ne modifier ni coefficient ni registre pour masquer une erreur de modèle. Les essais matériels dépendent de la famille d’onduleur.
 
 <!-- pagebreak -->
 
-## 5. Lire le tableau de bord
+## 5. Relier un logger LSW ou LSE
 
-### Puissance et énergie
+**Chemin :** Réglages > Installation > Connexion / logger.
 
-**W ou kW : ce qui se passe maintenant. kWh : ce qui s'est cumulé dans le temps.** Un appareil qui consomme 1 000 W pendant une heure utilise 1 kWh.
+![Connexion LSW / Solarman V5 et résultat de recherche simulé.](images/menus/logger-found-light.png)
+![Connexion LSE / Ethernet Modbus TCP.](images/menus/logger-lse-light.png)
 
-| Indication | Signification |
-|---|---|
-| Production / PV | Puissance issue des entrées PV visibles, avec ajout éventuel de GEN MO. |
-| Production du jour | Énergie produite sur la journée, selon les compteurs disponibles et le cumul choisi. |
-| Consommation / Load | Puissance consommée suivie par l'onduleur ; le périmètre dépend de l'installation et des capteurs. |
-| Consommation du jour | Énergie consommée depuis le début de la journée selon le compteur de l'onduleur. |
-| Réseau | Importation depuis le réseau ou exportation vers celui-ci. Les libellés indiquent le sens. |
-| Batterie / SOC | Niveau de charge en %, tension et puissance. Charge positive ; décharge négative dans cette interface. |
-| GEN / SmartLoad | Production sur le port GEN ou état SmartLoad, selon le mode choisi. |
-| Températures | Mesures internes transmises par l'onduleur. |
+1. Choisir le type de logger réellement installé. Renseigner son **IP locale**, son numéro de série et l’unité Modbus de l’onduleur.
+2. Les ports proposés sont **8899 pour LSW**, **8899 pour LSE** et **502 pour DL1000B**. Conserver un autre port si votre installation l’exige.
+3. Toucher **RECHERCHER**, vérifier le résultat, puis **SAUVEGARDER**. Attendre le redémarrage et comparer les mesures au LCD.
 
-**Exemple :** les panneaux ont produit 20 kWh et la maison en a consommé 15. Ces nombres n'ont pas à être identiques : une partie de la production peut charger la batterie ou être exportée. GEN Daily mesure une énergie liée au port GEN ; ce n'est pas la consommation de la maison.
-
-### Les états à connaître
-
-- **CHARGE / DECHARGE** : sens de circulation de l'énergie de la batterie.
-- **HC / HP** : période tarifaire calculée avec les réglages horaires.
-- **ON / OFF près du Wi-Fi** : état du relais intégré, visible uniquement si sa règle est activée.
-- **~ devant les kWh GEN** : estimation calculée à partir de la puissance.
-- **DEYE INJOIGNABLE** : aucune lecture Modbus réussie depuis environ deux minutes.
-
-La disparition du message de liaison ne prouve pas que tous les compteurs sont valides : une seule réponse réussie peut suffire. Consultez le diagnostic si une valeur reste absente ou incohérente. Une valeur indisponible ne doit pas être interprétée comme zéro.
-
-Près de la voiture, le soleil jaune indique un mode Solaire confirmé, même en attente de surplus. Avec WB01 : coche verte si le véhicule est branché, croix rouge s'il est débranché, tiret gris si la mesure manque ou est périmée. Deye LoRa ne fournit pas de statut de câble vérifié. Le plafond LoRa n'est pas affiché comme une puissance mesurée ; la puissance WB01 précédée de `~` est estimée à 230 V.
-
-Les compteurs journaliers de l'onduleur et les mesures du cloud peuvent avoir des heures de mise à jour différentes. Pour contrôler une puissance instantanée, comparez d'abord au LCD local au même moment.
+**À vérifier :** L’IP du logger sert aux lectures. L’IP de l’écran sert à ouvrir Deye Monitor sur le téléphone. Les numéros et adresses des captures sont fictifs ; ne pas les recopier.
 
 <!-- pagebreak -->
 
-## 6. Production PV / GEN
+## 6. Configurer un DL1000B
 
-**Chemin : Configuration > DEYE / SOLARMAN > PRODUCTION PV / GEN**
+**Chemin :** Réglages > Installation > Connexion / logger.
 
-### Afficher PV1, PV2, PV3 ou PV4
+![Rappel et QR code du guide Modbus TCP.](images/menus/logger-dl1000b-help-light.png)
+![Formulaire DL1000B ; le numéro peut contenir des lettres.](images/menus/logger-dl1000b-light.png)
 
-Ces interrupteurs choisissent les lignes affichées et les puissances incluses dans le total et son historique. Ils ne coupent pas les panneaux et ne modifient pas le fonctionnement électrique de l'onduleur.
+1. Suivre d’abord le [guide illustré DL1000B](GUIDE_DL1000B_MODBUS_TCP.md) pour le firmware du logger et l’activation **Link2 / Modbus TCP**.
+2. Choisir **DL1000B - Modbus TCP**, renseigner l’IP, le vrai numéro, le port et l’unité.
+3. Vérifier une lecture locale. La présence de données dans DeyeCloud ne suffit pas à prouver que le port local est activé.
 
-Les options PV3/PV4 n'apparaissent que sur les profils concernés. Masquez une ligne inutilisée si nécessaire. Le compteur journalier PV reste global : masquer une entrée ne retire pas automatiquement ses kWh du compteur de l'onduleur. Quand toutes les lignes PV sont masquées, ce compteur est omis du total affiché.
-
-### Mode SMARTLOAD ou GEN MO
-
-| Mode | Usage dans Deye Monitor |
-|---|---|
-| SMARTLOAD | Afficher l'état de la sortie SmartLoad lorsque le profil et l'appareil le permettent. |
-| GEN MO | Suivre la puissance et l'énergie de production reçues sur le port GEN, notamment des micro-onduleurs. |
-
-Ce choix adapte l'interprétation de l'écran. **Il ne reconfigure pas le port GEN de l'onduleur.** Le réglage doit correspondre à l'utilisation réelle du port, configurée sur l'onduleur.
-
-**Cumuler GEN MO + PV** ajoute GEN comme une source PV supplémentaire virtuelle, parfois appelée PV5. Sa puissance de production est prise en valeur positive après calibration, même si le coefficient en inverse le signe. Elle s'ajoute aux PV visibles dans le total instantané, le Web et l'historique ; ses kWh s'ajoutent au total du jour. Cela n'ajoute aucune entrée MPPT physique. Pour le total journalier, vérifiez que le compteur PV de votre onduleur n'inclut pas déjà cette énergie, afin d'éviter de la compter deux fois. Les commandes GEN sont masquées sur AI-W5.1.
-
-### Afficher les kWh à côté de SMARTLOAD / GEN
-
-Activez **Afficher les kWh GEN Daily** dans **PRODUCTION PV / GEN**, puis enregistrez. Désactivée par défaut, cette option est indépendante du cumul GEN MO + PV et fonctionne dans les deux modes.
-
-Le bandeau peut afficher `SMARTLOAD : ON / 278 kWh` ou `GEN : 2650 W / 278 kWh`. Il lit le registre GEN Daily et son coefficient, même sans NTP. Une adresse non configurée ou une mesure absente donne `-- kWh` : le bandeau ne remplace pas cette valeur par l'estimation. Les températures restent sur la même ligne.
-
-### Compteur GEN du jour
-
-Le réglage se trouve dans **REGISTRES PERSO > GEN Daily** :
-
-- **R62 en LP1 ; R536 en LP3/HP3**, coefficient par défaut **0,1** : lecture directe du compteur journalier.
-- **Adresse vide ou 0** : estimation. L'écran additionne la puissance positive au fil du temps, après synchronisation de l'heure, et affiche `~`.
-
-L'estimation repart à zéro à minuit local. Elle est sauvegardée environ toutes les cinq minutes ; un redémarrage peut perdre la dernière période non sauvegardée. Les coupures et les intervalles de mesure supérieurs à 45 secondes ne sont pas extrapolés.
-
-Une ancienne configuration à 0 reste en estimation après mise à jour. Pour passer au compteur, renseignez l'adresse adaptée dans GEN Daily puis sauvegardez. Si le compteur nécessaire est invalide, le total journalier peut rester indisponible.
+**À vérifier :** Une réponse Modbus TCP ne vérifie pas automatiquement le numéro du logger. Identifier l’appareil avant de retenir une IP proposée.
 
 <!-- pagebreak -->
 
-## 7. Registres personnalisés
+## 7. Choisir une IP et comprendre la reconnexion
 
-**Chemin : Configuration > DEYE / SOLARMAN > REGISTRES PERSO**
+**Chemin :** Réglages > Installation > Connexion / logger > Résultats.
 
-Le profil du modèle fournit les valeurs de départ. Ce menu sert à adapter une adresse ou une conversion lorsqu'une différence a été identifiée pour votre appareil. Exportez la configuration avant une modification.
+![Choix explicite parmi les IP qui répondent.](images/menus/logger-candidates-light.png)
+![Exemple de récupération automatique d’IP en LSW.](images/menus/logger-auto-light.png)
 
-| Groupe | Champs et rôle |
-|---|---|
-| Solaire | PV1/2/3/4 Power : puissances ; PV Daily : compteur journalier. |
-| Batterie | SOC, Volt, Power, Temp : niveau, tension, puissance et température. |
-| Réseau | Grid Power, Status, Buy, Sell : puissance, état et énergies achetée/vendue. |
-| Consommation | Load Power et Load Daily : puissance et énergie quotidienne. |
-| Port GEN | GEN Power et GEN Daily : puissance et énergie quotidienne. |
-| Températures | DC Temp et AC Temp. |
-| SmartLoad | Adresse et numéro de bit utilisé pour l'état. |
-| Communications | Connect, Response, Frame et Block Interval, en millisecondes. |
+1. Si **numéro non vérifié** apparaît, ouvrir **RESULTATS**, identifier l’appareil puis toucher **CHOISIR CETTE IP**.
+2. Revenir au formulaire et **SAUVEGARDER**. Une sélection dans la liste ne remplace pas l’enregistrement.
+3. En LSW, le vrai numéro enregistré permet la récupération automatique d’une nouvelle IP après une perte durable. Pour LSE/DL1000B, contrôler manuellement l’IP, le port et l’unité.
 
-### Adresse, coefficient et bit
-
-L'adresse désigne la donnée à lire. Le coefficient adapte son unité ou son signe. Pour GEN Daily, une valeur brute de 123 avec le coefficient 0,1 donne **12,3 kWh**.
-
-Pour le réseau et la consommation, un facteur de base est déjà appliqué par le logiciel avant le coefficient. N'utilisez donc pas le même coefficient au hasard sur toutes les familles. Un écart d'un facteur dix doit être vérifié avec le modèle sélectionné et sa calibration.
-
-Le numéro de bit SmartLoad n'est pas un coefficient. Un mauvais bit peut donner un état ON/OFF plausible mais incorrect ; comparez un changement réel avec le LCD.
-
-**65535 signifie « absent » uniquement pour les mesures optionnelles prévues : PV3, PV4, GEN Power ou SmartLoad.** GEN Daily utilise **0** pour l'estimation. Les adresses obligatoires et les blocs de lecture sont contrôlés avant sauvegarde.
-
-### Réinitialiser et sauvegarder
-
-**REINITIALISER** remplit les champs avec les valeurs du modèle actif. Cela peut remplacer vos calibrations personnalisées. Il faut ensuite sauvegarder pour les appliquer ; quitter sans sauvegarder permet de conserver la configuration enregistrée.
-
-Les délais de communication ne sont pas des adresses. En cas de liaison lente, commencez par vérifier le Wi-Fi et le diagnostic avant de modifier ces valeurs. Les paramètres de lecture de ce menu ne sont pas ceux du verrou d'écriture VE, présenté au chapitre 8.
+**À vérifier :** Une réservation DHCP dans la box aide à conserver la même IP. Une recherche peut suspendre temporairement les lectures, sans prouver une panne de l’onduleur.
 
 <!-- pagebreak -->
 
-## 8. Tarifs et véhicule électrique
+## 8. Régler les voies PV et le port GEN
 
-### TARIFS / HEURES CREUSES
+**Chemin :** Réglages > Installation > Sources et comptage / GEN.
 
-**2 plages** : saisissez début et fin au format HH:MM pour chaque plage. Une plage peut traverser minuit. Début = fin la désactive. L'heure de début est incluse, celle de fin exclue. Exemple : 22:30-06:30 et 12:00-14:00, à remplacer par vos horaires réels.
+![Exemple du port GEN utilisé pour une production supplémentaire.](images/menus/sources-gen-mo.png)
+![Bas du formulaire : cumul GEN et affichage des kWh du port GEN.](images/menus/gen-current-bottom.png)
 
-**Tempo** : le logiciel utilise les heures creuses 22:00-06:00 et le changement de jour tarifaire à 06:00. Sélectionnez Europe/Paris pour une installation française. **Afficher Tempo** active la récupération et l'affichage de ses informations ; **Couleurs accessibles** ajoute le nom de la couleur. Ces réglages ne modifient pas votre contrat d'électricité.
+1. Choisir l’usage réel : **Automatique**, **Port non utilisé**, **SmartLoad**, **Production solaire supplémentaire** ou **Groupe électrogène**.
+2. Activer les voies PV utiles. Pour du solaire sur GEN, ajouter GEN au total uniquement si cette énergie n’est pas déjà comptée.
+3. Faire défiler pour les options du bas, puis **ENREGISTRER**. Les kWh GEN dépendent du profil ; une énergie estimée est repérée par **~** sur les versions qui la proposent.
 
-### VEHICULE ELECTRIQUE > ACTIVATION / TARIFS
-
-Choisissez le système utilisé, puis **ENREGISTRER** et laissez redémarrer :
-
-| Choix | Compatibilité |
-|---|---|
-| Aucune | Suivi Deye sans client de recharge actif. |
-| Deye LoRa | Uniquement **SUN-12K-SG02LP1-EU-AM2** ; pas l'AM3. |
-| Vetronic WB01 | Passerelle ESP32 compatible, avec les 12 profils sélectionnables de l'écran. |
-
-Le modèle Deye et la borne sont deux choix indépendants. Une seule recharge est active ; les pages du système inactif ne commandent pas l'équipement. Un choix LoRa incompatible est refusé. Après changement de modèle, vérifiez de nouveau la borne.
-
-**Changer ou désactiver la borne dans l'écran n'arrête pas une charge en cours.** Utilisez d'abord sa commande d'arrêt si nécessaire. Le redémarrage n'envoie aucune consigne de charge.
-
-Les options **Appliquer les tarifs**, **Réseau en HC seulement** et **Interdire HP rouge Tempo** limitent les charges prises en charge par l'automatisme. Elles ne prennent pas le contrôle des charges autonomes ou déjà présentes au démarrage. Une heure ou une couleur requise mais inconnue interdit le réseau pour la charge gérée.
+**À vérifier :** Ce menu adapte l’affichage ; il ne change pas le mode électrique du port de l’onduleur. Le groupe électrogène reste exclu du total solaire.
 
 <!-- pagebreak -->
 
-### Recharge Deye LoRa
+## 9. Ajouter des sources PV5 à PV8
 
-Après choix du système, ouvrez **VEHICULE ELECTRIQUE > RECHARGE DEYE LORA**. Choisissez **ARRET**, **SOLAIRE** ou **LIBRE**, réglez le plafond entre **1 400 et 7 400 W**, puis **APPLIQUER**. Les boutons +/-, le curseur et la saisie préparent ce plafond.
+**Chemin :** Réglages > Installation > Sources solaires / PV5 à PV8.
 
-Le registre R490 est un **plafond**, pas la consommation mesurée de la borne. Contrôlez le **Mode lu** et le résultat de la commande ; la puissance native reste indisponible tant qu'elle n'est pas cartographiée de manière vérifiée.
+![Accès local par QR code pour configurer les sources supplémentaires.](images/menus/portal-0-light.png)
+![Exemple de six sources affichées ensemble sur le tableau de bord.](images/menus/pv-six-light.png)
 
-Les écritures sont verrouillées par défaut. Vérifiez les registres sur le Web dans **VE / registres d'écriture**, puis confirmez explicitement leur déblocage. Sans profil adapté, liaison valide ou autorisation, les commandes restent bloquées. Lors de la première migration vers le firmware unifié, les écritures doivent être déverrouillées de nouveau.
+1. Connecter le téléphone et l’écran au même réseau. Scanner le QR code ou saisir l’adresse indiquée sur votre écran.
+2. Choisir une installation libre, un nom, la marque et la connexion locale. Les quatre installations correspondent à **PV5, PV6, PV7 et PV8**.
+3. Enregistrer d’abord en **Afficher séparément** et attendre **Lecture OK**. Comparer avec l’application du matériel avant tout ajout au total.
 
-Les restrictions tarifaires LoRa concernent uniquement une charge **Libre lancée et confirmée depuis l'écran tactile pendant le démarrage courant**. Si une règle interdit le réseau, l'écran peut basculer vers Solaire et rétablir Libre lorsque la règle l'autorise, s'il avait lui-même imposé cette pause.
-
-Une commande locale vers un autre mode, une modification externe détectée ou un résultat incertain annulent cette reprise. Après redémarrage, aucune pause ancienne n'est récupérée. Cette fonction dépend des communications avec le logger et l'onduleur.
-
-<!-- pagebreak -->
-
-### Recharge VE TRONIC WB01
-
-Choisissez **Vetronic WB01**, enregistrez, puis ouvrez la page de recharge, également accessible par la voiture. Dans **RESEAU**, saisissez l'IP de la passerelle ESP32 compatible. L'écran doit pouvoir la joindre sur le réseau local.
-
-| Commande | Action |
-|---|---|
-| ARRET | Demander l'arrêt de la charge. |
-| CHARGE IMMEDIATE | Appliquer le courant préparé avec les boutons +/-. |
-| SOLAIRE | Confier la régulation solaire à la passerelle. |
-| RENDRE LA MAIN A LA BORNE | Rendre la WB01 autonome et annuler la reprise tarifaire locale. |
-
-Les boutons +/- ne commandent pas à eux seuls la charge. Le courant demandé respecte le plafond annoncé par la passerelle et la limite locale de **32 A**. La consigne, le courant mesuré et la confirmation WB01 sont distincts. `~` indique une puissance estimée par **courant mesuré × 230 V**, pas une mesure de puissance active.
-
-La **protection SOC solaire** propose MIN/arrêt et MAX/reprise, séparés d'au moins cinq points. Modifiez les seuils puis touchez **ENREGISTRER SOC**. La passerelle doit exposer l'API correspondante ; sinon elle demande une mise à jour. Une liaison perdue ou une commande en cours désactive les contrôles qui exigent une mesure fraîche.
-
-Les restrictions tarifaires WB01 concernent uniquement les charges manuelles lancées et confirmées depuis **l'écran ou son Web pendant le démarrage courant**. Arrêt, Solaire, Rendre la main, modification externe détectée ou résultat incertain annulent la reprise. Aucune pause ancienne n'est récupérée après redémarrage. Une réponse POST perdue n'entraîne pas de renvoi automatique.
-
-**La passerelle garde son propre firmware et sa propre configuration Deye.** Changer le modèle sur l'écran ne change pas ses registres ni son calcul solaire. Contrôlez ses réglages avant le mode Solaire. Sa disponibilité avec les 12 profils de l'écran ne valide pas toutes les combinaisons sur matériel.
+**À vérifier :** Choisir **Déjà mesurée par le port GEN** si GEN compte déjà cette production. Le guide [sources et historique](GUIDE_MICRO_SD_SOFAR.md) détaille les profils et leurs limites.
 
 <!-- pagebreak -->
 
-## 9. Relais intégré
+## 10. Lire le détail de la production
 
-**Chemin : Configuration > RELAIS**
+**Chemin :** Réglages > Énergie > Production par source, ou tableau de bord > PRODUCTION PV.
 
-Cette fonction commande le relais de l'écran **ESP32-4848S040C à un relais**, via GPIO40. Elle ne correspond pas au relais SmartLoad de l'onduleur. Les variantes d'écran à trois relais ne sont pas pilotées par cette configuration.
+![Avec sept ou huit sources, les valeurs du tableau de bord alternent.](images/menus/pv-eight-light.png)
+![Liste des sources : puissance, nom et indication de comptage.](images/menus/pv-details-light.png)
 
-### Construire une règle
+1. Ouvrir le détail pour voir toutes les sources au lieu d’attendre leur alternance sur le tableau de bord.
+2. Faire défiler jusqu’en bas. Une source peut être visible sans être ajoutée au total ; lire son indication de comptage.
+3. **0 W** est une mesure reçue à zéro ; **-- W** signale une mesure absente ou trop ancienne. Un total partiel ne doit pas être pris pour la production complète.
 
-Le principe affiché est : **ON si (registre × coefficient) satisfait la comparaison ; OFF sinon.**
-
-| Champ | Explication |
-|---|---|
-| Activer la règle | Autorise la commande automatique. Désactivée par défaut. |
-| Registre Modbus | Adresse à lire pour la condition. |
-| Valeur signée | À activer si la donnée peut être négative. |
-| Coefficient | Conversion propre à cette règle, indépendante du tableau de bord. |
-| Comparateur | Inférieur à, égal à ou supérieur à. L'égalité est exacte. |
-| Seuil | Valeur à comparer après conversion. |
-| Délai commutation | Durée pendant laquelle la condition doit rester stable avant ON ou OFF. |
-
-### Exemple : activer au-dessus de 80 % de batterie
-
-Sur un profil LP1, le SOC est R184 ; sur les profils triphasés de ce guide, R588. Utilisez une valeur non signée, le coefficient 1, le comparateur **>**, le seuil **80** et un délai de **5 secondes**.
-
-À 81 %, la condition est vraie ; à 80 %, elle est fausse. Il n'y a pas deux seuils séparés d'enclenchement et d'arrêt : la temporisation réduit les changements rapides mais ne crée pas une hystérésis.
-
-### En cas de perte de communication
-
-Le relais démarre à OFF. La dernière mesure valide peut être utilisée pendant cinq minutes malgré une panne de liaison. Après ce délai sans nouvelle mesure, OFF est forcé. La page indique l'âge de la mesure ; une valeur ancienne ne décrit pas nécessairement l'état actuel de la batterie.
-
-Les lectures et la règle continuent pendant la navigation et la veille. L'état du relais est affiché près du Wi-Fi uniquement si la règle est activée, sur le tableau de bord tactile et Web.
-
-Le paramétrage logiciel ne définit pas la charge électrique admissible du relais. Pour le raccordement, respectez les caractéristiques du matériel et faites intervenir une personne qualifiée si vous commandez une charge secteur.
+**À vérifier :** PV1 à PV4 appartiennent à l’onduleur principal. Une passerelle PV5 à PV8 représente toute sa production, pas nécessairement un seul panneau.
 
 <!-- pagebreak -->
 
-## 10. Affichage, veille et heure
+## 11. Ouvrir les fonctions Énergie
 
-### AFFICHAGE > THEME / LUMINOSITE
+**Chemin :** Réglages > Énergie.
 
-Choisissez le thème **Sombre** ou **Clair**, puis les niveaux de luminosité jour et nuit. Le firmware limite les valeurs brutes à **220-255** ; 255 correspond au maximum. Le curseur applique cette plage : elle n'est pas une échelle linéaire de luminosité perçue.
+![Production par source, prévision solaire et historique.](images/menus/navigation-group-1-light.png)
+![Détail de la prévision solaire et des dernières informations reçues.](images/menus/solar-detail-light.png)
 
-**Mode nuit programmé** active la luminosité nocturne. Choisissez les heures de début et de fin. Si le mode est désactivé, la luminosité jour est utilisée en permanence. Sans heure synchronisée, le niveau jour est conservé.
+1. **PRODUCTION PAR SOURCE** explique les puissances réellement mesurées.
+2. **PRÉVISION SOLAIRE** affiche une estimation et donne accès aux réglages de l’installation.
+3. **HISTORIQUE / CARTE SD** permet de revoir les mesures et de gérer leur conservation.
 
-**Suivre coucher / lever du soleil** remplace les horaires fixes par des horaires calculés. Renseignez la latitude et la longitude de l'installation sur la page Web ; les coordonnées initiales correspondent au centre de la France. La transition est progressive autour du lever et du coucher.
-
-Touchez **APPLIQUER** pour sauvegarder ; l'écran redémarre.
-
-### AFFICHAGE > VEILLE HORAIRE
-
-La veille coupe le rétroéclairage dans une plage horaire. Elle est désactivée par défaut ; la plage proposée est **23:00-07:00**, avec un réveil tactile de **60 secondes**, réglable de 1 à 3 600 secondes.
-
-1. Activez la veille.
-2. Choisissez le début, la fin et la durée du réveil.
-3. Enregistrez et attendez le redémarrage.
-
-L'écran attend la synchronisation de l'heure et laisse un délai de réveil avant de s'éteindre. Un premier toucher réveille l'affichage sans actionner le bouton situé dessous ; les touches suivantes prolongent le réveil.
-
-**La veille n'arrête pas l'appareil.** Les mesures, le serveur Web, les tarifs et le relais continuent de fonctionner. Elle se distingue du mode nuit, qui réduit la luminosité sans éteindre le rétroéclairage.
-
-### RESEAU / HEURE > HEURE / NTP
-
-Le fuseau choisi gère les changements saisonniers lorsqu'ils sont prévus dans sa règle. Conservez les serveurs NTP par défaut si votre réseau les autorise. Une heure absente ou incorrecte affecte les plages tarifaires, Tempo, la veille et le compteur GEN estimé.
-
-Sans NTP, touchez **REGLER L'HEURE MANUELLEMENT**, saisissez date et heure locales, puis appliquez sans redémarrer. NTP reprend la main dès qu'il reçoit une heure valide. Après une coupure d'alimentation, réglez de nouveau l'heure si NTP est indisponible.
-
-Si la synchronisation échoue, vérifiez la connexion Internet et le DNS. En IP statique, une passerelle ou un DNS incorrect peut laisser fonctionner les lectures locales tout en empêchant NTP.
+**À vérifier :** Une prévision est une estimation, distincte des mesures de l’onduleur. Les écrans de démonstration ne prédisent pas votre production.
 
 <!-- pagebreak -->
 
-## 11. Utiliser la page Web
+## 12. Configurer la prévision solaire
 
-Dans **RESEAU / HEURE > WIFI / RESEAU**, relevez **IP Serveur Web/Ecran**. Depuis un appareil sur le même réseau, ouvrez `http://IP_DE_LECRAN/`. Exemple : si l'écran affiche 192.168.1.60, ouvrez `http://192.168.1.60/`.
+**Chemin :** Réglages > Énergie > Prévision solaire > Réglages.
 
-### Les pages disponibles
+![Activation et paramètres de l’installation solaire.](images/menus/solar-config-light.png)
+![Saisie d’un paramètre avec le clavier de l’écran.](images/menus/solar-keyboard-light.png)
 
-| Page | Utilisation |
-|---|---|
-| `/` | Configuration Wi-Fi, réseau, modèle, logger, heure, affichage, registres, options, accès Web et OTA. |
-| `/dashboard` | Tableau de bord, rafraîchi automatiquement toutes les cinq secondes. |
-| `/history` | Jusqu'à 24 h de mesures, un point toutes les cinq minutes. |
-| `/vetronic` | Commandes WB01 si ce système est sélectionné. |
-| `/diagnostic` | Âge des blocs, lectures réussies/échouées et dernière exception Modbus. Actualiser la page pour rafraîchir. |
+1. Renseigner la position, la puissance des panneaux et leur orientation selon l’installation réelle.
+2. Respecter les unités et le sens des angles indiqués dans le formulaire. Utiliser le [guide de prévision](GUIDE_PREVISION_SOLAIRE.md) pour les limites et les conventions.
+3. Enregistrer, attendre une actualisation puis vérifier la date et le résultat. Contrôler Internet et l’heure si les données restent absentes.
 
-L'historique est conservé en mémoire vive : un redémarrage l'efface. Il ne s'agit pas d'un archivage longue durée. Le lien **Sonde VE** du diagnostic est un outil avancé de comparaison en lecture seule, destiné au profil SG02 ; il n'est pas nécessaire à la mise en route.
-
-Les rubriques de configuration Web se déplient en touchant leur titre. Chaque formulaire possède son bouton de sauvegarde. Une sauvegarde entraîne généralement un redémarrage : procédez rubrique par rubrique.
-
-### Réseau : DHCP / IP statique
-
-Ce formulaire règle **l'adresse de l'écran**, pas celle du logger. DHCP est le mode initial. Pour conserver une adresse stable, une réservation DHCP dans la box évite de saisir manuellement masque, passerelle et DNS.
-
-En IP statique, saisissez une adresse libre adaptée à votre réseau, le masque et la passerelle. Un DNS vide utilise la passerelle. Après sauvegarde, ouvrez la nouvelle IP indiquée ou retrouvez-la sur l'écran. Le retour au DHCP ignore les champs statiques.
-
-### Authentification serveur Web
-
-Elle est désactivée initialement. Dans la rubrique correspondante, saisissez un identifiant et un mot de passe, activez la protection et sauvegardez. Un champ de mot de passe vide conserve le secret déjà enregistré.
-
-En cas d'oubli : sur l'écran, **RESEAU / HEURE > WIFI / RESEAU**, cochez **Reset authentification serveur Web**, puis **SAUVEGARDER**. Les identifiants Web sont effacés, le Wi-Fi est conservé et l'écran redémarre. Cette action ne réinitialise pas le mot de passe du logger. Le serveur utilise HTTP et est prévu pour le réseau local ; n'exposez pas directement sa page sur Internet.
+**À vérifier :** La prévision seule n’envoie aucune commande. L’anticipation batterie est une option distincte, désactivée par défaut.
 
 <!-- pagebreak -->
 
-## 12. Sauvegardes et mises à jour
+## 13. Afficher les courbes et l’alternance
 
-### Exporter la configuration
+**Chemin :** Prévision solaire > Réglages d’affichage.
 
-Sur la page Web, ouvrez **Export / import de configuration JSON**, puis **Télécharger la configuration JSON**. Rangez le fichier avec le modèle et la date dans son nom.
+![Réglages du bandeau et de l’affichage solaire.](images/menus/solar-display-settings-light.png)
+![Exemple de page affichée pendant l’alternance.](images/menus/solar-alternate-light.png)
 
-L'export contient la configuration du modèle actif et les paramètres généraux inclus, mais pas tous les profils sauvegardés en une seule fois. Il inclut aussi le type de logger, son port, son unité, son numéro complet et le choix de borne `ev_backend`. Il ne contient ni le mot de passe Wi-Fi ni les identifiants Web. Exportez séparément chaque modèle si vous souhaitez en conserver une copie externe.
+1. Choisir le bandeau et l’alternance souhaités dans les réglages dédiés.
+2. Revenir au tableau de bord et laisser passer le délai choisi pour voir le changement de page.
+3. Si le résultat manque, vérifier d’abord les données de l’installation et la dernière actualisation.
 
-### Importer un fichier
-
-1. Sélectionnez d'abord le modèle correspondant au fichier, puis laissez l'écran redémarrer.
-2. Sur le Web, choisissez le fichier JSON dans la rubrique d'import.
-3. Touchez **Importer et redémarrer**.
-4. Après redémarrage, vérifiez modèle, logger et mesures.
-
-Un fichier V3 portant l'identifiant d'un autre modèle est refusé. Un ancien export sans modèle est accepté uniquement sur le profil SG02 d'origine. Les mots de passe ne sont pas remplacés par l'import. Un ancien JSON avec VE activé sans `ev_backend` est refusé car la borne est ambiguë ; choisissez la borne dans la version unifiée puis créez un nouvel export. Un ancien export avec VE désactivé reste importable pour le même modèle. Les nouveaux exports identifient Aucune (`none`), Deye LoRa (`deye_lora`) ou WB01 (`vetronic_wb01`) ; la cohérence modèle/borne est contrôlée. Les anciens R536 sont corrigés lors de la sauvegarde sur les profils LP1 concernés ; une adresse 0 et les autres adresses personnalisées restent conservées.
+**À vérifier :** Les courbes de prévision et de mesure n’ont pas le même sens. Une interruption de mesure reste une donnée manquante, pas une production nulle.
 
 <!-- pagebreak -->
 
-### Mettre à jour directement depuis l'écran
+## 14. Gérer la carte microSD
 
-1. Exportez votre configuration. Vérifiez le Wi-Fi avec accès Internet et l'heure.
-2. Ouvrez **Configuration > MISE À JOUR > VÉRIFIER SUR GITHUB**.
-3. Si une version stable plus récente et compatible est proposée, touchez **INSTALLER**, puis confirmez.
-4. Attendez la progression, la validation du fichier et le redémarrage.
-5. Vérifiez la version, le modèle, la borne et les mesures après démarrage.
+**Chemin :** Réglages > Énergie > Historique / carte SD.
 
-**L'écran va scintiller pendant l'installation. C'est normal. Ne coupez pas l'alimentation jusqu'au redémarrage.** L'écran reste éveillé pendant le téléchargement. Aucun compte GitHub n'est nécessaire ; une vérification seule n'installe rien.
+![État de la carte, espace disponible et commandes de gestion.](images/menus/history-storage-light.png)
+![Bas de la page : archives, formatage, actualisation et accès téléphone.](images/menus/history-bottom.png)
 
-La connexion HTTPS vérifie le certificat ; la taille et le SHA-256 du fichier sont contrôlés avant activation. Le menu refuse les anciennes versions, les préversions, les images USB et les fichiers trop grands. Une mise à jour compatible conserve les réglages, mais l'historique en mémoire vive repart à zéro. En cas d'erreur, lisez le message et corrigez la connexion ou l'heure avant de réessayer.
+1. Vérifier l’état de la carte et son espace libre. Pour consulter une journée ou télécharger son CSV, utiliser l’accès Web de l’historique.
+2. **SAUVEGARDER MAINTENANT** écrit les mesures en attente. **RETIRER EN SÉCURITÉ** ferme les fichiers : attendre la confirmation avant de retirer la carte.
+3. Après réinsertion, utiliser **RECONNECTER / VÉRIFIER**. La durée de conservation et l’archivage se règlent depuis le Web.
 
-Le QR code **DOC / GITHUB** ouvre le guide utilisateur sur le téléphone. Il ne lance pas l'installation. Son fond reste blanc dans les deux thèmes.
-
-### Ancienne version sans le menu : OTA depuis le Web
-
-1. Téléchargez **DEYE_V3_4.6.3_OTA.bin** dans la [release 4.6.3](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.6.3), puis ouvrez **Mise à jour OTA** sur le Web de l'écran.
-2. Sélectionnez ce fichier applicatif `.bin`, puis **Installer la mise à jour**.
-3. Conservez l'alimentation, attendez la réussite et le redémarrage, puis vérifiez version et mesures.
-4. Lors de la première migration depuis V3/Vetronic V3, choisissez explicitement la borne et créez un nouvel export JSON.
-
-N'envoyez ni ZIP, ni bootloader, ni partitions, ni `boot_app0.bin`, ni image USB fusionnée dans le formulaire OTA. Un partitionnement incompatible impose le pack USB complet. Le fichier est celui de **l'écran**, pas celui de la passerelle WB01.
-
-Sur Vetronic V3 4.3.4, l'erreur « b is null » du bouton de vérification n'empêche pas ce formulaire : téléchargez manuellement le fichier OTA, puis envoyez-le. Installation détaillée.
+**À vérifier :** Depuis 4.8.9, les mesures prises toutes les cinq minutes sont écrites par groupes, environ toutes les trente minutes. Une coupure peut perdre les mesures encore en attente ; sans carte, les dernières 24 h restent en mémoire vive.
 
 <!-- pagebreak -->
 
-## 13. Dépannage
+## 15. Comprendre le formatage de la carte
 
-| Symptôme | Vérifications utiles |
-|---|---|
-| Wi-Fi de la maison absent | Vérifier le 2,4 GHz, rapprocher l'écran, refaire SCAN. |
-| Wi-Fi perdu après une coupure de la box | En 4.6.3, laisser la reconnexion automatique agir ; vérifier que le réseau et son mot de passe n'ont pas changé. |
-| L'écran n'obtient pas d'IP | Vérifier le mot de passe et le DHCP de la box. |
-| Impossible d'ouvrir le Web | Utiliser l'IP de l'écran, avec http:// ; vérifier que le téléphone est sur le même réseau, sans isolation Wi-Fi invité. |
-| DEYE INJOIGNABLE | Vérifier type de logger, IP STA/LAN, numéro, port et unité. En LSW/V5, enregistrer le vrai numéro pour la récupération automatique d'IP. |
-| Tout est visible dans le cloud, rien sur l'écran | Vérifier l'accès local du logger ; cloud et communication locale sont deux chemins distincts. |
-| Certains blocs réussissent, d'autres échouent | Vérifier le modèle exact et les adresses personnalisées ; relever les exceptions dans Diagnostic. |
-| Valeur dix fois trop grande/petite | Vérifier modèle, unité et coefficient ; comparer au LCD avant modification. |
-| Batterie affichée dans le mauvais sens | Vérifier le coefficient Battery Power ; l'interface utilise charge positive, décharge négative. |
-| PV3/PV4 absent | Vérifier le nombre d'entrées du profil et les interrupteurs Afficher PV. |
-| GEN Daily faux ou absent | Vérifier GEN MO, R62/R536 selon la famille et le coefficient 0,1 ; vérifier la réponse du compteur. |
-| Total journalier trop élevé | Vérifier que PV Daily n'inclut pas déjà GEN avant de les cumuler. |
-| Veille ou tarifs inopérants | Vérifier heure NTP, fuseau et activation de la fonction. |
-| Relais reste ON après une perte Wi-Fi | La dernière mesure reste utilisable cinq minutes ; consulter son âge. |
-| Commande VE indisponible | Vérifier le choix de borne et sa liaison ; pour LoRa, profil AM2 et verrou d'écriture ; pour WB01, IP et état de la passerelle. |
-| Import refusé | Vérifier le modèle et le choix de borne ; un ancien export avec VE actif sans ev_backend est ambigu. |
+**Chemin :** Historique / carte SD > Formater la carte.
 
-### Contrôle technique de la liaison
+![Confirmation explicite avant formatage de toute la carte.](images/menus/history-format-confirm-light.png)
+![Le même avertissement en thème sombre.](images/menus/history-format-confirm-dark.png)
 
-LSW utilise **Solarman V5** ; LSE et DL1000B utilisent **Modbus TCP**. Les ports proposés sont 8899, 8899 et 502 ; ils sont modifiables, ainsi que l'unité Modbus. Vérifiez le protocole réellement disponible sur votre logger. Un accès cloud fonctionnel ne confirme pas l'accès local.
+1. Télécharger les archives utiles avant de demander un formatage. Une carte FAT32 de 4 à 32 Go est le format conseillé par le guide de cette version.
+2. **FORMATER LA CARTE** efface tous ses fichiers, y compris ceux d’autres appareils. **ANNULER** quitte la confirmation sans lancer l’opération.
+3. Si l’opération est confirmée, laisser la carte et l’alimentation en place jusqu’au résultat. **EFFACER LES ARCHIVES** est une autre action : elle vise seulement les CSV datés de deye-history.
 
-Si le DHCP change l'IP du logger, la récupération automatique concerne LSW/V5 avec son vrai numéro enregistré. Pour TCP, vérifiez l'IP et le port. Réservez l'adresse dans la box si possible. En cas d'échecs intermittents, vérifiez aussi le signal et les autres logiciels qui interrogent le logger.
-
-### Pour demander de l'aide
-
-Indiquez la référence complète, le modèle sélectionné, la version de Deye Monitor, le modèle du logger, le symptôme, une photo du LCD et les compteurs/âges du diagnostic. Un export JSON aide à comprendre les réglages ; il peut contenir des identifiants d'appareil et le nom du réseau, à masquer avant publication publique. Ne communiquez pas vos mots de passe.
+**À vérifier :** Aucun formatage n’est automatique. Les captures montrent une confirmation simulée ; l’essai physique du formatage reste à valider pour cette préparation.
 
 <!-- pagebreak -->
 
-## 14. Repères, limites et sources
+## 16. Choisir une fonction de pilotage
 
-### Des fonctions V3 au firmware unifié
+**Chemin :** Réglages > Pilotage.
 
-La V3 a apporté le choix du modèle, les registres et conversions associés, PV4, les réglages par modèle et le contrôle du modèle à l'import. La correction GEN Daily existe aussi en V2 4.2.1.
+![Les accès du Pilotage, dont Batterie / anticipation.](images/menus/tempo-battery-menu-light.png)
+![Les mêmes accès en thème sombre.](images/menus/tempo-battery-menu-dark.png)
 
-Le firmware unifié ajoute le choix de borne WB01/Deye LoRa, les loggers LSE/DL1000B, la recherche de logger, la récupération d'IP LSW, l'heure manuelle, GEN comme source PV supplémentaire, les kWh GEN dans le bandeau, la mise à jour GitHub depuis l'écran et la reconnexion Wi-Fi 4.6.3. Les fonctions communes V2/V3 restent disponibles.
+1. **BORNE DE RECHARGE** concerne la voiture. **BATTERIE / ANTICIPATION** concerne la batterie de la maison.
+2. **TARIFS / TEMPO** définit les heures creuses et l’affichage Tempo ; **TIME OF USE / BATTERIE** reprend le programme de l’onduleur.
+3. **RELAIS** règle la sortie intégrée de l’écran. Commencer par vérifier les mesures avant d’activer une règle.
 
-Les retours du 1er octobre 2026 concernent neuf références : 8K-SG01LP1, 12K-SG05LP3, 25K-SG01HP3-AM2, 5K-SG05LP1-AM2-P, 6K-SG03LP1, 6K-SG05LP1, 12K-SG02LP1-AM3, 8K-SG05LP1 et 10K-SG04LP3. Ils ne précisent pas toutes les fonctions et versions testées. Voir les suffixes au chapitre 4.
+**À vérifier :** Sur Sofar utilisé comme onduleur principal, les commandes Deye, TOU, recharge et automatismes de relais sont indisponibles. Les captures de pilotage présentent un profil Deye.
 
-AI-W5.1 P1 conserve les registres confirmés en 4.3.3 ; ce retour ne valide pas les autres révisions ni P3. SG06LP1 reste indisponible. Contrôlez SmartLoad au LCD. Les profils 20/25K HP3 ne valident pas les puissances supérieures.
+<!-- pagebreak -->
 
-La 4.6.3 a été compilée et testée par logiciel, avec une coupure Wi-Fi d'une heure simulée. Aucun écran n'a été flashé et aucune commande de recharge envoyée pour cette publication. Retour Wi-Fi après redémarrage réel du routeur, téléchargement complet depuis le menu et scénarios de charge restent à vérifier sur matériel. À la publication 4.6.3, le DL1000B avait été testé sur simulateur ; son fonctionnement avec notre écran a depuis été confirmé par un retour utilisateur le 29 octobre 2026. Voir le complément DL1000B illustré. Validation 4.6.3.
+## 17. Régler les tarifs et les heures creuses
 
-### Petit lexique
+**Chemin :** Réglages > Pilotage > Tarifs / Tempo.
 
-| Terme | Sens |
-|---|---|
-| Logger | Module de communication raccordé à l'onduleur. |
-| AP | Réseau Wi-Fi émis par le logger pour sa configuration. |
-| STA | Connexion du logger au Wi-Fi de la maison. |
-| DHCP | Attribution automatique d'une adresse IP par la box. |
-| NTP | Synchronisation de l'heure par le réseau. |
-| SOC | Niveau de charge de la batterie, en %. |
-| OTA | Mise à jour du logiciel par le réseau. |
-| Registre | Adresse d'une donnée ou d'un réglage dans le protocole de l'appareil. |
+![Début du formulaire des tarifs et des heures creuses.](images/menus/tarifs.png)
+![Bas du formulaire : options Tempo et couleurs accessibles.](images/menus/tarifs-bottom.png)
 
-### Sources de la procédure logger
+1. Choisir **2 plages** pour les horaires personnels ou **Tempo** selon le contrat.
+2. Saisir les débuts et fins des heures creuses au format HH:MM. Faire défiler pour **Afficher Tempo** et **Couleurs accessibles**.
+3. **ENREGISTRER**, puis vérifier le comportement et l’heure locale après redémarrage.
 
-- **[S1] SOLARMAN, [Network Settings](https://helpcenter.solarmanpv.com/portal/en/kb/articles/network-settings)** : Wi-Fi 2,4 GHz, accès AP, réservation DHCP.
-- **[S2] SOLARMAN, [Fixed IP Settings](https://helpcenter.solarmanpv.com/portal/en/kb/articles/fixed-ip-settings)** : accès 10.10.100.254 et identifiants d'origine des modèles documentés.
-- **[S3] Deye, [Guia de Configuração Solarman PRO](https://pt.deyeinverter.com/deyeinverter/2021/03/19/guiasolarmanpro.pdf)**, pages 34 et 45 ; **[Quick Guide DL1000B-ETH](https://www.deyeinverter.com/deyeinverter/2026/05/20/DeyeDataLoggerQuickGuideDL1000B-ETHV11.pdf)**, Device information : distinction AP/STA/LAN. Ces interfaces illustrent les adresses, sans prouver la compatibilité locale du logger.
+**À vérifier :** Ces horaires de l’écran sont distincts des six plages TOU du Deye. Les dates et couleurs d’exemple ne doivent pas être utilisées comme information tarifaire du jour.
 
-Cette édition suit les sources et la validation du firmware unifié 4.6.3. Les protocoles de registres GEN sont conservés dans `docs/protocols/`.
+<!-- pagebreak -->
+
+## 18. Choisir la borne de recharge
+
+**Chemin :** Réglages > Pilotage > Borne de recharge > Activation / tarifs.
+
+![Choix explicite : Aucune, Deye LoRa ou Vetronic WB01.](images/menus/bornes-liste.png)
+![Options tarifaires de la recharge de la voiture.](images/menus/options-ve.png)
+
+1. Sélectionner la borne réellement installée. **Aucune** conserve le suivi sans pilotage de recharge par l’écran.
+2. Choisir les restrictions tarifaires souhaitées : réseau en HC seulement et interdiction des HP rouges Tempo, selon les options disponibles.
+3. **ENREGISTRER**, laisser redémarrer puis ouvrir la page de la borne. Le choix de Deye LoRa dépend du profil compatible ; WB01 nécessite sa passerelle.
+
+**À vérifier :** Changer de borne ou désactiver son utilisation dans l’écran n’arrête pas une charge en cours. Utiliser d’abord la commande d’arrêt si la charge doit être stoppée.
+
+<!-- pagebreak -->
+
+## 19. Utiliser la recharge Deye LoRa
+
+**Chemin :** Réglages > Pilotage > Borne de recharge > Recharge Deye LoRa.
+
+![Commandes de recharge Deye LoRa sur un profil compatible.](images/menus/recharge-ve.png)
+
+1. Vérifier que le modèle, les registres VE et la liaison correspondent au matériel pris en charge.
+2. Lire le mode et la puissance affichés. Préparer la consigne avec les commandes proposées, puis utiliser l’action de validation de la page.
+3. Après une demande, contrôler l’état relu et la borne elle-même. Une consigne affichée n’est pas une preuve que le véhicule charge.
+
+**À vérifier :** Le profil historique Deye LoRa concerne le SUN-12K-SG02LP1-EU-AM2 ; ne pas sélectionner ce modèle sur un autre onduleur pour faire apparaître la fonction.
+
+<!-- pagebreak -->
+
+## 20. Relier et commander une Vetronic WB01
+
+**Chemin :** Réglages > Pilotage > Borne de recharge > VE Tronic WB01.
+
+![Adresse IP de la passerelle de la WB01.](images/menus/vetronic-reseau.png)
+![Page de pilotage de la WB01 en thème clair.](images/menus/vetronic-clair.png)
+
+1. Saisir l’IP de la **passerelle ESP32 WB01** compatible avec le projet, puis enregistrer. Cette IP est distincte de celles du logger et de l’écran.
+2. Vérifier la liaison, les mesures et les protections SOC. Choisir le mode voulu : arrêt, manuel, solaire ou rendre la main à la borne.
+3. Après une commande, vérifier l’état retourné. **Rendre la main** laisse la borne suivre son propre fonctionnement.
+
+**À vérifier :** La configuration Wi-Fi de la passerelle reste distincte de celle de Deye Monitor. Les intensités visibles sont des valeurs de démonstration.
+
+<!-- pagebreak -->
+
+## 21. Reconnaître une borne hors ligne
+
+**Chemin :** Page de recharge WB01.
+
+![Une liaison perdue rend les mesures indisponibles.](images/menus/vetronic-hors-ligne.png)
+![Exemple d’un profil où Deye LoRa est indisponible, WB01 restant proposée.](images/menus/options-ve-lp3.png)
+
+1. Face à des tirets, vérifier l’alimentation, le réseau et l’adresse de la passerelle.
+2. Vérifier le choix de borne après une migration. L’absence de Deye LoRa sur un profil ne signifie pas que WB01 est indisponible.
+3. Attendre le retour d’une mesure récente avant d’interpréter une ancienne valeur ou de conclure à la réussite d’une commande.
+
+**À vérifier :** La perte de liaison de l’écran ne prouve pas l’arrêt physique de la borne. Contrôler son propre état si nécessaire.
+
+<!-- pagebreak -->
+
+## 22. Lire et modifier le Time of Use
+
+**Chemin :** Réglages > Pilotage > Time of Use / batterie.
+
+![Les six plages TOU lues dans l’onduleur.](images/menus/tou-table-light.png)
+![Brouillon local de modification d’une plage.](images/menus/tou-edit-light.png)
+
+1. Lire les six lignes : début et fin, puissance, seuil batterie et autorisations de charge réseau/groupe.
+2. Toucher une ligne pour préparer une modification. **GARDER** conserve un brouillon dans l’écran ; il ne commande pas encore le Deye.
+3. Vérifier l’activation et les jours, examiner le tableau puis **APPLIQUER** et confirmer. Attendre la relecture de contrôle et comparer au LCD.
+
+**À vérifier :** La fin d’une ligne est le début de la suivante ; la dernière boucle sur la première. Un échec partiel demande une comparaison de toutes les lignes avant une nouvelle tentative. Les profils non pris en charge restent indisponibles.
+
+<!-- pagebreak -->
+
+## 23. Confirmer les jours et le brouillon TOU
+
+**Chemin :** Time of Use > Jours / activation, puis Appliquer.
+
+![Activation du TOU et choix des jours ; faire défiler pour le week-end.](images/menus/tou-days-current.png)
+![Confirmation du brouillon avant envoi des consignes au Deye.](images/menus/tou-confirm-current.png)
+
+1. Choisir les jours et l’activation, puis **GARDER** pour revenir au tableau avec le brouillon.
+2. Sur le tableau, relire les valeurs puis **APPLIQUER**. La confirmation envoie les modifications ; **ANNULER** quitte cette confirmation.
+3. **RELIRE** remplace le brouillon par les valeurs de l’onduleur. Après application, contrôler la relecture et le LCD.
+
+**À vérifier :** Les écritures successives prennent effet au fil des commandes. En cas d’interruption, vérifier toutes les lignes et les jours ; ne pas supposer un retour automatique à l’ancien tableau.
+
+<!-- pagebreak -->
+
+## 24. Préparer la batterie de la maison
+
+**Chemin :** Réglages > Pilotage > Batterie / anticipation.
+
+![Début du formulaire : activation, déclenchement et cible Tempo.](images/menus/tempo-battery-light.png)
+![Premier seuil de l’exemple : moins de 10 kWh et cible 90 %.](images/menus/battery-rule-1.png)
+
+1. Laisser l’option désactivée pendant la préparation. Choisir **Jour rouge** pour Tempo ou **Prévision PV** pour les règles de prévision avec vos HC.
+2. Faire défiler pour les trois règles : activation, **Moins de / Plus de**, seuil kWh et cible SOC. Contrôler ensuite **Si plusieurs règles**.
+3. Sur le Web, **Exemple Tempo** remplit le brouillon sans activer ni enregistrer. Vérifier les valeurs et la priorité avant de sauvegarder ; l’enregistrement sur l’écran provoque son redémarrage.
+
+**À vérifier :** Ce réglage concerne la batterie de la maison. Il exige un TOU compatible, actif, en mode SOC, une heure correcte et au moins une plage entièrement incluse dans les HC. Un cycle réel reste à valider.
+
+<!-- pagebreak -->
+
+## 25. Vérifier les trois seuils solaires
+
+**Chemin :** Batterie / anticipation > faire défiler les règles.
+
+![Deuxième seuil : moins de 20 kWh et cible 60 %.](images/menus/battery-rule-2.png)
+![Troisième seuil : moins de 30 kWh et cible 30 %.](images/menus/battery-rule-3.png)
+
+1. Chaque règle possède son interrupteur, son comparateur, son seuil et sa cible. Vérifier les quatre informations.
+2. Pour cet exemple, activer les trois règles et choisir **Moins de** pour chacune ; conserver les seuils dans l’ordre 10, 20 et 30 kWh.
+3. Faire encore défiler pour **Si plusieurs règles : Première**. La page suivante explique le résultat aux valeurs limites.
+
+**À vérifier :** Les captures présentent un brouillon d’exemple, avec l’automatisme global encore désactivé. La cible d’une règle est un SOC souhaité ; elle ne demande pas une décharge forcée.
+
+<!-- pagebreak -->
+
+## 26. Utiliser l’exemple Tempo corrigé
+
+**Chemin :** Web local > Pilotage > Time of Use · batterie, ou Batterie / anticipation sur l’écran.
+
+![Priorité Première et rappels avant activation de l’anticipation.](images/menus/battery-priority.png)
+
+1. Règle 1 : **moins de 10 kWh → 90 %**. Règle 2 : **moins de 20 kWh → 60 %**. Règle 3 : **moins de 30 kWh → 30 %**.
+2. Sélectionner la priorité **Première règle remplie**. Ainsi : 5 kWh → 90 %, 15 kWh → 60 %, 25 kWh → 30 %.
+3. Les comparaisons sont strictes : exactement 10 kWh → 60 %, exactement 20 kWh → 30 %, à partir de 30 kWh → TOU habituel si le repli fixe reste décoché.
+
+**À vérifier :** Les anciens réglages 4.8.9 conservent leur priorité et leurs signes. Pour remplacer l’ancien exemple, utiliser celui corrigé, vérifier puis sauvegarder. Une prévision requise indisponible bloque la nouvelle charge anticipée.
+
+<!-- pagebreak -->
+
+## 27. Régler le relais intégré
+
+**Chemin :** Réglages > Pilotage > Relais.
+
+![Début de la règle : état, registre, signe et coefficient.](images/menus/relais.png)
+![Bas du formulaire : comparateur, seuil et délai de commutation.](images/menus/relais-bottom.png)
+
+1. Identifier la mesure à utiliser. Renseigner son registre, son caractère signé et son coefficient seulement s’ils sont connus.
+2. Choisir le comparateur **<**, **=** ou **>**, le seuil et le délai. Lire la phrase récapitulative « ON si… ».
+3. Activer la règle si le résultat convient, **ENREGISTRER**, puis vérifier la mesure relue et l’état réel de la sortie.
+
+**À vérifier :** Le relais intégré est une sortie de l’écran ; il ne s’agit pas du port GEN du Deye. Une mesure indisponible entraîne l’état OFF prévu par la règle.
+
+<!-- pagebreak -->
+
+## 28. Connecter le Wi-Fi et ouvrir le Web
+
+**Chemin :** Réglages > Réseau / Heure > Wi-Fi / Réseau.
+
+![Wi-Fi, date et heure, accès à la page Web locale.](images/menus/navigation-group-3-light.png)
+
+1. Dans **WIFI / RÉSEAU**, toucher **SCAN**, choisir le Wi-Fi 2,4 GHz et saisir son mot de passe. **SAUVEGARDER**, puis attendre le redémarrage.
+2. Revenir relever **IP Serveur Web / Écran**. Sur le téléphone connecté au même réseau, ouvrir http:// suivi de cette IP, ou l’accès Web proposé dans le menu.
+3. Utiliser les identifiants habituels de l’écran si une protection est active. Le mot de passe vide d’un réseau déjà enregistré peut conserver celui mémorisé.
+
+**À vérifier :** Si le téléphone annonce « sans Internet » sur un réseau local, conserver la connexion pour ouvrir la page de l’écran. Sans box, suivre le parcours réseau du guide de démarrage. Une illustration du formulaire Wi-Fi n’est pas disponible dans cette série de captures.
+
+<!-- pagebreak -->
+
+## 29. Régler la date, l’heure et le fuseau
+
+**Chemin :** Réglages > Réseau / Heure > Date / Heure / Fuseau UTC.
+
+![Page d’heure : les versions récentes proposent un décalage UTC et une règle d’été.](images/menus/clock-ntp-light.png)
+![Réglage manuel de la date et de l’heure locales.](images/menus/clock-manual-light.png)
+
+1. Avec Internet, vérifier les serveurs NTP et le fuseau. Paris : **UTC+01:00 + Auto Europe** ; Antilles françaises : **UTC-04:00 + heure d’été désactivée**.
+2. Sans synchronisation, ouvrir l’heure manuelle : date **AAAA-MM-JJ**, heure **HH:MM**, puis **APPLIQUER**.
+3. Après une coupure d’alimentation sans NTP, vérifier à nouveau l’heure. Vérifier aussi l’horloge de l’onduleur pour le TOU.
+
+**À vérifier :** La date de la capture est fictive. Changer le fuseau de l’écran ne change ni l’horloge ni les plages TOU de l’onduleur. La présentation du fuseau varie selon la version.
+
+<!-- pagebreak -->
+
+## 30. Choisir le thème et la veille
+
+**Chemin :** Réglages > Écran.
+
+![Accès au thème, à la luminosité et à la veille.](images/menus/navigation-group-4-light.png)
+![Veille : activation, horaires et durée de réveil au toucher.](images/menus/veille-clair.png)
+
+1. Ouvrir **THÈME / LUMINOSITÉ**, choisir clair ou sombre et régler les niveaux jour/nuit selon votre besoin.
+2. Ouvrir **VEILLE HORAIRE** : activer l’option, saisir début, fin et durée de réveil, puis **ENREGISTRER**.
+3. Si l’écran devient noir à heure fixe, vérifier cette page. Un toucher le réveille temporairement pendant la durée prévue.
+
+**À vérifier :** La veille coupe le rétroéclairage, tandis que les lectures et l’accès Web continuent. Une heure correcte est nécessaire.
+
+<!-- pagebreak -->
+
+## 31. Utiliser le clavier et les pages longues
+
+**Chemin :** Dans un formulaire de réglages.
+
+![Un toucher dans l’horaire ouvre le clavier.](images/menus/veille-clavier.png)
+![Exemple de saisie de l’adresse de la passerelle WB01.](images/menus/vetronic-clavier.png)
+
+1. Toucher la case à modifier, saisir la valeur puis fermer ou valider le clavier.
+2. Faire glisser le contenu vers le haut pour atteindre les champs du bas ; les boutons de retour et d’enregistrement restent à part.
+3. Vérifier les valeurs avant **ENREGISTRER / SAUVEGARDER**. Le bouton du clavier ne remplace pas l’enregistrement de la page.
+
+**À vérifier :** Si le clavier cache une information, le fermer avant de contrôler le formulaire. Ne pas recopier les IP et horaires des captures.
+
+<!-- pagebreak -->
+
+## 32. Sauvegarder et diagnostiquer
+
+**Chemin :** Réglages > Système.
+
+![Mise à jour, sauvegarde, diagnostic et réglages avancés.](images/menus/navigation-group-5-light.png)
+
+1. **SAUVEGARDE DES RÉGLAGES** ouvre l’accès local pour exporter le JSON. Garder une copie avant une mise à jour ou un changement important.
+2. **DIAGNOSTIC / AIDE** permet de relever l’état des connexions et les lectures. Conserver le message précis, la version et la référence de l’onduleur.
+3. **RÉGLAGES AVANCÉS** concerne les registres et coefficients. Ne les modifier qu’après identification de la cartographie et sauvegarde.
+
+**À vérifier :** Un export peut contenir des informations privées : le transmettre uniquement à l’assistance concernée. Une réussite de connexion ne valide pas tous les registres ni toutes les commandes.
+
+<!-- pagebreak -->
+
+## 33. Mettre à jour le logiciel de l’écran
+
+**Chemin :** Réglages > Système > Mise à jour.
+
+![Recherche de version et progression : données de démonstration.](images/menus/github-ota-light.png)
+![Confirmation avant l’installation OTA.](images/menus/github-ota-confirm-light.png)
+
+1. Exporter les réglages. Vérifier le Wi-Fi, l’heure et l’alimentation, puis toucher **VÉRIFIER SUR GITHUB**.
+2. Lire la version réellement proposée. Si elle convient, toucher **INSTALLER** puis confirmer. Un scintillement pendant l’installation est normal.
+3. Attendre le redémarrage sans couper l’alimentation. Vérifier ensuite la version, le logger et les mesures. Une OTA compatible conserve les réglages.
+
+**À vérifier :** Les versions et pourcentages de la capture sont fictifs. Le logiciel de l’écran ne met à jour ni l’onduleur ni le logger. Le lien [téléchargements](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest) reste celui des binaires publics.
+
+<!-- pagebreak -->
+
+## 34. Choisir le bon fichier et retrouver de l’aide
+
+**Chemin :** Page Web locale > Mise à jour OTA.
+
+
+1. Utiliser uniquement le fichier **_OTA.bin** adapté à l’écran et à son partitionnement. Ni ZIP, ni bootloader, ni partitions, ni image USB fusionnée dans ce formulaire.
+2. Pour un écran vierge ou une récupération USB, utiliser le pack fourni pour ce matériel. Décompresser tout le ZIP avant INSTALLER.bat ; un effacement complet peut supprimer les réglages.
+3. En cas de problème, relever la version, l’onduleur, le logger, le réseau et le message. Joindre des photos simultanées du LCD et de Deye Monitor pour une mesure incohérente.
+
+**À vérifier :** Les guides ne constituent pas une annonce de disponibilité d’une version. Pour les détails : [FAQ](FAQ_ECRAN.md), [DL1000B](GUIDE_DL1000B_MODBUS_TCP.md), [prévision](GUIDE_PREVISION_SOLAIRE.md), [sources / microSD](GUIDE_MICRO_SD_SOFAR.md), [correction Tempo 4.8.10](NOTES_4.8.10.md).
 

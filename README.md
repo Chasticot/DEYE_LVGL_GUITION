@@ -1,5 +1,7 @@
 # Deye Monitor — démarrage, utilisation et mises à jour
 
+> **Documentation illustrée du 6 novembre 2026 :** [guide des menus](docs/GUIDE_UTILISATEUR_V3.md), [guide PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo](docs/RECAP_UTILISATEURS_V3.md).
+
 Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUITION ESP32-S3 480 × 480. Il fonctionne en local avec un logger compatible, sans Home Assistant ni compte cloud à renseigner dans l’écran.
 
 ## Commencer ici
@@ -45,6 +47,6 @@ Le fichier OTA ne remplace pas une première installation USB. Les archives auto
 
 Le modèle de l’onduleur **et** celui du logger comptent. LSW3/LSW5 et LSE disposent de retours de fonctionnement ; **le fonctionnement DL1000B avec notre écran est confirmé par un retour utilisateur**. Pour le DL1000B-WIFI, demander un firmware **1.7.2 minimum**, activer Modbus TCP dans **Link2** puis utiliser le port **502**. [Mode opératoire avec captures et demande à Deye](docs/GUIDE_DL1000B_MODBUS_TCP.md). [Vérifier son matériel](docs/MISE_A_JOUR_ECRAN_GITHUB.md#vérifier-la-compatibilité-avant-de-commencer).
 
-Le [manuel détaillé 4.6.3](docs/GUIDE_UTILISATEUR_V3.md) et les [notes 4.7.0](docs/GUIDE_UNIFIE_4.7.0.md) restent disponibles pour les anciennes versions. Les PDF sont mis à jour pour la **4.8.0** : [guide complet illustré](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo de démarrage](docs/pdf/RECAP_UTILISATEURS_V3.pdf). Les noms de fichiers sont conservés pour les anciens liens.
+Le [guide illustré](docs/GUIDE_UTILISATEUR_V3.md) explique **34 parcours avec 62 captures commentées**, selon les menus **4.8.10**. Les [notes 4.7.0](docs/GUIDE_UNIFIE_4.7.0.md) restent disponibles pour les anciennes versions. Les PDF ont été actualisés le **6 novembre 2026** : [guide complet illustré](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo de démarrage](docs/pdf/RECAP_UTILISATEURS_V3.pdf). Les noms de fichiers sont conservés pour les anciens liens.
 
 Ce dépôt public distribue les **binaires OTA**, leurs empreintes SHA-256 et les guides. Les sources du firmware et leur historique restent privés. Les URL existantes des guides sont conservées pour les écrans déjà livrés.

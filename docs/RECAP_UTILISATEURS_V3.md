@@ -1,91 +1,79 @@
-# Deye Monitor — mémo de démarrage
+# Deye Monitor - Mémo de démarrage
 
-**Édition du 29 octobre 2026 — version publique de référence : 4.8.0.** Le nom de fichier V3 est conservé pour les anciens liens.
+**Édition du 6 novembre 2026 - Menus de référence 4.8.10.**
 
-[Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Questions fréquentes](FAQ_ECRAN.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
+[Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 
-![Parcours en cinq étapes : alimenter, connecter le Wi-Fi, choisir le modèle, connecter le logger, vérifier.](images/demarrage/parcours-demarrage.svg)
+Si l’écran affiche déjà les bonnes mesures, l’utiliser directement. Une mise à jour n’impose pas une réinstallation USB.
 
-**Première fois ?** Suivre le dessin dans l’ordre, puis les explications ci-dessous. Le [guide illustré](MISE_A_JOUR_ECRAN_GITHUB.md) montre les boutons et les menus en grand. Cliquer sur une image pour l’agrandir.
+## 1. Retrouver les menus
 
-## Avant de brancher
+![Six rubriques : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système.](images/menus/navigation-tiles-light.png)
 
-- Identifier le matériel : référence complète du DEYE, modèle et numéro du **logger**, version de l’écran.
-- Utiliser l’alimentation prévue pour cette variante. USB **5 V**, ou entrée 230 V uniquement si le matériel la prévoit et si les bornes sont protégées.
-- Pas de batterie intégrée. Powerbank possible en 5 V, sans autonomie garantie.
-- Vérifier cotes, profondeur, fixation et protection des bornes avant encastrement. Boîte ronde ou boîte étanche : aucune compatibilité universelle validée.
+**Installation** relie l’onduleur et les sources. **Énergie** affiche production, prévision et historique. **Pilotage** regroupe borne, tarifs, batterie et relais. **Réseau / Heure**, **Écran** et **Système** regroupent les réglages de l’appareil.
 
-## Les cinq étapes
+Les captures sont issues du simulateur de l’interface : valeurs, adresses et références d’exemple. Ne pas les recopier. La présentation varie selon la version installée. Les anciennes rubriques DEYE / SOLARMAN et AFFICHAGE ont été réorganisées dans les menus récents.
 
-1. **Wi-Fi** : Configuration > **RÉSEAU / HEURE > WIFI / RÉSEAU > SCAN**. Choisir le 2,4 GHz, saisir son mot de passe, sauvegarder et vérifier l’IP de l’écran.
-2. **Modèle** : **DEYE / SOLARMAN > MON ONDULEUR**. Choisir la puissance et la référence exacte, suffixes compris, puis **APPLIQUER / REDÉMARRER**.
-3. **Logger** : **CONNEXION / LOGGER**. Choisir LSW, LSE ou DL1000B, saisir son vrai numéro, rechercher puis sauvegarder le bon résultat. « Numéro non vérifié » exige une identification dans RESULTATS.
-4. **Mesures** : attendre et comparer au LCD du DEYE. Contrôler modèle, unité et coefficients si une valeur est incohérente.
-5. **Heure** : vérifier date, fuseau et NTP. Sans Internet, régler manuellement ; recommencer après coupure d’alimentation si nécessaire.
+<!-- pagebreak -->
 
-## Repères en images
+## 2. Obtenir les premières mesures
 
-Les captures suivantes sont des **aperçus de développement** : les données et le modèle montrés sont des exemples. Leur présentation peut varier selon la version. Ne pas recopier les IP ou les numéros.
+![Choisir la puissance puis la référence exacte de l’étiquette.](images/menus/modele-v5-clair.png)
+![Renseigner la connexion au logger puis rechercher et sauvegarder.](images/menus/logger-found-light.png)
 
-![Choisir la puissance puis la référence exacte sur la page MON ONDULEUR.](images/demarrage/mon-onduleur.png)
+1. **Réseau / Heure > Wi-Fi / Réseau** : SCAN, choisir le Wi-Fi 2,4 GHz, saisir son mot de passe et sauvegarder. Attendre le redémarrage.
+2. **Installation > Mon onduleur** : puissance, référence complète et suffixes ; appliquer et laisser redémarrer.
+3. **Installation > Connexion / logger** : type, IP locale, vrai numéro, port et unité. Rechercher, vérifier puis sauvegarder.
+4. Comparer SOC, tension et puissances au LCD du Deye. Régler la date et le fuseau avant d’utiliser les horaires.
 
-**Modèle :** choisir sa propre référence, suffixes compris. Le 12 kW illustré n’est pas un réglage universel. Appliquer et laisser redémarrer si le modèle change. [Explication pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md#faire-apparaître-les-mesures-de-londuleur).
+**IP du logger = mesures. IP de l’écran = page Web, sauvegarde et OTA.** Ports proposés : LSW 8899, LSE 8899, DL1000B 502. Le numéro est celui du logger, pas de l’onduleur.
 
-![Choisir le logger et renseigner son IP et son vrai numéro, puis rechercher et sauvegarder.](images/demarrage/connexion-lsw.png)
+Pour DL1000B, suivre le [guide d’activation Modbus TCP](GUIDE_DL1000B_MODBUS_TCP.md). Si le numéro n’est pas vérifié, identifier l’appareil dans RESULTATS avant de choisir son IP.
 
-**Logger :** sélectionner son type, son IP et son vrai numéro. L’IP **192.168.255.254** et le numéro **4294967295** de cet aperçu sont des valeurs de simulation à remplacer. Rechercher, vérifier le résultat, puis sauvegarder. [Voir les cas particuliers](MISE_A_JOUR_ECRAN_GITHUB.md#faire-apparaître-les-mesures-de-londuleur).
+<!-- pagebreak -->
 
-![L’IP du logger sert aux mesures ; l’IP de l’écran sert à sa page Web. Les adresses sont fictives.](images/demarrage/reseau-maison.svg)
+## 3. Solaire, historique et microSD
 
-**Deux adresses différentes :** le logger fournit les mesures ; l’écran possède sa propre page Web. Relever les vraies adresses de son installation. [Sans box ? Voir le schéma AP](MISE_A_JOUR_ECRAN_GITHUB.md#connexion-directe-au-logger-sans-box).
+![Énergie donne accès à la production, la prévision et l’historique.](images/menus/navigation-group-1-light.png)
+![Gestion microSD : état, sauvegarde et retrait sécurisé.](images/menus/history-storage-light.png)
 
-## Repères à garder sous la main
+1. Pour une passerelle supplémentaire : **Installation > Sources solaires / PV5 à PV8**, puis ouvrir le QR code sur le même réseau. Tester en **Afficher séparément** avant de choisir l’ajout au total.
+2. Si GEN mesure déjà cette production, choisir **Déjà mesurée par le port GEN**. Ne pas ajouter deux fois les mêmes watts et kWh.
+3. **Énergie > Prévision solaire** : régler position, panneaux et orientation. Une prévision est une estimation ; les mesures réelles restent distinctes.
 
-| Information | Usage |
-| --- | --- |
-| IP du logger | Lecture des données par l’écran. |
-| IP de l’écran | Page Web, diagnostic, export JSON et OTA depuis un téléphone/PC. |
-| Numéro du logger | Connexion/logger ; différent du numéro de l’onduleur. |
-| Ports proposés | LSW 8899, LSE 8899, DL1000B 502, à confirmer pour la configuration réelle. |
-| DL1000B-WIFI | Fonctionnement confirmé avec notre écran. Firmware **1.7.2 minimum** demandé ; **Lien adapté (Link1 ou Link2) > Enable > Modbus Tcp > Default > Confirm**. Conserver un lien déjà fonctionnel et les réglages cloud, puis port **502**. [Captures et demande à Deye](GUIDE_DL1000B_MODBUS_TCP.md). |
-| Sans box | Possible avec un LSW/AP compatible. 10.10.100.254 est l’IP habituelle de certains AP LSW, pas une IP universelle à copier sur le réseau de la box. |
+Depuis 4.8.9, les mesures microSD sont regroupées avant écriture, environ toutes les trente minutes. **Sauvegarder maintenant** avant une coupure prévue ; **Retirer en sécurité**, attendre la confirmation, puis retirer la carte. Après insertion, reconnecter/vérifier.
 
-## Si ça ne fonctionne pas
+**Formater la carte efface tous ses fichiers.** Télécharger les archives utiles d’abord. Sans carte, les dernières 24 h restent en mémoire vive. Les essais physiques de formatage restent à valider pour cette préparation.
 
-| Symptôme | Première vérification |
-| --- | --- |
-| Wi-Fi absent | 2,4 GHz, nom/mot de passe, distance, alimentation. |
-| Wi-Fi connecté mais DEYE injoignable | Même réseau joignable, bon logger, IP, numéro, port/unité et modèle. |
-| Fonctionne près de l’onduleur seulement | Portée Wi-Fi ; tester plus près du point d’accès. |
-| Coupures ou données cloud incomplètes | Qualité du réseau, autres lecteurs et intervalle de lecture ; voir la FAQ avant réglage. |
-| IP changée après coupure | Réservation DHCP ; récupération automatique avec vrai numéro enregistré en LSW/V5 seulement. |
-| Puissance ou kWh incohérents | Même instant de comparaison, bon modèle, unités, coefficients et heure. |
-| Écran noir à certaines heures | Veille horaire, durée de réveil et heure. |
+<!-- pagebreak -->
 
-## Micro-onduleurs sur GEN
+## 4. Recharge de la voiture et batterie de la maison
 
-Dans **PRODUCTION SOLAIRE / GEN**, choisir **Production solaire supplémentaire** (ancien GEN MO), activer le cumul GEN + PV si souhaité et sauvegarder. Vérifier que PV Daily ne comprend pas déjà GEN. W et kWh sont distincts ; **~** indique une estimation et **--** une donnée indisponible. Le groupe électrogène n’est pas du solaire. Ces réglages adaptent l’affichage sans changer le mode du port sur l’onduleur.
+![Pilotage regroupe la borne, les tarifs, le TOU, le relais et l’anticipation batterie.](images/menus/tempo-battery-menu-light.png)
+![Choisir explicitement la borne : Aucune, Deye LoRa ou Vetronic WB01.](images/menus/bornes-liste.png)
 
-## Prévision solaire — 4.8.0
+1. **Pilotage > Borne de recharge > Activation / tarifs** : choisir le matériel, enregistrer et attendre le redémarrage. Pour WB01, renseigner ensuite l’IP de sa passerelle.
+2. Les horaires de **Tarifs / Tempo** sont distincts des six plages **Time of Use** de l’onduleur.
+3. **Batterie / anticipation** concerne la batterie de la maison. L’option est désactivée par défaut ; vérifier TOU, SOC, heure et plages HC avant activation.
 
-**Configuration > Prévision solaire** : saisir position, puissance des panneaux (kWc), inclinaison et orientation ; activer et sauvegarder. Internet et date correcte sont nécessaires, sans compte ni clé API.
+**Exemple corrigé 4.8.10 :** moins de 10 kWh → 90 %, moins de 20 kWh → 60 %, moins de 30 kWh → 30 %, avec priorité à la **première règle remplie**. À 10 kWh exactement, la cible est 60 % ; à 20 kWh, 30 %. Sans règle correspondante et sans repli fixe, le TOU habituel est conservé.
 
-Toucher **PV auj. / PV dem.** ouvre les deux courbes. Choisir **Aujourd’hui**, **Demain** ou **Alternance** pour le bandeau. L’alternance vaut **5 secondes par défaut**, réglables de **1 à 300 secondes** dans **Réglages > Bandeau principal > Alternance (s)**. Le choix est mémorisé.
+Le bouton Web **Exemple Tempo** remplit seulement le brouillon. Les anciens réglages restent conservés ; vérifier puis sauvegarder pour les remplacer. Un cycle réel reste à valider. Changer le choix de borne n’arrête pas une voiture déjà en charge.
 
-Les kWh sont prévus pour toute la journée, pas seulement pour les heures restantes. [Guide illustré et détails](GUIDE_PREVISION_SOLAIRE.md).
+<!-- pagebreak -->
 
-## Mettre à jour
+## 5. Heure, veille, sauvegarde et mise à jour
 
-![Choisir une mise à jour par le menu, par le fichier OTA ou une récupération USB guidée.](images/demarrage/choisir-mise-a-jour.svg)
+![Système : mise à jour, sauvegarde des réglages et diagnostic.](images/menus/navigation-group-5-light.png)
 
-Le menu tactile et la page Web concernent l’écran. Ne pas utiliser l’adresse du logger pour envoyer le fichier OTA.
+1. **Réseau / Heure** : Paris = UTC+01:00 + Auto Europe ; Antilles françaises = UTC-04:00, sans heure d’été. Sans NTP, saisir la date et l’heure manuellement ; les vérifier après une coupure.
+2. **Écran > Veille horaire** : si l’écran est noir à heure fixe, toucher pour le réveiller puis contrôler les horaires. Les lectures et le Web continuent pendant la veille.
+3. **Système > Sauvegarde des réglages** : exporter le JSON avant une modification importante. **Mise à jour > Vérifier sur GitHub > Installer**, puis confirmer et attendre le redémarrage.
 
-Exporter le JSON puis **CONFIGURATION > MISE À JOUR > VÉRIFIER SUR GITHUB > INSTALLER**, avec Internet et heure correcte. Ou télécharger le **_OTA.bin** adapté et l’envoyer depuis la page Web de **l’écran**. Garder l’alimentation jusqu’au redémarrage, même si l’affichage scintille.
+Par le Web, envoyer seulement le fichier **_OTA.bin** adapté à l’écran. Ni ZIP, ni bootloader, ni image USB fusionnée. Le scintillement pendant l’installation est normal ; garder l’alimentation jusqu’au redémarrage. Une OTA compatible conserve les réglages.
 
-Ni ZIP, ni archive Source code, ni image USB dans l’OTA. Une première installation/récupération USB demande un pack distinct et adapté. La 4.7.2 renforce la reconnexion Wi-Fi, y compris en liaison AP, sans garantir toutes les variantes et coupures de logger.
+Si la page Web ne s’ouvre pas, vérifier l’IP actuelle de l’écran et le réseau du téléphone. Si les mesures manquent, contrôler logger, IP, numéro, port/unité et modèle. Une récupération USB demande le pack adapté au matériel.
 
-## Pour demander de l’aide
+Pour l’assistance : version de l’écran, référence d’onduleur, logger, réseau et message précis. Pour une mesure incohérente, photos de Deye Monitor et du LCD prises au même instant. Garder mots de passe et exports privés.
 
-Indiquer modèle DEYE, logger/firmware, version de l’écran, type de réseau et symptôme exact. Ajouter une photo du LCD DEYE et de l’écran au même instant si les mesures diffèrent. Masquer mots de passe, QR d’accès et identifiants privés avant publication.
-
-Ce [mémo en PDF](pdf/RECAP_UTILISATEURS_V3.pdf) et le [guide complet illustré en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) sont à jour pour la **4.8.0**. Le [manuel détaillé historique](GUIDE_UTILISATEUR_V3.md) reste en édition 4.6.3. Voir aussi le [guide](MISE_A_JOUR_ECRAN_GITHUB.md) et la [FAQ](FAQ_ECRAN.md).
+[FAQ et dépannage](FAQ_ECRAN.md) · [Sources et historique](GUIDE_MICRO_SD_SOFAR.md) · [Prévision solaire](GUIDE_PREVISION_SOLAIRE.md) · [Notes 4.8.10](NOTES_4.8.10.md).
