@@ -16,7 +16,7 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.11**, le **6 novembre 2026**. Elle débloque le tableau **Time of Use sur les AI-W5.1 P1**, ajoute une lecture automatique par petits blocs si nécessaire et distingue une lecture impossible d’un TOU inactif. Compilation et tests logiciels réussis ; la comparaison des valeurs sur l’onduleur reste nécessaire avant une première modification. [Détails et limites 4.8.11](docs/NOTES_4.8.11.md) · [Binaire OTA 4.8.11](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.11).
+La dernière version publiée est **4.8.12**, le **9 novembre 2026**. Elle simplifie l’activation des PV5 à PV8 par une case à cocher, conserve leur dernière configuration enregistrée et corrige l’affichage des kWc. Des exemples courts sont intégrés aux réglages ; la prévision météo reste une indication moyenne. [Détails 4.8.12](docs/NOTES_4.8.12.md) · [Binaire OTA 4.8.12](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.12).
 
 La gestion de la microSD (formatage FAT32 confirmé, retrait sécurisé et écritures groupées) et la recharge anticipée avec ou sans Tempo restent disponibles. [Guide de ces fonctions](docs/NOTES_4.8.9.md).
 
