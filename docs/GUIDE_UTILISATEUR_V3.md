@@ -1,6 +1,10 @@
 # Deye Monitor - Guide utilisateur illustré
 
-**Édition du 6 novembre 2026 - Menus de référence 4.8.10.**
+**Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
+
+**Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
+
+**Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
 
 Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage avec des captures commentées. Les noms V3 des fichiers sont conservés pour les liens existants.
 
@@ -132,7 +136,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 ![Connexion LSW / Solarman V5 et résultat de recherche simulé.](images/menus/logger-found-light.png)
 ![Connexion LSE / Ethernet Modbus TCP.](images/menus/logger-lse-light.png)
 
-1. Choisir le type de logger réellement installé. Renseigner son **IP locale**, son numéro de série et l’unité Modbus de l’onduleur.
+1. Choisir le type de logger réellement installé. Renseigner son **IP locale**, son vrai numéro de série (remplacer 12345678 s’il apparaît) et l’unité Modbus de l’onduleur.
 2. Les ports proposés sont **8899 pour LSW**, **8899 pour LSE** et **502 pour DL1000B**. Conserver un autre port si votre installation l’exige.
 3. Toucher **RECHERCHER**, vérifier le résultat, puis **SAUVEGARDER**. Attendre le redémarrage et comparer les mesures au LCD.
 
@@ -147,7 +151,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 ![Rappel et QR code du guide Modbus TCP.](images/menus/logger-dl1000b-help-light.png)
 ![Formulaire DL1000B ; le numéro peut contenir des lettres.](images/menus/logger-dl1000b-light.png)
 
-1. Suivre d’abord le [guide illustré DL1000B](GUIDE_DL1000B_MODBUS_TCP.md) pour le firmware du logger et l’activation **Link2 / Modbus TCP**.
+1. Suivre d’abord le [guide illustré DL1000B](GUIDE_DL1000B_MODBUS_TCP.md) pour le firmware du logger et l’activation **Link1 ou Link2 / Modbus TCP**, selon la configuration.
 2. Choisir **DL1000B - Modbus TCP**, renseigner l’IP, le vrai numéro, le port et l’unité.
 3. Vérifier une lecture locale. La présence de données dans DeyeCloud ne suffit pas à prouver que le port local est activé.
 
@@ -196,6 +200,8 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 2. Choisir une installation libre, un nom, la marque et la connexion locale. Les quatre installations correspondent à **PV5, PV6, PV7 et PV8**.
 3. Enregistrer d’abord en **Afficher séparément** et attendre **Lecture OK**. Comparer avec l’application du matériel avant tout ajout au total.
 
+**Pour annuler PV5 en 4.8.12 :** sur sa page Web, décocher **Activer cette source PV** puis attendre la confirmation ; l’arrêt est immédiat. Voir le [pas à pas](DEMARRAGE_SIMPLE.md#7-annuler-une-source-pv5-commencée-par-erreur).
+
 **À vérifier :** Choisir **Déjà mesurée par le port GEN** si GEN compte déjà cette production. Le guide [sources et historique](GUIDE_MICRO_SD_SOFAR.md) détaille les profils et leurs limites.
 
 <!-- pagebreak -->
@@ -237,7 +243,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 ![Activation et paramètres de l’installation solaire.](images/menus/solar-config-light.png)
 ![Saisie d’un paramètre avec le clavier de l’écran.](images/menus/solar-keyboard-light.png)
 
-1. Renseigner la position, la puissance des panneaux et leur orientation selon l’installation réelle.
+1. Renseigner la position, la puissance des panneaux et leur orientation selon l’installation réelle. **Latitude puis longitude**, un nombre décimal par champ ; **8 000 Wc = 8 kWc**.
 2. Respecter les unités et le sens des angles indiqués dans le formulaire. Utiliser le [guide de prévision](GUIDE_PREVISION_SOLAIRE.md) pour les limites et les conventions.
 3. Enregistrer, attendre une actualisation puis vérifier la date et le résultat. Contrôler Internet et l’heure si les données restent absentes.
 
@@ -559,7 +565,6 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 ## 34. Choisir le bon fichier et retrouver de l’aide
 
 **Chemin :** Page Web locale > Mise à jour OTA.
-
 
 1. Utiliser uniquement le fichier **_OTA.bin** adapté à l’écran et à son partitionnement. Ni ZIP, ni bootloader, ni partitions, ni image USB fusionnée dans ce formulaire.
 2. Pour un écran vierge ou une récupération USB, utiliser le pack fourni pour ce matériel. Décompresser tout le ZIP avant INSTALLER.bat ; un effacement complet peut supprimer les réglages.

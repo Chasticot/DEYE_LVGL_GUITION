@@ -1,6 +1,10 @@
 # Deye Monitor - Mémo de démarrage
 
-**Édition du 6 novembre 2026 - Menus de référence 4.8.10.**
+**Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
+
+**Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
+
+**Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
 
 [Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 
@@ -23,7 +27,7 @@ Les captures sont issues du simulateur de l’interface : valeurs, adresses et r
 
 1. **Réseau / Heure > Wi-Fi / Réseau** : SCAN, choisir le Wi-Fi 2,4 GHz, saisir son mot de passe et sauvegarder. Attendre le redémarrage.
 2. **Installation > Mon onduleur** : puissance, référence complète et suffixes ; appliquer et laisser redémarrer.
-3. **Installation > Connexion / logger** : type, IP locale, vrai numéro, port et unité. Rechercher, vérifier puis sauvegarder.
+3. **Installation > Connexion / logger** : type, IP locale, vrai numéro (remplacer 12345678 s’il apparaît), port et unité. Rechercher, vérifier puis sauvegarder.
 4. Comparer SOC, tension et puissances au LCD du Deye. Régler la date et le fuseau avant d’utiliser les horaires.
 
 **IP du logger = mesures. IP de l’écran = page Web, sauvegarde et OTA.** Ports proposés : LSW 8899, LSE 8899, DL1000B 502. Le numéro est celui du logger, pas de l’onduleur.
@@ -39,7 +43,9 @@ Pour DL1000B, suivre le [guide d’activation Modbus TCP](GUIDE_DL1000B_MODBUS_T
 
 1. Pour une passerelle supplémentaire : **Installation > Sources solaires / PV5 à PV8**, puis ouvrir le QR code sur le même réseau. Tester en **Afficher séparément** avant de choisir l’ajout au total.
 2. Si GEN mesure déjà cette production, choisir **Déjà mesurée par le port GEN**. Ne pas ajouter deux fois les mêmes watts et kWh.
-3. **Énergie > Prévision solaire** : régler position, panneaux et orientation. Une prévision est une estimation ; les mesures réelles restent distinctes.
+3. **Énergie > Prévision solaire** : régler position, panneaux et orientation. Latitude puis longitude, chacune en degrés décimaux ; **8 000 Wc = 8 kWc**. Une prévision est une estimation ; les mesures réelles restent distinctes.
+
+**Annuler PV5 en 4.8.12 :** décocher **Activer cette source PV** sur sa page Web ; attendre la confirmation, sans réinitialiser l’écran.
 
 Depuis 4.8.9, les mesures microSD sont regroupées avant écriture, environ toutes les trente minutes. **Sauvegarder maintenant** avant une coupure prévue ; **Retirer en sécurité**, attendre la confirmation, puis retirer la carte. Après insertion, reconnecter/vérifier.
 

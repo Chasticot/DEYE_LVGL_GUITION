@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340">
+<rect width="960" height="340" rx="20" fill="#eef5f6"/>
+<g font-family="Arial, sans-serif" fill="#183144">
+<text x="30" y="46" font-size="26" font-weight="bold">Annuler PV5 sans effacer les autres réglages</text>
+<rect x="24" y="72" width="288" height="190" rx="12" fill="white"/>
+<rect x="336" y="72" width="288" height="190" rx="12" fill="white"/>
+<rect x="648" y="72" width="288" height="190" rx="12" fill="white"/>
+<text x="42" y="110" font-size="22" font-weight="bold">1. Ouvrir PV5</text>
+<text x="42" y="153" font-size="20">Page locale de l’écran</text>
+<text x="42" y="187" font-size="20">Sources solaires</text>
+<text x="42" y="221" font-size="20">PV5 à PV8 → PV5</text>
+<text x="354" y="110" font-size="22" font-weight="bold">2. Décocher</text>
+<rect x="354" y="144" width="22" height="22" fill="white" stroke="#087e8b" stroke-width="3"/>
+<text x="354" y="202" font-size="20">Activer cette source PV</text>
+<text x="354" y="236" font-size="18">Application immédiate en 4.8.12</text>
+<text x="666" y="110" font-size="22" font-weight="bold">3. Vérifier</text>
+<text x="666" y="153" font-size="20">Source PV désactivée</text>
+<text x="666" y="187" font-size="20">Les autres réglages</text>
+<text x="666" y="221" font-size="20">restent conservés</text>
+<text x="30" y="302" font-size="18">Schéma explicatif d’après l’interface 4.8.12 ; ce n’est pas une photo d’installation.</text>
+</g></svg>

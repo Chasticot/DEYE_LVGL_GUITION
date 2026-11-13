@@ -1,6 +1,8 @@
 # Deye Monitor — questions fréquentes
 
-**Édition du 26 octobre 2026.** Repères pour le firmware public 4.8.0 et les écrans du projet. [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
+**Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
+
+**Édition du 11 novembre 2026.** Réponses actualisées à partir des échanges d’assistance. Les fonctions et menus dépendent de la version installée. [Guide pas à pas](MISE_A_JOUR_ECRAN_GITHUB.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest).
 
 Les réponses distinguent les fonctions disponibles, les retours de fonctionnement et les matériels qui restent à tester. Un essai réussi sur un modèle ne valide pas toutes ses révisions ni toutes les fonctions.
 
@@ -23,6 +25,20 @@ Les réponses distinguent les fonctions disponibles, les retours de fonctionneme
 | Comment activer les courbes solaires et l’alternance ? | [Prévision solaire](#prevision-solaire) |
 | Comment mettre à jour ou récupérer un écran ? | [OTA et USB](#mise-a-jour) |
 | Qu’envoyer pour demander de l’aide ? | [Informations utiles](#demande-aide) |
+
+## Les blocages les plus fréquents au démarrage
+
+- **Le QR code du logger ne fonctionne pas :** rejoindre son réseau depuis les réglages Wi-Fi du téléphone ; le QR code ne remplace pas cette étape. [Procédure](DEMARRAGE_SIMPLE.md#2-ouvrir-le-logger-depuis-son-téléphone).
+- **Quels identifiants utiliser ?** Le mot de passe du Wi-Fi du logger, ses identifiants Web locaux et le compte cloud sont distincts. Créer les identifiants Web uniquement si la page le demande à la première connexion ; sinon retrouver ceux déjà configurés.
+- **L’écran ne trouve pas le Deye :** remplacer **12345678**, s’il apparaît, par le vrai numéro du logger. Vérifier ensuite IP, type et port, puis sauvegarder. [Premières mesures](DEMARRAGE_SIMPLE.md#1-faire-apparaître-les-premières-mesures).
+- **Mise à jour sans box :** télécharger le fichier OTA avec Internet, puis rejoindre le Wi-Fi du logger et envoyer ce fichier sur la page locale de l’écran. [Avec ou sans box](DEMARRAGE_SIMPLE.md#4-mettre-à-jour-avec-ou-sans-box).
+- **Prévision non enregistrée :** latitude puis longitude en degrés décimaux, chacune dans son champ ; **8 000 Wc = 8 kWc**. Lire la confirmation et vérifier les valeurs après redémarrage. [Exemple illustré](DEMARRAGE_SIMPLE.md#5-enregistrer-la-prévision-solaire).
+- **Production PV dix fois trop grande :** comparer la même mesure et ses unités. **Load power** corrige la consommation, pas la production PV. Le coefficient adapté et sa disponibilité dépendent de la version et du profil. [Vérifications](DEMARRAGE_SIMPLE.md#6-une-mesure-paraît-dix-fois-trop-grande).
+- **PV5 configuré par erreur :** avec la 4.8.12, décocher **Activer cette source PV** dans sa page Web et attendre la confirmation ; l’arrêt est immédiat. Sur une ancienne version, les commandes diffèrent. Si cela reste bloqué, relever version et message. Éviter une remise à zéro complète. [Procédure](DEMARRAGE_SIMPLE.md#7-annuler-une-source-pv5-commencée-par-erreur).
+
+### L’écran peut-il se connecter en même temps au Wi-Fi isolé du logger et à celui de la box ?
+
+Le parcours pris en charge utilise un réseau Wi-Fi à la fois. Pour avoir les mesures et la prévision, relier le logger et l’écran au réseau de la maison lorsqu’ils le permettent. En connexion directe à un logger sans Internet, les mesures locales restent possibles ; le téléchargement GitHub et la prévision demandent un accès Internet.
 
 <a id="principe"></a>
 ## Principe
@@ -146,6 +162,11 @@ Non : c’est le même firmware. Changer la connexion Wi-Fi, s’assurer que le 
 <a id="deye-injoignable"></a>
 ## « DEYE INJOIGNABLE »
 
+### Pourquoi « Terminer » reste grisé au premier démarrage ?
+
+Sur le nouveau parcours guidé en préparation, enregistrer le Wi-Fi et le logger ne suffit pas. Il faut une connexion Wi-Fi active, un vrai numéro de logger et des lectures DEYE récentes. Choisir le modèle exact, comparer PV, batterie, maison et réseau au LCD du DEYE puis cocher la confirmation. **VOIR MESURES** sert à comparer ; revenir par **Installation > Démarrage rapide**. Un simple résultat de recherche ou un envoi de réglages n’est pas une validation. **PLUS TARD** reporte le parcours, sans effacer les réglages.
+
+
 ### Le Wi-Fi de l’écran est connecté, pourquoi n’y a-t-il aucune mesure ?
 
 Être connecté au Wi-Fi ne prouve pas que le logger répond. Vérifier dans cet ordre :
@@ -189,6 +210,9 @@ Cela peut être lié à la fréquence des interrogations ou aux autres lecteurs 
 ## Mesures et production
 
 ### Une valeur est dix fois trop grande ou trop petite : quel coefficient mettre ?
+
+Identifier précisément **PV**, **réseau**, **maison / Load power** ou **batterie**. Un réglage de consommation ne corrige pas une erreur de production PV. La préparation du firmware propose des coefficients PV séparés ; leur présence dépend de la version installée. Ne changer qu’une mesure identifiée, conserver sa valeur initiale, puis comparer les deux afficheurs. Une correction conseillée à une autre installation n’est pas une valeur par défaut universelle.
+
 
 Vérifier d’abord référence du modèle, version et unité (**W/kW**, **Wh/kWh**). Comparer la même mesure au LCD du DEYE au même instant. Selon la cartographie et le firmware du logger, une calibration peut être nécessaire ; il n’existe pas un coefficient unique pour tous les modèles. Exporter les réglages, modifier une seule valeur à la fois, sauvegarder et comparer. Ne pas recopier les registres d’un LP1 sur un LP3/HP3.
 
@@ -274,3 +298,9 @@ Les mesures locales restent possibles. Utiliser le réglage manuel de date/heure
 Envoyer en une fois : modèle complet DEYE, modèle/firmware logger, version Deye Monitor, mode réseau (box/AP/Ethernet/mesh), message exact, changement récent et photos comparées écran/LCD. Si demandé, ajouter diagnostic et export JSON. Ne pas publier mots de passe, QR codes d’accès, numéros d’appareil ou coordonnées privées. [Liste détaillée](MISE_A_JOUR_ECRAN_GITHUB.md#demander-de-laide-sans-multiplier-les-échanges).
 
 Les cas de compatibilité inconnue, de données incohérentes persistantes et de raccordement secteur doivent être examinés pour le matériel concerné. Une lecture trouvée dans un menu ne suffit pas à valider toute l’installation.
+
+## Où retrouver les fonctions demandées en assistance ?
+
+**Tempo** affiche les couleurs et tarifs ; les règles se trouvent dans **Pilotage**. Pour une recharge de nuit, vérifier le matériel piloté, les conditions horaires, la cible et la fin de règle avant activation. La prévision solaire attend une **inclinaison en degrés**, pas une pente en pourcentage : **33 % ≈ 18,3°**, tandis que **33° ≈ 65 %**.
+
+Pour un autre format d’écran, un accès distant, deux onduleurs ou une passerelle supplémentaire, demander une validation pour les références exactes. La présence d’une marque dans un menu ne confirme pas les lectures de toutes ses variantes.

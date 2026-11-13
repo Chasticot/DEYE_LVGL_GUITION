@@ -1,5 +1,7 @@
 # Deye Monitor — démarrage, utilisation et mises à jour
 
+> **Premières mesures :** [Démarrage rapide Wi-Fi + logger](docs/DEMARRAGE_RAPIDE.md) · [Fiche PDF à imprimer](docs/pdf/DEMARRAGE_RAPIDE.pdf) · [Pas à pas illustré](docs/DEMARRAGE_SIMPLE.md).
+
 > **Documentation illustrée du 6 novembre 2026 :** [guide des menus](docs/GUIDE_UTILISATEUR_V3.md), [guide PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo](docs/RECAP_UTILISATEURS_V3.md).
 
 Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUITION ESP32-S3 480 × 480. Il fonctionne en local avec un logger compatible, sans Home Assistant ni compte cloud à renseigner dans l’écran.

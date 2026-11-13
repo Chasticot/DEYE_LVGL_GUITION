@@ -1,6 +1,12 @@
 # Guide utilisateur — Deye Monitor
 
-**Documentation mise à jour le 6 novembre 2026.** [Guide complet : 34 parcours et 62 captures commentées](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
+
+**Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
+
+**Documentation mise à jour le 11 novembre 2026.** [Nouveau guide complet : 34 parcours de menus illustrés](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
+
+Le guide illustré suit les menus de référence **4.8.10** : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système. La préparation 5.0.0 reste distincte. Les captures ci-dessous conservent certains anciens libellés ; utiliser le nouveau guide pour les chemins actuels.
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 
@@ -153,8 +159,8 @@ Sur cette page, lire de haut en bas :
 
 Le **logger** est le module de communication branché sur l’onduleur. Son numéro de série est celui à renseigner dans les réglages de connexion ; il peut être différent du numéro de série de l’onduleur lui-même.
 
-1. Dans **DEYE / SOLARMAN > MON ONDULEUR**, choisir la puissance et la référence exacte, puis **APPLIQUER / REDÉMARRER** et confirmer.
-2. Ouvrir **DEYE / SOLARMAN > CONNEXION / LOGGER**.
+1. Dans **Installation > Mon onduleur**, choisir la puissance et la référence exacte, puis **APPLIQUER / REDÉMARRER** et confirmer.
+2. Ouvrir **Installation > Connexion / logger**.
 3. Choisir le type de module : **LSW**, **LSE** ou **DL1000B**, selon l’équipement installé. Pour un DL1000B-WIFI, activer d’abord le Modbus TCP du logger selon le [pas-à-pas illustré](GUIDE_DL1000B_MODBUS_TCP.md).
 4. Renseigner le vrai numéro du logger. Les lettres sont acceptées pour le DL1000B.
 5. Toucher **RECHERCHER**. La recherche peut prendre plusieurs minutes ; les mesures peuvent être momentanément suspendues.
@@ -174,7 +180,7 @@ Avec un logger **LSW / Solarman V5** dont le vrai numéro est enregistré, l’�
 
 ## Choisir le modèle et les sources de production
 
-Choisir **DEYE / SOLARMAN > MON ONDULEUR**, puis la **puissance** et la **référence exacte** de l’étiquette, suffixes compris. Vérifier le récapitulatif, toucher **APPLIQUER / REDÉMARRER** et confirmer. Le Web propose aussi une recherche par fragments.
+Choisir **Installation > Mon onduleur**, puis la **puissance** et la **référence exacte** de l’étiquette, suffixes compris. Vérifier le récapitulatif, toucher **APPLIQUER / REDÉMARRER** et confirmer. Le Web propose aussi une recherche par fragments.
 
 Le catalogue et les références sélectionnables dépendent de la version installée. Les profils expérimentaux sont signalés à confirmer et certaines anciennes références peuvent n’être conservées que pour reprendre leurs sauvegardes. Les voies PV, le nombre de MPPT et les fonctions proposées suivent le modèle choisi. Les réglages existants par référence sont conservés. Les SG06 expérimentaux et les fonctions non vérifiées restent signalés à confirmer. Comparer les mesures au LCD de l’onduleur.
 
@@ -273,6 +279,8 @@ Les horaires et tarifs doivent être vérifiés dans les réglages. Ils ne prenn
 
 ## Régler l’affichage et l’heure
 
+**Menus récents : Réglages > Écran** pour le thème et la veille ; **Réseau / Heure > Date / Heure / Fuseau UTC** pour l’horloge. Les anciens chemins ci-dessous permettent de retrouver ces réglages sur les versions précédentes.
+
 Dans **AFFICHAGE > THÈME / LUMINOSITÉ**, choisir le thème clair ou sombre et les niveaux de luminosité souhaités.
 
 Dans **AFFICHAGE > VEILLE HORAIRE**, régler les plages de veille si vous souhaitez que l’écran s’éteigne à certaines heures. Un toucher permet de le réveiller temporairement selon le délai configuré.
@@ -302,7 +310,9 @@ Pour conserver une copie des réglages, utiliser l’**export de configuration J
 
 ## Mettre l’écran à jour
 
-La dernière version stable vérifiée le **26/10/2026** est **4.8.0**. Pour les téléchargements futurs, consulter la [dernière release stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest). Une mise à jour du logiciel **de l’écran** ne met pas à jour l’onduleur ni le logger.
+Sur les menus récents, ouvrir **Réglages > Système > Mise à jour**. [Parcours illustré actuel](GUIDE_UTILISATEUR_V3.md#33-mettre-à-jour-le-logiciel-de-lécran).
+
+Les fichiers **4.8.0** cités ci-dessous sont des exemples historiques. Pour connaître la version actuellement proposée, consulter la [page de téléchargement](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest). Une mise à jour du logiciel **de l’écran** ne met pas à jour l’onduleur ni le logger.
 
 ![Trois méthodes : menu GitHub, fichier OTA sur la page Web, puis récupération USB si nécessaire.](images/demarrage/choisir-mise-a-jour.svg)
 
@@ -322,7 +332,7 @@ Sur un écran qui possède le menu **MISE À JOUR** :
 
 ![Page MISE À JOUR : VÉRIFIER SUR GITHUB, INSTALLER et barre de progression.](images/demarrage/mise-a-jour.png)
 
-Sur cette ancienne capture de développement, **4.6.0** et **42 %** sont des exemples. Sur votre écran, lire la version réellement proposée ; la référence publique vérifiée pour cette notice est **4.8.0**. Une fois l’installation lancée, laisser l’alimentation jusqu’au redémarrage.
+Sur cette ancienne capture de développement, **4.6.0** et **42 %** sont des exemples. Sur votre écran, lire la version réellement proposée ; le numéro indiqué dans la capture ne constitue pas une recommandation de version. Une fois l’installation lancée, laisser l’alimentation jusqu’au redémarrage.
 
 Une mise à jour compatible conserve les réglages. Si l’écran indique qu’il est à jour, aucune installation supplémentaire n’est nécessaire. Si une erreur apparaît, lire le message et réessayer après avoir corrigé la connexion ou l’heure.
 
