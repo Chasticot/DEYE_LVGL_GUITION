@@ -1,31 +1,41 @@
-# Prévision solaire — Deye Monitor 4.8.0
+# Prévision solaire — Deye Monitor 4.9.2
 
 [Guide complet en PDF, avec cette notice solaire](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
-[Guide utilisateur](MISE_A_JOUR_ECRAN_GITHUB.md) · [Nouveautés 4.8.0](GUIDE_UNIFIE_4.8.0.md).
+[Guide utilisateur](MISE_A_JOUR_ECRAN_GITHUB.md) · [Nouveautés 4.9.2](NOTES_4.9.2.md).
 
-**Édition du 26 octobre 2026.** Les captures ci-dessous sont des aperçus de développement : leurs coordonnées, dates et productions sont des exemples, à remplacer par les informations de votre installation.
+**Édition actualisée le 16 novembre 2026 pour la 4.9.2.** Les captures ci-dessous sont des aperçus historiques de développement : leurs coordonnées, dates et productions sont des exemples, à remplacer par les informations de votre installation.
 
 ## Mise en route
 
-Ouvrir **Configuration > Prévision solaire** sur l'écran, ou le lien
+Ouvrir **Réglages > Énergie > Prévision solaire** sur l’écran (ancien menu **Configuration > Prévision solaire**), ou le lien
 **Prévision solaire** sur sa page Web. La page Web dédiée est `/solar`.
 
 1. Renseigner la latitude et la longitude des panneaux, obtenues depuis une carte.
-2. Indiquer leur puissance totale en **kWc** : 3000 Wc = 3 kWc.
-   Utiliser la puissance des panneaux, pas celle de l'onduleur.
-3. Saisir l'inclinaison : 0° à plat, 90° à la verticale.
-4. Saisir l'orientation : nord 0°, est 90°, sud 180°, ouest 270°.
+2. Répartir les panneaux entre **huit expositions au maximum** : un groupe par orientation et inclinaison. Indiquer la puissance de chaque groupe en **kWc** : 3000 Wc = 3 kWc. Laisser à **0 kWc** les groupes inutilisés. Utiliser la puissance des panneaux, pas celle de l'onduleur.
+3. Pour chaque groupe utilisé, saisir l'inclinaison : 0° à plat, 90° à la verticale.
+4. Pour chaque groupe utilisé, saisir l'orientation : nord 0°, est 90°, sud 180°, ouest 270°.
 5. Activer la prévision, sauvegarder et attendre le redémarrage.
 
-Les virgules et les points sont acceptés pour les décimales. Cette première
-intégration représente un groupe de panneaux de même orientation et inclinaison.
-Elle ne modélise pas séparément plusieurs pans de toiture ou les ombres locales.
+Les virgules et les points sont acceptés pour les décimales. Les huit expositions
+partagent la même position géographique. Leurs courbes et leurs totaux sont additionnés.
+Les ombres locales ne sont pas modélisées.
 Le fuseau horaire réglé dans l'écran doit correspondre au lieu de l'installation.
 
 ![Réglages de l’installation solaire : latitude, longitude, puissance, inclinaison et orientation.](images/solaire/reglages-installation.png)
 
-**Les coordonnées et 3 kWc de cette image sont des exemples.** Ne pas les recopier pour une autre installation.
+**Capture historique avec une seule exposition.** La 4.9.2 permet d'en renseigner huit. Les coordonnées et 3 kWc de cette image sont des exemples : ne pas les recopier pour une autre installation.
+
+## Les réglages ne restent pas enregistrés ?
+
+![Latitude et longitude dans deux champs séparés ; 8 000 Wc donnent 8 kWc. Position montrée uniquement pour illustrer le format.](images/demarrage/saisie-solaire.svg)
+
+1. Utiliser des **degrés décimaux**, latitude d’abord puis longitude. Un seul nombre par champ ; garder le signe moins éventuel. Ne pas coller un lien de carte, une adresse ou des degrés/minutes/secondes.
+2. Convertir la puissance des panneaux : **8 000 Wc = 8 kWc**, donc saisir **8**, sans l’unité. La puissance de l’onduleur est une autre information.
+3. Lire le message après **Sauvegarder**. Si une erreur est signalée, corriger les champs ; après confirmation et redémarrage, rouvrir pour vérifier qu’ils sont conservés.
+4. Si les champs sont conservés mais la courbe manque, vérifier **Internet**, l’heure et l’état de réception. L’enregistrement des réglages et la réception d’une prévision sont deux étapes différentes.
+
+Cette fonction estime la production solaire. Elle n’affiche pas une météo générale avec pluie, température et vent. [Pas à pas pour débuter](DEMARRAGE_SIMPLE.md#5-enregistrer-la-prévision-solaire).
 
 ## Lecture
 
@@ -56,7 +66,7 @@ l'affichage des écrans déjà configurés.
 La durée se modifie lorsque le mode Alternance est choisi. Les deux autres modes conservent une seule journée dans le bandeau.
 
 L'indicateur est masqué par défaut et lorsque la fonction est désactivée.
-Les cinq réglages sont accessibles ensemble sur la page tactile dédiée ;
+Les paramètres de l'installation sont accessibles sur la page tactile dédiée ;
 les options du bandeau se trouvent plus bas. Le clavier numérique s'ouvre
 uniquement pendant la saisie.
 
@@ -72,9 +82,10 @@ et de la puissance à Forecast.Solar. Ces informations servent uniquement à la
 demande de prévision ; aucun identifiant d'onduleur ni de licence n'est envoyé.
 La connexion HTTPS vérifie le certificat du service.
 
-L'écran effectue au plus une tentative par heure, y compris si le service
-échoue ou limite les demandes. La requête s'exécute en arrière-plan ; aucune
-nouvelle requête n'est lancée pendant la mise à jour OTA. Une réception
+L'écran effectue au plus une série de demandes par heure, avec une demande par
+exposition utilisée. Si une demande échoue ou si le service limite les demandes,
+la série s'arrête et le dernier total complet est conservé. Les demandes s'exécutent
+en arrière-plan ; aucune nouvelle demande n'est lancée pendant la mise à jour OTA. Une réception
 réussie reste utilisable six heures et conserve ses dates : à minuit, la
 prévision de demain peut devenir celle d'aujourd'hui. Une journée absente,
 une valeur trop ancienne ou une date incohérente donne `--`, jamais zéro par
@@ -86,7 +97,9 @@ La page de détail explique les coupures et erreurs ; il n'y a pas de bouton
 de rafraîchissement qui pourrait épuiser le quota du service.
 
 Les réglages sont stockés séparément et conservés après une mise à jour OTA.
-Ils figurent aussi dans l'export/import JSON. Un ancien export sans rubrique
+Ils figurent aussi dans l'export/import JSON. Une ancienne configuration à une seule
+exposition est reprise dans le premier groupe ; les autres restent inutilisés.
+Un ancien export sans rubrique
 solaire conserve les réglages solaires présents. La dernière prévision reçue
 reste en mémoire vive : après redémarrage, attendre une nouvelle réception.
 Le choix du bandeau et sa durée sont enregistrés séparément des caractéristiques

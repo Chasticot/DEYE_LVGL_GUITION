@@ -4,9 +4,9 @@
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Documentation mise à jour le 11 novembre 2026.** [Nouveau guide complet : 34 parcours de menus illustrés](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Documentation mise à jour le 16 novembre 2026 pour la 4.9.2.** [Nouveau guide complet : 34 parcours de menus illustrés](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
-Le guide illustré suit les menus de référence **4.8.10** : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système. La préparation 5.0.0 reste distincte. Les captures ci-dessous conservent certains anciens libellés ; utiliser le nouveau guide pour les chemins actuels.
+Le guide suit les six rubriques de la **4.9.2** : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système. Certaines captures historiques affichent d'anciens numéros ou libellés ; les légendes expliquent les différences. [Nouveautés 4.9.2](NOTES_4.9.2.md).
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 
@@ -224,7 +224,7 @@ Certaines informations dépendent du modèle d’onduleur, des équipements pré
 
 ## Prévision solaire
 
-Depuis la **4.8.0**, ouvrir **CONFIGURATION > PRÉVISION SOLAIRE**. Renseigner latitude, longitude, puissance des panneaux en kWc, inclinaison et orientation, puis activer et sauvegarder. Le téléphone peut aussi ouvrir **Prévision solaire** depuis la page Web de l’écran.
+En **4.9.2**, ouvrir **Réglages > Énergie > Prévision solaire**. Sur les premières versions, utiliser **CONFIGURATION > PRÉVISION SOLAIRE**. Renseigner la latitude et la longitude communes, puis jusqu'à **huit expositions**, chacune avec sa puissance en kWc, son inclinaison et son orientation. Laisser les groupes inutilisés à **0 kWc**. Les prévisions sont additionnées. Activer et sauvegarder. Le téléphone peut aussi ouvrir **Prévision solaire** depuis la page Web de l’écran.
 
 ![Deux courbes de prévision et choix Aujourd’hui, Demain ou Alternance pour le bandeau.](images/solaire/courbes-alternance.png)
 
@@ -234,24 +234,24 @@ Toucher **PV auj. / PV dem.**, entre l’heure et les paramètres, ouvre les cou
 
 En mode Alternance, le bandeau change toutes les **5 secondes par défaut**. Dans **Réglages > Bandeau principal**, la durée **Alternance (s)** se règle de **1 à 300 secondes**. La page Web propose le même réglage, appliqué sans redémarrage.
 
-Le service Forecast.Solar ne demande **ni compte ni clé API**. L’écran doit avoir Internet et une date correcte ; un AP de logger isolé ne suffit pas. L’activation transmet au service la position et les caractéristiques saisies. Les ombres locales et plusieurs pans de toiture peuvent rendre l’estimation différente de la production réelle. Une courbe indisponible n’est pas une production nulle.
+Le service Forecast.Solar ne demande **ni compte ni clé API**. L’écran doit avoir Internet et une date correcte ; un AP de logger isolé ne suffit pas. L’activation transmet au service la position et les caractéristiques saisies. Les ombres locales peuvent rendre l’estimation différente de la production réelle. Une courbe indisponible n’est pas une production nulle.
 
 [Configurer les panneaux et lire les courbes pas à pas](GUIDE_PREVISION_SOLAIRE.md).
 
 ## Se repérer dans les menus
 
-Le menu **CONFIGURATION** regroupe les réglages :
+En **4.9.2**, ouvrir **RÉGLAGES** puis choisir la rubrique :
 
 | Menu | Utilisation |
 | --- | --- |
-| **DEYE / SOLARMAN** | Choisir l’onduleur, connecter son logger et régler les sources de production. |
-| **TARIFS / HEURES CREUSES** | Configurer les informations tarifaires utilisées par les fonctions prévues. |
-| **VÉHICULE ÉLECTRIQUE** | Choisir la borne et accéder à sa page de recharge. |
-| **RELAIS** | Configurer la règle du relais de l’écran, si cette fonction est utilisée. |
-| **RÉSEAU / HEURE** | Connexion Wi-Fi, fuseau et réglage de l’heure. |
-| **AFFICHAGE** | Thème, luminosité et veille horaire. |
-| **PRÉVISION SOLAIRE** | Configurer les panneaux, consulter les deux courbes et choisir la valeur du bandeau. |
-| **MISE À JOUR** | Chercher et installer une nouvelle version ; ouvrir ce guide avec le QR code. |
+| **INSTALLATION** | Onduleur, logger, sources PV1 à PV8 et passerelles. |
+| **ÉNERGIE** | Production par source, prévision solaire, historique et microSD. |
+| **PILOTAGE** | Borne de recharge, tarifs, Time of Use, anticipation batterie et relais. |
+| **RÉSEAU / HEURE** | Wi-Fi, réseau local, date, heure et fuseau. |
+| **ÉCRAN** | Thème et horaires, veille et réveil tactile ; pas de réglage de luminosité. |
+| **SYSTÈME** | Mise à jour, sauvegarde des réglages, diagnostic et réglages avancés. |
+
+Sur les anciennes versions, ces fonctions peuvent être regroupées sous **CONFIGURATION** avec les libellés DEYE / SOLARMAN, VÉHICULE ÉLECTRIQUE ou AFFICHAGE.
 
 **RETOUR** quitte la page. **SAUVEGARDER**, **ENREGISTRER** ou **APPLIQUER** valide les modifications selon la page. Laisser le redémarrage se terminer lorsqu’il est annoncé.
 
@@ -261,13 +261,15 @@ Les menus de registres et de coefficients servent à adapter les mesures à un m
 
 Si vous n’utilisez pas la fonction de recharge de l’écran, choisir **Aucune**.
 
-Sinon, ouvrir **VÉHICULE ÉLECTRIQUE > ACTIVATION / TARIFS**, sélectionner le système utilisé et enregistrer :
+En 4.9.2, ouvrir **Réglages > Pilotage > Borne de recharge**, choisir le système puis appliquer et laisser redémarrer. Sur les anciennes versions, utiliser **VÉHICULE ÉLECTRIQUE > ACTIVATION / TARIFS** :
 
 | Choix | Équipement concerné |
 | --- | --- |
 | **Aucune** | Utilisation du suivi Deye sans pilotage d’une borne par l’écran. |
 | **Deye LoRa** | Système compatible avec le profil explicitement pris en charge par le firmware, après validation de la liaison et déverrouillage des écritures. Ne pas changer de modèle au hasard pour activer cette fonction. |
 | **Vetronic WB01** | Borne WB01 accompagnée de la passerelle ESP32 compatible avec ce projet. |
+| **V2C Trydan / Pro** | Pilotage local selon les fonctions exposées par la borne. [Notice V2C](GUIDE_V2C_TRYDAN_BETA.md). |
+| **Tesla Gen 3 Wi-Fi** | Suivi uniquement ; les commandes et tarifs restent dans l’application Tesla. [Notice Tesla](GUIDE_TESLA_GEN3_WIFI.md). |
 
 Après le redémarrage, ouvrir la page de la borne. Pour une WB01, renseigner l’adresse IP de sa passerelle. La configuration de cette passerelle reste distincte de celle de l’écran.
 
@@ -281,11 +283,11 @@ Les horaires et tarifs doivent être vérifiés dans les réglages. Ils ne prenn
 
 **Menus récents : Réglages > Écran** pour le thème et la veille ; **Réseau / Heure > Date / Heure / Fuseau UTC** pour l’horloge. Les anciens chemins ci-dessous permettent de retrouver ces réglages sur les versions précédentes.
 
-En **4.9.1**, dans **AFFICHAGE > THÈME / HORAIRES**, choisir le thème clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe lorsqu'il est allumé ; sa variation est retirée. Les versions antérieures peuvent encore proposer le menu THÈME / LUMINOSITÉ.
+En **4.9.2**, dans **Réglages > Écran > THÈME / HORAIRES**, choisir le thème clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe lorsqu'il est allumé ; sa variation est retirée. Les versions antérieures peuvent encore proposer le menu THÈME / LUMINOSITÉ.
 
-Dans **AFFICHAGE > VEILLE HORAIRE**, activer la veille et régler un créneau, puis activer le second uniquement si nécessaire. Les deux peuvent traverser minuit. Le LCD et le rétroéclairage s'éteignent ; le tactile reste actif et un toucher confirmé les réveille temporairement selon le délai configuré. Le premier toucher ne commande aucun bouton. Voir le [guide complet de veille](GUIDE_VEILLE_HORAIRE.md).
+Dans **Réglages > Écran > VEILLE HORAIRE**, activer la veille et régler un créneau, puis activer le second uniquement si nécessaire. Les deux peuvent traverser minuit. Le LCD et le rétroéclairage s'éteignent ; le tactile reste actif et un toucher confirmé les réveille temporairement selon le délai configuré. Le premier toucher ne commande aucun bouton. Voir le [guide complet de veille](GUIDE_VEILLE_HORAIRE.md).
 
-![Illustration historique de la veille à un créneau ; la version 4.9.1 propose aussi un second créneau facultatif.](images/demarrage/veille-horaire.png)
+![Illustration historique de la veille à un créneau ; la version 4.9.2 propose aussi un second créneau facultatif.](images/demarrage/veille-horaire.png)
 
 **Écran noir à heure fixe ?** Vérifier cette page. L’interrupteur en haut active la veille ; choisir les horaires et la durée du réveil au toucher, puis **ENREGISTRER**. La veille coupe l'affichage et le rétroéclairage, pas les lectures ni la page Web. Sans heure valide, l'écran reste allumé. Les horaires montrés sont des exemples.
 
@@ -304,9 +306,9 @@ Sans synchronisation Internet, choisir **RÉGLER L’HEURE MANUELLEMENT**, saisi
 3. Saisir cette adresse dans la barre d’adresse du navigateur, par exemple `http://192.168.1.50` en remplaçant l’exemple par l’adresse réelle.
 4. Si une identification est demandée, utiliser le compte configuré pour l’écran.
 
-La page web donne accès à la configuration, au tableau de bord et aux outils de diagnostic.
+La page Web propose les mêmes six rubriques et donne accès à la configuration, au tableau de bord et aux outils de diagnostic.
 
-Pour conserver une copie des réglages, utiliser l’**export de configuration JSON** et garder le fichier sur le téléphone ou l’ordinateur. Il est conseillé d’en faire une copie avant une mise à jour ou un changement important de réglages. Le fichier d’import doit correspondre à la configuration et au modèle utilisés.
+Pour conserver une copie des réglages, utiliser l’**export de configuration JSON** avant une mise à jour ou un changement important. En **4.9.2**, il inclut aussi les quatre passerelles PV5-PV8, leurs clés et jetons, ainsi que la famille Sofar et les inversions de signe. **Garder ce fichier privé.** Il ne contient ni le mot de passe Wi-Fi ni les identifiants Web, ni les archives CSV de la carte SD. Les anciens exports restent acceptés et ne remplacent pas les nouveaux réglages lorsqu’ils sont absents du fichier. Importer un fichier correspondant au modèle d’onduleur choisi.
 
 ## Mettre l’écran à jour
 

@@ -1,4 +1,4 @@
-# Veille de l'écran — un ou deux créneaux — 4.9.1
+# Veille de l'écran — un ou deux créneaux — 4.9.2
 
 Pendant les créneaux choisis, l'affichage LCD est désactivé et le rétroéclairage est éteint. **Le tactile reste actif pour réveiller l'écran.** Le rétroéclairage fonctionne uniquement allumé/éteint, à son niveau fixe ; aucun réglage de luminosité ni variation automatique n'est utilisé.
 
@@ -36,4 +36,4 @@ Le logiciel a été compilé et testé avec des périphériques simulés. La cou
 - Tester un créneau qui traverse minuit, puis deux créneaux distincts et leur sortie.
 - Vérifier le retour en veille après le délai, la conservation des paramètres après redémarrage et l'accès Web pendant l'extinction.
 
-Cette version reste **4.9.1 sans licence**. La version 5 mise de côté n'est pas modifiée.
+Cette version reste **4.9.2 sans licence**.

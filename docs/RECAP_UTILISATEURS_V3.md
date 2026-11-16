@@ -1,12 +1,14 @@
 # Deye Monitor - Mémo de démarrage
 
+**Mise à jour documentaire du 16 novembre 2026 - version 4.9.2 publiée :** sauvegarde étendue aux passerelles PV5-PV8, à leurs clés et jetons et au choix Sofar. Conserver ce JSON comme un fichier privé. Les anciens exports restent acceptés. [Détails 4.9.2](NOTES_4.9.2.md).
+
 **Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
+**Édition du 16 novembre 2026 - version 4.9.2.** Les captures de référence historiques restent signalées.
 
-**Correction 4.9.1 du 16 novembre 2026 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Complément 4.9.1 du 16 novembre 2026 :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.1 ne demande aucune licence. Les PDF et captures de référence restent ceux des versions précédentes.
+**Version 4.9.2 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Bornes et veille :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.2 ne demande aucune licence. Les PDF sont actualisés ; les captures de référence historiques restent signalées.
 
 [Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 
@@ -64,7 +66,7 @@ Depuis 4.8.9, les mesures microSD sont regroupées avant écriture, environ tout
 2. Les horaires de **Tarifs / Tempo** sont distincts des six plages **Time of Use** de l’onduleur.
 3. **Batterie / anticipation** concerne la batterie de la maison. L’option est désactivée par défaut ; vérifier TOU, SOC, heure et plages HC avant activation.
 
-En **4.9.1**, la recherche IP de V2C/Tesla est automatique après validation des mesures et de l'identité ; choisir dans la liste si plusieurs bornes répondent. V2C propose le pilotage local, Tesla Wi-Fi le suivi uniquement : ses commandes et tarifs restent dans l'application Tesla.
+En **4.9.2**, la recherche IP de V2C/Tesla est automatique après validation des mesures et de l'identité ; choisir dans la liste si plusieurs bornes répondent. V2C propose le pilotage local, Tesla Wi-Fi le suivi uniquement : ses commandes et tarifs restent dans l'application Tesla.
 
 **Exemple corrigé 4.8.10 :** moins de 10 kWh → 90 %, moins de 20 kWh → 60 %, moins de 30 kWh → 30 %, avec priorité à la **première règle remplie**. À 10 kWh exactement, la cible est 60 % ; à 20 kWh, 30 %. Sans règle correspondante et sans repli fixe, le TOU habituel est conservé.
 
@@ -77,8 +79,8 @@ Le bouton Web **Exemple Tempo** remplit seulement le brouillon. Les anciens rég
 ![Système : mise à jour, sauvegarde des réglages et diagnostic.](images/menus/navigation-group-5-light.png)
 
 1. **Réseau / Heure** : Paris = UTC+01:00 + Auto Europe ; Antilles françaises = UTC-04:00, sans heure d’été. Sans NTP, saisir la date et l’heure manuellement ; les vérifier après une coupure.
-2. **Réglages > Écran > Veille horaire** : activer un ou deux créneaux, y compris à cheval sur minuit. En 4.9.1, LCD et rétroéclairage sont éteints ; le tactile reste actif pour un réveil temporaire sans clic sur les commandes. Les lectures et le Web continuent. **Thème / horaires** conserve un rétroéclairage fixe, sans variation. Sans heure valide, l'écran reste allumé.
-3. **Système > Sauvegarde des réglages** : exporter le JSON avant une modification importante. **Mise à jour > Vérifier sur GitHub > Installer**, puis confirmer et attendre le redémarrage.
+2. **Réglages > Écran > Veille horaire** : activer un ou deux créneaux, y compris à cheval sur minuit. En 4.9.2, LCD et rétroéclairage sont éteints ; le tactile reste actif pour un réveil temporaire sans clic sur les commandes. Les lectures et le Web continuent. **Thème / horaires** conserve un rétroéclairage fixe, sans variation. Sans heure valide, l'écran reste allumé.
+3. **Système > Sauvegarde des réglages** : exporter le JSON avant une modification importante. En 4.9.2, il comprend aussi PV5-PV8, les clés et jetons des passerelles et le choix Sofar : garder ce fichier privé. Les mots de passe Wi-Fi, identifiants Web et CSV de la carte SD restent exclus. **Mise à jour > Vérifier sur GitHub > Installer**, puis confirmer et attendre le redémarrage.
 
 Par le Web, envoyer seulement le fichier **_OTA.bin** adapté à l’écran. Ni ZIP, ni bootloader, ni image USB fusionnée. Le scintillement pendant l’installation est normal ; garder l’alimentation jusqu’au redémarrage. Une OTA compatible conserve les réglages.
 

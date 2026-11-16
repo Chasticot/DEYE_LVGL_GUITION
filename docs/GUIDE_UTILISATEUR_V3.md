@@ -1,12 +1,14 @@
 # Deye Monitor - Guide utilisateur illustré
 
+**Mise à jour documentaire du 16 novembre 2026 - version 4.9.2 publiée :** sauvegarde étendue aux passerelles PV5-PV8, à leurs clés et jetons et au choix Sofar. Conserver ce JSON comme un fichier privé. Les anciens exports restent acceptés. [Détails 4.9.2](NOTES_4.9.2.md).
+
 **Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
+**Édition du 16 novembre 2026 - version 4.9.2.** Les captures de référence historiques restent signalées.
 
-**Complément du 16 novembre 2026 — version 4.9.1 sans licence :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md) et [veille LCD/rétroéclairage sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les captures historiques et les PDF de référence peuvent montrer les anciens menus ; les notices liées décrivent les nouveautés 4.9.1.
+**Fonctions conservées en 4.9.2 :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md) et [veille LCD/rétroéclairage sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les captures historiques peuvent montrer les anciens menus ; les notices liées décrivent les nouveautés 4.9.1.
 
 Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage avec des captures commentées. Les noms V3 des fichiers sont conservés pour les liens existants.
 
@@ -16,7 +18,7 @@ Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage 
 
 Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la préparation 4.8.10 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
 
-La série 4.9.1 ne demande aucune licence. La série 5 avec activation commerciale est conservée séparément. Une version affichée dans une capture ne signifie pas qu'elle est publiée ; les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
+La version 4.9.2 ne demande aucune licence ni activation commerciale. Une version affichée dans une capture ne signifie pas qu'elle est publiée ; les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
 
 ## Démarrer sans se perdre
 
@@ -80,7 +82,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 1. **Installation** : onduleur, logger et sources supplémentaires. **Énergie** : production, prévision et historique.
 2. **Pilotage** : borne, tarifs, batterie et relais. **Réseau / Heure** : Wi-Fi, date et accès Web.
-3. **Réglages > Écran** : thème, horaires et veille. En 4.9.1, le rétroéclairage reste fixe, sans variation. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
+3. **Réglages > Écran** : thème, horaires et veille. En 4.9.2, le rétroéclairage reste fixe, sans variation. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
 
 **À vérifier :** Sur les anciennes versions, ces accès peuvent encore porter les noms DEYE / SOLARMAN et AFFICHAGE. Les chemins de ce guide suivent la préparation 4.8.10.
 
@@ -246,7 +248,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 ![Saisie d’un paramètre avec le clavier de l’écran.](images/menus/solar-keyboard-light.png)
 
 1. Renseigner la position, la puissance des panneaux et leur orientation selon l’installation réelle. **Latitude puis longitude**, un nombre décimal par champ ; **8 000 Wc = 8 kWc**.
-2. Respecter les unités et le sens des angles indiqués dans le formulaire. Utiliser le [guide de prévision](GUIDE_PREVISION_SOLAIRE.md) pour les limites et les conventions.
+2. Répartir les panneaux entre **huit expositions au maximum**, avec puissance, inclinaison et orientation pour chacune ; laisser les groupes inutilisés à **0 kWc**. La position est commune et les prévisions sont additionnées. Voir le [guide de prévision](GUIDE_PREVISION_SOLAIRE.md).
 3. Enregistrer, attendre une actualisation puis vérifier la date et le résultat. Contrôler Internet et l’heure si les données restent absentes.
 
 **À vérifier :** La prévision seule n’envoie aucune commande. L’anticipation batterie est une option distincte, désactivée par défaut.
@@ -339,7 +341,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 2. Choisir les restrictions tarifaires souhaitées : réseau en HC seulement et interdiction des HP rouges Tempo, selon les options disponibles.
 3. **ENREGISTRER**, laisser redémarrer puis ouvrir la page de la borne. Le choix de Deye LoRa dépend du profil compatible ; WB01 nécessite sa passerelle.
 
-En **4.9.1**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Tesla Gen 3 Wi-Fi** pour le suivi uniquement. L'écran cherche automatiquement l'IP de la borne sélectionnée et l'enregistre après vérification de l'identité et des mesures, si la réponse est unique. En cas d'ambiguïté, choisir dans la liste puis laisser l'écran vérifier. Les commandes de charge Tesla restent dans l'application Tesla ; les tarifs de l'écran ne la commandent pas. Voir les [notices V2C](GUIDE_V2C_TRYDAN_BETA.md) et [Tesla](GUIDE_TESLA_GEN3_WIFI.md).
+En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Tesla Gen 3 Wi-Fi** pour le suivi uniquement. L'écran cherche automatiquement l'IP de la borne sélectionnée et l'enregistre après vérification de l'identité et des mesures, si la réponse est unique. En cas d'ambiguïté, choisir dans la liste puis laisser l'écran vérifier. Les commandes de charge Tesla restent dans l'application Tesla ; les tarifs de l'écran ne la commandent pas. Voir les [notices V2C](GUIDE_V2C_TRYDAN_BETA.md) et [Tesla](GUIDE_TESLA_GEN3_WIFI.md).
 
 **À vérifier :** Changer de borne ou désactiver son utilisation dans l’écran n’arrête pas une charge en cours. Utiliser d’abord la commande d’arrêt si la charge doit être stoppée.
 
@@ -514,11 +516,11 @@ En **4.9.1**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 ![Capture historique du menu d'affichage ; la version 4.9.1 propose Thème / horaires et Veille horaire sans variation de luminosité.](images/menus/navigation-group-4-light.png)
 ![Veille à un créneau dans une ancienne version ; la 4.9.1 ajoute un second créneau facultatif.](images/menus/veille-clair.png)
 
-1. En 4.9.1, ouvrir **THÈME / HORAIRES**, choisir clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe, sans PWM ni variation. Les versions antérieures peuvent encore proposer THÈME / LUMINOSITÉ.
+1. En 4.9.2, ouvrir **THÈME / HORAIRES**, choisir clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe, sans PWM ni variation. Les versions antérieures peuvent encore proposer THÈME / LUMINOSITÉ.
 2. Ouvrir **VEILLE HORAIRE** : activer l'option, saisir les heures du premier créneau et la durée de réveil, puis activer le second créneau si nécessaire. Les horaires peuvent traverser minuit. Toucher **ENREGISTRER**.
 3. Si l'écran devient noir à heure fixe, vérifier cette page. Un contact confirmé le réveille temporairement pendant la durée prévue, 60 secondes par défaut. Le premier toucher sert uniquement au réveil ; relâcher avant de toucher une commande.
 
-**À vérifier :** En 4.9.1, la veille désactive le LCD et éteint le rétroéclairage ; le tactile, les lectures et l'accès Web restent actifs. Sans heure valide, l'écran reste allumé. Voir le [guide de veille](GUIDE_VEILLE_HORAIRE.md), notamment pour les essais matériels attendus.
+**À vérifier :** En 4.9.2, la veille désactive le LCD et éteint le rétroéclairage ; le tactile, les lectures et l'accès Web restent actifs. Sans heure valide, l'écran reste allumé. Voir le [guide de veille](GUIDE_VEILLE_HORAIRE.md), notamment pour les essais matériels attendus.
 
 <!-- pagebreak -->
 
@@ -547,7 +549,7 @@ En **4.9.1**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 2. **DIAGNOSTIC / AIDE** permet de relever l’état des connexions et les lectures. Conserver le message précis, la version et la référence de l’onduleur.
 3. **RÉGLAGES AVANCÉS** concerne les registres et coefficients. Ne les modifier qu’après identification de la cartographie et sauvegarde.
 
-**À vérifier :** Un export peut contenir des informations privées : le transmettre uniquement à l’assistance concernée. Une réussite de connexion ne valide pas tous les registres ni toutes les commandes.
+**À vérifier :** En 4.9.2, l’export inclut aussi les jetons et clés des passerelles PV5-PV8 et la famille Sofar. Garder ce fichier privé ; il ne contient ni le mot de passe Wi-Fi ni les identifiants Web, ni les CSV de la carte SD. Une réussite de connexion ne valide pas tous les registres ni toutes les commandes.
 
 <!-- pagebreak -->
 

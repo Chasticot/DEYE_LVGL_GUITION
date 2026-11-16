@@ -1,6 +1,6 @@
-# V2C Trydan / Trydan Pro — version 4.9.1 sans licence
+# V2C Trydan / Trydan Pro — version 4.9.2 sans licence
 
-Cette intégration en essai ajoute le pilotage local d'une Trydan ou Trydan Pro depuis l'écran GUITION et sa page Web. Elle doit être essayée sur des bornes réelles avant d'annoncer une compatibilité validée. Les vérifications logicielles ne remplacent pas ces essais. Le même firmware 4.9.1 ajoute le [suivi Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), sélectionnable à la place d'une V2C.
+Cette intégration en essai ajoute le pilotage local d'une Trydan ou Trydan Pro depuis l'écran GUITION et sa page Web. Elle doit être essayée sur des bornes réelles avant d'annoncer une compatibilité validée. Les vérifications logicielles ne remplacent pas ces essais. Le même firmware 4.9.2 propose le [suivi Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), sélectionnable à la place d'une V2C.
 
 Elle regroupe également les **8 expositions solaires**, les **thèmes sombre/clair avec horaires** et l'**indicateur orange de mise à jour à gauche du Wi-Fi**. Le réglage de luminosité de l'écran a été retiré ; la veille horaire est conservée. Les réglages de luminosité LED de la borne V2C concernent la borne et restent disponibles.
 
@@ -9,7 +9,7 @@ La [veille de l'écran](GUIDE_VEILLE_HORAIRE.md) propose un ou deux créneaux : 
 ## Installer et connecter
 
 1. Depuis la page Web de l'écran, exporter sa configuration et conserver le fichier OTA de sa version actuelle.
-2. Dans **Mise à jour OTA**, sélectionner `DEYE_V3_4.9.1_OTA.bin` puis installer. C'est le firmware de l'écran, pas celui de la borne. La configuration est conservée. Si une bêta de la série 5 est déjà installée, utiliser ce formulaire Web manuel pour revenir à la série 4.
+2. Dans **Mise à jour OTA**, sélectionner `DEYE_V3_4.9.2_OTA.bin` puis installer. C'est le firmware de l'écran, pas celui de la borne. La configuration est conservée. Si une autre série majeure est déjà installée, utiliser ce formulaire Web manuel pour revenir à la série 4.
 3. Ouvrir **Réglages → Pilotage → Borne de recharge → Activation / tarifs**, choisir **V2C Trydan / Pro**, enregistrer et laisser l'écran redémarrer.
 4. Ouvrir **Réglages → Pilotage → Borne de recharge → V2C Trydan / Pro → Réseau**. Laisser la recherche automatique trouver et enregistrer l'adresse de la borne ; le port est **80** par défaut. Une saisie manuelle reste possible avec **Enregistrer / tester**. Pour un autre port HTTP, le renseigner avant de relancer la recherche.
 5. Vérifier l'état, l'identifiant et la version de la borne. Le test est en lecture seule. L'écran et la borne doivent pouvoir communiquer sur le même réseau ; une réservation d'adresse dans la box facilite la connexion.
