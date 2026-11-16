@@ -1,6 +1,6 @@
 # Deye Monitor — démarrage, utilisation et mises à jour
 
-**Notices 4.9.1 :** [V2C Trydan / Pro](docs/GUIDE_V2C_TRYDAN_BETA.md) · [Tesla Gen 3 Wi-Fi](docs/GUIDE_TESLA_GEN3_WIFI.md) · [Veille et réveil tactile](docs/GUIDE_VEILLE_HORAIRE.md).
+**Notices des bornes et de la veille :** [V2C Trydan / Pro](docs/GUIDE_V2C_TRYDAN_BETA.md) · [Tesla Gen 3 Wi-Fi](docs/GUIDE_TESLA_GEN3_WIFI.md) · [Veille et réveil tactile](docs/GUIDE_VEILLE_HORAIRE.md).
 
 
 > **Premières mesures :** [Démarrage rapide Wi-Fi + logger](docs/DEMARRAGE_RAPIDE.md) · [Fiche PDF à imprimer](docs/pdf/DEMARRAGE_RAPIDE.pdf) · [Pas à pas illustré](docs/DEMARRAGE_SIMPLE.md).
@@ -21,7 +21,9 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.9.1**, le **16 novembre 2026** : menus tactiles et Web de la 4.8.12 rétablis, avec V2C Trydan/Pro, suivi Tesla Gen 3 Wi-Fi, découverte des bornes, veille tactile à deux créneaux, huit expositions solaires et recherche de mises à jour facultative. Version 4 sans licence. [Notes et limites 4.9.1](docs/NOTES_4.9.1.md) · [Firmware OTA et empreinte](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.9.1).
+La dernière version publiée est **4.9.2**, le **16 novembre 2026** : retrait des restes d’activation commerciale de la V4, sauvegarde complétée pour PV5 à PV8 et Sofar, correction Time of Use et ressources Web compressées. Les menus et fonctions de la 4.9.1 sont conservés. [Nouveautés, installation et limites 4.9.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.9.2).
+
+**Sauvegarde privée :** en 4.9.2, le JSON inclut aussi les clés et jetons des passerelles PV5 à PV8. Le conserver en lieu sûr et ne pas le partager publiquement. Les mots de passe Wi-Fi, identifiants Web et CSV de la carte SD restent exclus.
 
 La gestion de la microSD (formatage FAT32 confirmé, retrait sécurisé et écritures groupées) et la recharge anticipée avec ou sans Tempo restent disponibles. [Guide de ces fonctions](docs/NOTES_4.8.9.md).
 
