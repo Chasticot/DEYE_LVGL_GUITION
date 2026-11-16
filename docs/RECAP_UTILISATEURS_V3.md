@@ -8,7 +8,7 @@
 
 **Édition du 16 novembre 2026 - version 4.9.2.** Les captures ont été refaites avec l’interface 4.9.2.
 
-**Version 4.9.2 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Bornes et veille :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.2 ne demande aucune licence. Les PDF sont actualisés ; les captures correspondent à l’interface 4.9.2.
+**Version 4.9.2 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Bornes et veille :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les PDF sont actualisés ; les captures correspondent à l’interface 4.9.2.
 
 [Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 

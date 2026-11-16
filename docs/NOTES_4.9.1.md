@@ -1,6 +1,6 @@
 # Deye Monitor 4.9.1 — menus 4.8.x rétablis
 
-Cette correction rétablit l’interface complète de la **4.8.12** et conserve les nouveautés de la 4.9.0. **Version 4 sans licence ni activation.** La version 5 reste à part.
+Cette correction rétablit l’interface complète de la **4.8.12** et conserve les nouveautés de la 4.9.0.
 
 ## Menus et fonctions retrouvés
 

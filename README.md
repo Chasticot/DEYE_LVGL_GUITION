@@ -2,7 +2,6 @@
 
 **Notices des bornes et de la veille :** [V2C Trydan / Pro](docs/GUIDE_V2C_TRYDAN_BETA.md) · [Tesla Gen 3 Wi-Fi](docs/GUIDE_TESLA_GEN3_WIFI.md) · [Veille et réveil tactile](docs/GUIDE_VEILLE_HORAIRE.md).
 
-
 > **Premières mesures :** [Démarrage rapide Wi-Fi + logger](docs/DEMARRAGE_RAPIDE.md) · [Fiche PDF à imprimer](docs/pdf/DEMARRAGE_RAPIDE.pdf) · [Pas à pas illustré](docs/DEMARRAGE_SIMPLE.md).
 
 > **Documentation illustrée du 16 novembre 2026 :** [guide des menus](docs/GUIDE_UTILISATEUR_V3.md), [guide PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo](docs/RECAP_UTILISATEURS_V3.md).
@@ -47,7 +46,7 @@ Interface **4.9.2** sur écran 480 × 480. Captures rendues depuis le firmware a
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.9.2**, le **16 novembre 2026** : retrait des restes d’activation commerciale de la V4, sauvegarde complétée pour PV5 à PV8 et Sofar, correction Time of Use et ressources Web compressées. Les menus et fonctions de la 4.9.1 sont conservés. [Notes 4.9.2](docs/NOTES_4.9.2.md) · [Nouveautés, installation et limites 4.9.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.9.2).
+La dernière version publiée est **4.9.2**, le **16 novembre 2026** : sauvegarde complétée pour PV5 à PV8 et Sofar, correction Time of Use et ressources Web compressées. Les menus et fonctions de la 4.9.1 sont conservés. [Notes 4.9.2](docs/NOTES_4.9.2.md) · [Nouveautés, installation et limites 4.9.2](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.9.2).
 
 **Sauvegarde privée :** en 4.9.2, le JSON inclut aussi les clés et jetons des passerelles PV5 à PV8. Le conserver en lieu sûr et ne pas le partager publiquement. Les mots de passe Wi-Fi, identifiants Web et CSV de la carte SD restent exclus.
 

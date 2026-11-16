@@ -4,7 +4,6 @@ La **4.9.2 est publiée** : [firmware OTA et empreinte SHA-256](https://github.c
 
 ## Ce qui change
 
-- Aucune licence ni activation commerciale n'est requise pour la série 4.
 - La sauvegarde JSON inclut maintenant les quatre passerelles PV5-PV8, leurs clés et jetons, ainsi que la famille Sofar et les inversions de signe.
 - Les configurations de passerelles sont vérifiées ensemble avant enregistrement. Les anciens exports restent acceptés ; l'absence de ces nouveaux champs ne remplace pas les réglages déjà présents.
 - Le fonctionnement du Time of Use au démarrage est corrigé.

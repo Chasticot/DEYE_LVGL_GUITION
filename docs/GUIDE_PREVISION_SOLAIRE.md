@@ -81,7 +81,7 @@ récupérer la prévision sans accès Internet.
 
 L'activation autorise l'envoi de la position, de l'inclinaison, de l'orientation
 et de la puissance à Forecast.Solar. Ces informations servent uniquement à la
-demande de prévision ; aucun identifiant d'onduleur ni de licence n'est envoyé.
+demande de prévision ; aucun identifiant d'onduleur n'est envoyé.
 La connexion HTTPS vérifie le certificat du service.
 
 L'écran effectue au plus une série de demandes par heure, avec une demande par

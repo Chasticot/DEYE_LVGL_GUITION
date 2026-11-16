@@ -41,5 +41,3 @@ Le logiciel a été compilé et testé avec des périphériques simulés. La cou
 - Vérifier un réveil tactile net, sans écran blanc persistant, sans variation de luminosité et sans action sur un bouton au premier toucher.
 - Tester un créneau qui traverse minuit, puis deux créneaux distincts et leur sortie.
 - Vérifier le retour en veille après le délai, la conservation des paramètres après redémarrage et l'accès Web pendant l'extinction.
-
-Cette version reste **4.9.2 sans licence**.

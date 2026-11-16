@@ -1,6 +1,6 @@
 # Deye Monitor 4.9.0 — 16 novembre 2026
 
-Firmware de l'écran GUITION ESP32-S3 480 × 480 compatible avec le projet. **Cette version 4 ne demande aucune licence ni activation.**
+Firmware de l'écran GUITION ESP32-S3 480 × 480 compatible avec le projet.
 
 ## Nouveautés
 

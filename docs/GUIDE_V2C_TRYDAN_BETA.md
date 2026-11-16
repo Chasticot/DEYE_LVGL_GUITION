@@ -1,4 +1,4 @@
-# V2C Trydan / Trydan Pro — version 4.9.2 sans licence
+# V2C Trydan / Trydan Pro — version 4.9.2
 
 Cette intégration en essai ajoute le pilotage local d'une Trydan ou Trydan Pro depuis l'écran GUITION et sa page Web. Elle doit être essayée sur des bornes réelles avant d'annoncer une compatibilité validée. Les vérifications logicielles ne remplacent pas ces essais. Le même firmware 4.9.2 propose le [suivi Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), sélectionnable à la place d'une V2C.
 
@@ -16,7 +16,7 @@ La [veille de l'écran](GUIDE_VEILLE_HORAIRE.md) propose un ou deux créneaux : 
 
 Le symbole de voiture du tableau de bord ouvre également la page de recharge. Depuis un téléphone connecté à la maison, la page `http://ADRESSE_DE_L_ECRAN/v2c` propose les mêmes commandes et les diagnostics.
 
-La communication entre écran et borne est locale. Elle ne demande ni Home Assistant, ni broker MQTT, ni compte V2C supplémentaire. L'installation et la configuration énergétique de la borne restent celles de V2C. **Cette version 4 ne demande aucune licence ni activation** : le pilotage V2C, Deye, WB01 et les automatismes restent soumis à leurs réglages habituels, sans verrou commercial.
+La communication entre écran et borne est locale. Elle ne demande ni Home Assistant, ni broker MQTT, ni compte V2C supplémentaire. L'installation et la configuration énergétique de la borne restent celles de V2C. Le pilotage V2C, Deye, WB01 et les automatismes restent soumis à leurs réglages et protections habituels.
 
 ## Retrouver l'adresse automatiquement
 

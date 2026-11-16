@@ -18,7 +18,7 @@ Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage 
 
 Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la 4.9.2 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
 
-La version 4.9.2 ne demande aucune licence ni activation commerciale. Les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
+Les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
 
 ## Démarrer sans se perdre
 
@@ -585,7 +585,6 @@ En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 3. En cas de problème, relever la version, l’onduleur, le logger, le réseau et le message. Joindre des photos simultanées du LCD et de Deye Monitor pour une mesure incohérente.
 
 **À vérifier :** Les guides ne constituent pas une annonce de disponibilité d’une version. Pour les détails : [FAQ](FAQ_ECRAN.md), [DL1000B](GUIDE_DL1000B_MODBUS_TCP.md), [prévision](GUIDE_PREVISION_SOLAIRE.md), [sources / microSD](GUIDE_MICRO_SD_SOFAR.md), [correction Tempo 4.8.10](NOTES_4.8.10.md).
-
 
 <!-- pagebreak -->
 

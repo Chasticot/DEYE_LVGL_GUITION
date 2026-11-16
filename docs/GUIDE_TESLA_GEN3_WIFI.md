@@ -1,6 +1,6 @@
 # Tesla Wall Connector Gen 3 Wi-Fi — écran 4.9.2
 
-Cette intégration affiche les données de la borne sur l'écran GUITION et sa page Web, par le réseau local. Elle ne demande ni Home Assistant, ni compte Tesla, ni licence de l'écran pour ces lectures. La borne doit déjà être installée et connectée au réseau Wi-Fi de la maison.
+Cette intégration affiche les données de la borne sur l'écran GUITION et sa page Web, par le réseau local. Elle ne demande ni Home Assistant ni compte Tesla pour ces lectures. La borne doit déjà être installée et connectée au réseau Wi-Fi de la maison.
 
 La [veille de l'écran](GUIDE_VEILLE_HORAIRE.md) peut couper le LCD et le rétroéclairage sur un ou deux créneaux, en gardant le tactile actif. Le suivi Tesla et l'accès Web continuent ; aucun réglage de variation du rétroéclairage n'est utilisé.
 
