@@ -1,5 +1,8 @@
 # Deye Monitor — démarrage, utilisation et mises à jour
 
+**Notices 4.9.0 :** [V2C Trydan / Pro](docs/GUIDE_V2C_TRYDAN_BETA.md) · [Tesla Gen 3 Wi-Fi](docs/GUIDE_TESLA_GEN3_WIFI.md) · [Veille et réveil tactile](docs/GUIDE_VEILLE_HORAIRE.md).
+
+
 > **Premières mesures :** [Démarrage rapide Wi-Fi + logger](docs/DEMARRAGE_RAPIDE.md) · [Fiche PDF à imprimer](docs/pdf/DEMARRAGE_RAPIDE.pdf) · [Pas à pas illustré](docs/DEMARRAGE_SIMPLE.md).
 
 > **Documentation illustrée du 6 novembre 2026 :** [guide des menus](docs/GUIDE_UTILISATEUR_V3.md), [guide PDF](docs/pdf/GUIDE_UTILISATEUR_V3.pdf) et [mémo](docs/RECAP_UTILISATEURS_V3.md).
@@ -18,7 +21,7 @@ Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUIT
 - **[Mémo de démarrage](docs/RECAP_UTILISATEURS_V3.md)** : les étapes à garder sous la main.
 - **[Téléchargements et dernière version stable](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest)**.
 
-La dernière version publiée est **4.8.12**, le **9 novembre 2026**. Elle simplifie l’activation des PV5 à PV8 par une case à cocher, conserve leur dernière configuration enregistrée et corrige l’affichage des kWc. Des exemples courts sont intégrés aux réglages ; la prévision météo reste une indication moyenne. [Détails 4.8.12](docs/NOTES_4.8.12.md) · [Binaire OTA 4.8.12](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.8.12).
+La dernière version publiée est **4.9.0**, le **16 novembre 2026** : V2C Trydan/Pro, suivi Tesla Gen 3 Wi-Fi, recherche automatique des bornes, veille LCD/rétroéclairage à un ou deux créneaux sans variation, huit expositions solaires et recherche de mises à jour facultative. Version 4 sans licence. [Notes et limites 4.9.0](docs/NOTES_4.9.0.md) · [Firmware OTA et empreinte](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/tag/v4.9.0).
 
 La gestion de la microSD (formatage FAT32 confirmé, retrait sécurisé et écritures groupées) et la recharge anticipée avec ou sans Tempo restent disponibles. [Guide de ces fonctions](docs/NOTES_4.8.9.md).
 

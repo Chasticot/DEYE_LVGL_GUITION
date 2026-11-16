@@ -6,6 +6,8 @@
 
 **Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
 
+**Complément du 16 novembre 2026 — version 4.9.0 sans licence :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md) et [veille LCD/rétroéclairage sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les captures historiques et les PDF de référence peuvent montrer les anciens menus ; les notices liées décrivent les nouveautés 4.9.0.
+
 Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage avec des captures commentées. Les noms V3 des fichiers sont conservés pour les liens existants.
 
 [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Questions fréquentes](FAQ_ECRAN.md).
@@ -14,7 +16,7 @@ Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage 
 
 Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la préparation 4.8.10 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
 
-La préparation 5.0.0 et son activation commerciale sont distinctes de ce parcours 4.8.10. Une version affichée dans une capture ne signifie pas qu’elle est publiée.
+La série 4.9.0 ne demande aucune licence. La série 5 avec activation commerciale est conservée séparément. Une version affichée dans une capture ne signifie pas qu'elle est publiée ; les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
 
 ## Démarrer sans se perdre
 
@@ -78,7 +80,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 1. **Installation** : onduleur, logger et sources supplémentaires. **Énergie** : production, prévision et historique.
 2. **Pilotage** : borne, tarifs, batterie et relais. **Réseau / Heure** : Wi-Fi, date et accès Web.
-3. **Écran** : luminosité et veille. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
+3. **Écran / Affichage** : thème, horaires et veille. En 4.9.0, le rétroéclairage reste fixe, sans variation. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
 
 **À vérifier :** Sur les anciennes versions, ces accès peuvent encore porter les noms DEYE / SOLARMAN et AFFICHAGE. Les chemins de ce guide suivent la préparation 4.8.10.
 
@@ -330,12 +332,14 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 **Chemin :** Réglages > Pilotage > Borne de recharge > Activation / tarifs.
 
-![Choix explicite : Aucune, Deye LoRa ou Vetronic WB01.](images/menus/bornes-liste.png)
+![Capture historique du choix de borne ; la version 4.9.0 ajoute V2C Trydan / Pro et Tesla Gen 3 Wi-Fi.](images/menus/bornes-liste.png)
 ![Options tarifaires de la recharge de la voiture.](images/menus/options-ve.png)
 
 1. Sélectionner la borne réellement installée. **Aucune** conserve le suivi sans pilotage de recharge par l’écran.
 2. Choisir les restrictions tarifaires souhaitées : réseau en HC seulement et interdiction des HP rouges Tempo, selon les options disponibles.
 3. **ENREGISTRER**, laisser redémarrer puis ouvrir la page de la borne. Le choix de Deye LoRa dépend du profil compatible ; WB01 nécessite sa passerelle.
+
+En **4.9.0**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Tesla Gen 3 Wi-Fi** pour le suivi uniquement. L'écran cherche automatiquement l'IP de la borne sélectionnée et l'enregistre après vérification de l'identité et des mesures, si la réponse est unique. En cas d'ambiguïté, choisir dans la liste puis laisser l'écran vérifier. Les commandes de charge Tesla restent dans l'application Tesla ; les tarifs de l'écran ne la commandent pas. Voir les [notices V2C](GUIDE_V2C_TRYDAN_BETA.md) et [Tesla](GUIDE_TESLA_GEN3_WIFI.md).
 
 **À vérifier :** Changer de borne ou désactiver son utilisation dans l’écran n’arrête pas une charge en cours. Utiliser d’abord la commande d’arrêt si la charge doit être stoppée.
 
@@ -507,14 +511,14 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 **Chemin :** Réglages > Écran.
 
-![Accès au thème, à la luminosité et à la veille.](images/menus/navigation-group-4-light.png)
-![Veille : activation, horaires et durée de réveil au toucher.](images/menus/veille-clair.png)
+![Capture historique du menu d'affichage ; la version 4.9.0 propose Thème / horaires et Veille horaire sans variation de luminosité.](images/menus/navigation-group-4-light.png)
+![Veille à un créneau dans une ancienne version ; la 4.9.0 ajoute un second créneau facultatif.](images/menus/veille-clair.png)
 
-1. Ouvrir **THÈME / LUMINOSITÉ**, choisir clair ou sombre et régler les niveaux jour/nuit selon votre besoin.
-2. Ouvrir **VEILLE HORAIRE** : activer l’option, saisir début, fin et durée de réveil, puis **ENREGISTRER**.
-3. Si l’écran devient noir à heure fixe, vérifier cette page. Un toucher le réveille temporairement pendant la durée prévue.
+1. En 4.9.0, ouvrir **THÈME / HORAIRES**, choisir clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe, sans PWM ni variation. Les versions antérieures peuvent encore proposer THÈME / LUMINOSITÉ.
+2. Ouvrir **VEILLE HORAIRE** : activer l'option, saisir les heures du premier créneau et la durée de réveil, puis activer le second créneau si nécessaire. Les horaires peuvent traverser minuit. Toucher **ENREGISTRER**.
+3. Si l'écran devient noir à heure fixe, vérifier cette page. Un contact confirmé le réveille temporairement pendant la durée prévue, 60 secondes par défaut. Le premier toucher sert uniquement au réveil ; relâcher avant de toucher une commande.
 
-**À vérifier :** La veille coupe le rétroéclairage, tandis que les lectures et l’accès Web continuent. Une heure correcte est nécessaire.
+**À vérifier :** En 4.9.0, la veille désactive le LCD et éteint le rétroéclairage ; le tactile, les lectures et l'accès Web restent actifs. Sans heure valide, l'écran reste allumé. Voir le [guide de veille](GUIDE_VEILLE_HORAIRE.md), notamment pour les essais matériels attendus.
 
 <!-- pagebreak -->
 

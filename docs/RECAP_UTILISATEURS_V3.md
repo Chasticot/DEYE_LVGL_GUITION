@@ -6,6 +6,8 @@
 
 **Édition du 11 novembre 2026 - Menus de référence 4.8.10.**
 
+**Complément 4.9.0 du 16 novembre 2026 :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.0 ne demande aucune licence. Les PDF et captures de référence restent ceux des versions précédentes.
+
 [Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 
 Si l’écran affiche déjà les bonnes mesures, l’utiliser directement. Une mise à jour n’impose pas une réinstallation USB.
@@ -56,11 +58,13 @@ Depuis 4.8.9, les mesures microSD sont regroupées avant écriture, environ tout
 ## 4. Recharge de la voiture et batterie de la maison
 
 ![Pilotage regroupe la borne, les tarifs, le TOU, le relais et l’anticipation batterie.](images/menus/tempo-battery-menu-light.png)
-![Choisir explicitement la borne : Aucune, Deye LoRa ou Vetronic WB01.](images/menus/bornes-liste.png)
+![Capture historique du choix de borne ; la 4.9.0 ajoute V2C Trydan / Pro et Tesla Gen 3 Wi-Fi.](images/menus/bornes-liste.png)
 
 1. **Pilotage > Borne de recharge > Activation / tarifs** : choisir le matériel, enregistrer et attendre le redémarrage. Pour WB01, renseigner ensuite l’IP de sa passerelle.
 2. Les horaires de **Tarifs / Tempo** sont distincts des six plages **Time of Use** de l’onduleur.
 3. **Batterie / anticipation** concerne la batterie de la maison. L’option est désactivée par défaut ; vérifier TOU, SOC, heure et plages HC avant activation.
+
+En **4.9.0**, la recherche IP de V2C/Tesla est automatique après validation des mesures et de l'identité ; choisir dans la liste si plusieurs bornes répondent. V2C propose le pilotage local, Tesla Wi-Fi le suivi uniquement : ses commandes et tarifs restent dans l'application Tesla.
 
 **Exemple corrigé 4.8.10 :** moins de 10 kWh → 90 %, moins de 20 kWh → 60 %, moins de 30 kWh → 30 %, avec priorité à la **première règle remplie**. À 10 kWh exactement, la cible est 60 % ; à 20 kWh, 30 %. Sans règle correspondante et sans repli fixe, le TOU habituel est conservé.
 
@@ -73,7 +77,7 @@ Le bouton Web **Exemple Tempo** remplit seulement le brouillon. Les anciens rég
 ![Système : mise à jour, sauvegarde des réglages et diagnostic.](images/menus/navigation-group-5-light.png)
 
 1. **Réseau / Heure** : Paris = UTC+01:00 + Auto Europe ; Antilles françaises = UTC-04:00, sans heure d’été. Sans NTP, saisir la date et l’heure manuellement ; les vérifier après une coupure.
-2. **Écran > Veille horaire** : si l’écran est noir à heure fixe, toucher pour le réveiller puis contrôler les horaires. Les lectures et le Web continuent pendant la veille.
+2. **Écran / Affichage > Veille horaire** : activer un ou deux créneaux, y compris à cheval sur minuit. En 4.9.0, LCD et rétroéclairage sont éteints ; le tactile reste actif pour un réveil temporaire sans clic sur les commandes. Les lectures et le Web continuent. **Thème / horaires** conserve un rétroéclairage fixe, sans variation. Sans heure valide, l'écran reste allumé.
 3. **Système > Sauvegarde des réglages** : exporter le JSON avant une modification importante. **Mise à jour > Vérifier sur GitHub > Installer**, puis confirmer et attendre le redémarrage.
 
 Par le Web, envoyer seulement le fichier **_OTA.bin** adapté à l’écran. Ni ZIP, ni bootloader, ni image USB fusionnée. Le scintillement pendant l’installation est normal ; garder l’alimentation jusqu’au redémarrage. Une OTA compatible conserve les réglages.
