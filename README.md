@@ -9,6 +9,32 @@
 
 Deye Monitor affiche les mesures d’un onduleur DEYE sur un écran tactile GUITION ESP32-S3 480 × 480. Il fonctionne en local avec un logger compatible, sans Home Assistant ni compte cloud à renseigner dans l’écran.
 
+<!-- galerie-sombre-debut -->
+## Le projet en images — mode sombre
+
+Interface **4.9.2** sur écran 480 × 480. Captures rendues depuis le firmware avec des données de démonstration ; les valeurs, adresses et états ne décrivent pas une installation réelle. Cliquer sur une image pour l’agrandir.
+
+<p align="center"><a href="docs/images/presentation/dashboard-sombre.png"><img src="docs/images/presentation/dashboard-sombre.png" alt="Tableau de bord principal — mode sombre" width="480"></a><br><em>Tableau de bord principal</em></p>
+
+<table>
+<tr>
+<td align="center"><a href="docs/images/presentation/reglages-sombre.png"><img src="docs/images/presentation/reglages-sombre.png" alt="Les six rubriques de réglages — mode sombre" width="250"></a><br><em>Les six rubriques de réglages</em></td>
+<td align="center"><a href="docs/images/presentation/installation-sombre.png"><img src="docs/images/presentation/installation-sombre.png" alt="Installation et sources solaires — mode sombre" width="250"></a><br><em>Installation et sources solaires</em></td>
+<td align="center"><a href="docs/images/presentation/pilotage-sombre.png"><img src="docs/images/presentation/pilotage-sombre.png" alt="Recharge, tarifs et batterie — mode sombre" width="250"></a><br><em>Recharge, tarifs et batterie</em></td>
+</tr>
+<tr>
+<td align="center"><a href="docs/images/presentation/prevision-sombre.png"><img src="docs/images/presentation/prevision-sombre.png" alt="Prévisions solaires et courbes — mode sombre" width="250"></a><br><em>Prévisions solaires et courbes</em></td>
+<td align="center"><a href="docs/images/presentation/expositions-sombre.png"><img src="docs/images/presentation/expositions-sombre.png" alt="Jusqu’à huit expositions solaires — mode sombre" width="250"></a><br><em>Jusqu’à huit expositions solaires</em></td>
+<td align="center"><a href="docs/images/presentation/historique-sombre.png"><img src="docs/images/presentation/historique-sombre.png" alt="Historique et carte microSD — mode sombre" width="250"></a><br><em>Historique et carte microSD</em></td>
+</tr>
+<tr>
+<td align="center"><a href="docs/images/presentation/tou-sombre.png"><img src="docs/images/presentation/tou-sombre.png" alt="Time of Use de l’onduleur — mode sombre" width="250"></a><br><em>Time of Use de l’onduleur</em></td>
+<td align="center"><a href="docs/images/presentation/v2c-sombre.png"><img src="docs/images/presentation/v2c-sombre.png" alt="Recharge V2C Trydan / Pro — mode sombre" width="250"></a><br><em>Recharge V2C Trydan / Pro</em></td>
+<td align="center"><a href="docs/images/presentation/tesla-sombre.png"><img src="docs/images/presentation/tesla-sombre.png" alt="Suivi Tesla Gen 3 Wi-Fi — mode sombre" width="250"></a><br><em>Suivi Tesla Gen 3 Wi-Fi</em></td>
+</tr>
+</table>
+<!-- galerie-sombre-fin -->
+
 ## Commencer ici
 
 ![Le parcours de première utilisation en cinq étapes](docs/images/demarrage/parcours-demarrage.svg)
