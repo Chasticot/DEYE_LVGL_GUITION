@@ -44,6 +44,20 @@ Une recherche interrompue ou dépassant le délai, un changement manuel de confi
 
 Le signe `--` désigne une mesure ou une fonction indisponible. Les fonctions absentes de la réponse V2C sont désactivées. Une fonction lisible peut encore être refusée en écriture par certaines versions de la borne : relever le résultat et transmettre le diagnostic.
 
+## Repères sur l’écran 4.9.2
+
+Captures de l’interface réelle, rendues avec des données simulées : adresses et mesures d’exemple, sans essai de charge matériel.
+
+![Charge : courant proposé, pause/reprise et modes solaires.](images/menus/v2c-charge-light.png)
+
+![Réglages : fonction, valeur relue et application à la borne.](images/menus/v2c-settings-light.png)
+
+![Mesures : session, courants et tensions reçus.](images/menus/v2c-measures-light.png)
+
+![Réseau : adresse, port et test de lecture. Faire défiler pour la recherche automatique si nécessaire.](images/menus/v2c-network-dark.png)
+
+![Liaison perdue : données indisponibles et commandes de charge désactivées.](images/menus/v2c-offline-dark.png)
+
 ## Commandes intégrées
 
 | Réglage | Fonctionnement |

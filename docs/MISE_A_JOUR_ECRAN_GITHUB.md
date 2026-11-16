@@ -4,9 +4,9 @@
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Documentation mise à jour le 16 novembre 2026 pour la 4.9.2.** [Nouveau guide complet : 34 parcours de menus illustrés](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
+**Documentation mise à jour le 16 novembre 2026 pour la 4.9.2.** [Nouveau guide complet : 40 parcours de menus illustrés](GUIDE_UTILISATEUR_V3.md) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf).
 
-Le guide suit les six rubriques de la **4.9.2** : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système. Certaines captures historiques affichent d'anciens numéros ou libellés ; les légendes expliquent les différences. [Nouveautés 4.9.2](NOTES_4.9.2.md).
+Le guide suit les six rubriques de la **4.9.2** : Installation, Énergie, Pilotage, Réseau / Heure, Écran et Système. Les captures de Deye Monitor ont été refaites avec le code actif 4.9.2 et des données d’exemple. [Nouveautés 4.9.2](NOTES_4.9.2.md).
 
 Ce guide explique comment mettre en route et utiliser l’écran Deye Monitor au quotidien. Il concerne l’écran tactile, sa page accessible depuis un téléphone ou un ordinateur et les fonctions optionnelles de recharge.
 
@@ -287,7 +287,7 @@ En **4.9.2**, dans **Réglages > Écran > THÈME / HORAIRES**, choisir le thème
 
 Dans **Réglages > Écran > VEILLE HORAIRE**, activer la veille et régler un créneau, puis activer le second uniquement si nécessaire. Les deux peuvent traverser minuit. Le LCD et le rétroéclairage s'éteignent ; le tactile reste actif et un toucher confirmé les réveille temporairement selon le délai configuré. Le premier toucher ne commande aucun bouton. Voir le [guide complet de veille](GUIDE_VEILLE_HORAIRE.md).
 
-![Illustration historique de la veille à un créneau ; la version 4.9.2 propose aussi un second créneau facultatif.](images/demarrage/veille-horaire.png)
+![Veille 4.9.2 : deux créneaux configurés ; leurs horaires sont des exemples.](images/demarrage/veille-horaire.png)
 
 **Écran noir à heure fixe ?** Vérifier cette page. L’interrupteur en haut active la veille ; choisir les horaires et la durée du réveil au toucher, puis **ENREGISTRER**. La veille coupe l'affichage et le rétroéclairage, pas les lectures ni la page Web. Sans heure valide, l'écran reste allumé. Les horaires montrés sont des exemples.
 

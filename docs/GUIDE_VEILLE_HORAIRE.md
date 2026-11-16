@@ -17,6 +17,12 @@ Les heures suivent l'heure locale de l'écran. Chaque créneau peut traverser mi
 
 Le même paramétrage existe dans la page Web, rubrique **Écran → Veille et réveil tactile**. Les réglages sont sauvegardés après redémarrage/OTA et inclus dans l'export/import de configuration. Un ancien réglage ou export à un seul créneau conserve ses horaires ; le deuxième reste désactivé.
 
+![Premier créneau et activation facultative du second, dans la 4.9.2.](images/menus/veille-clair.png)
+
+![Après défilement : deuxième créneau actif et durée de réveil. Les horaires sont des exemples.](images/menus/veille-deux-creneaux-clair.png)
+
+Captures rendues depuis l’interface 4.9.2 avec des données simulées ; ne pas recopier les horaires sans les adapter.
+
 ## Réveiller l'écran
 
 Pendant la veille, toucher normalement l'écran pour le rallumer temporairement. Le contact est filtré pour écarter les parasites. **Le toucher de réveil n'actionne aucun bouton** : relâcher le doigt, puis toucher la commande voulue.

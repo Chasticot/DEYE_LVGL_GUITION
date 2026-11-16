@@ -4,7 +4,7 @@
 
 [Guide utilisateur](MISE_A_JOUR_ECRAN_GITHUB.md) · [Nouveautés 4.9.2](NOTES_4.9.2.md).
 
-**Édition actualisée le 16 novembre 2026 pour la 4.9.2.** Les captures ci-dessous sont des aperçus historiques de développement : leurs coordonnées, dates et productions sont des exemples, à remplacer par les informations de votre installation.
+**Édition actualisée le 16 novembre 2026 pour la 4.9.2.** Les captures ci-dessous sont des rendus de l’interface active 4.9.2, avec des données simulées : leurs coordonnées, dates et productions sont des exemples, à remplacer par les informations de votre installation.
 
 ## Mise en route
 
@@ -24,7 +24,9 @@ Le fuseau horaire réglé dans l'écran doit correspondre au lieu de l'installat
 
 ![Réglages de l’installation solaire : latitude, longitude, puissance, inclinaison et orientation.](images/solaire/reglages-installation.png)
 
-**Capture historique avec une seule exposition.** La 4.9.2 permet d'en renseigner huit. Les coordonnées et 3 kWc de cette image sont des exemples : ne pas les recopier pour une autre installation.
+**Sélecteur « Exposition à régler (1 à 8) » :** choisir un groupe, saisir sa puissance et ses angles, puis passer au suivant. Les champs de position restent communs. Laisser les groupes inutilisés à 0 kWc. Les valeurs et coordonnées sont des exemples.
+
+![Exposition 8 sélectionnée : puissance et angles propres à ce groupe de panneaux.](images/menus/solar-exposure-8-light.png)
 
 ## Les réglages ne restent pas enregistrés ?
 

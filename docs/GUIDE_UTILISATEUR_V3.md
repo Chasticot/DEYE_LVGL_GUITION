@@ -6,19 +6,19 @@
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Édition du 16 novembre 2026 - version 4.9.2.** Les captures de référence historiques restent signalées.
+**Édition du 16 novembre 2026 - version 4.9.2.** Les captures ont été refaites avec l’interface 4.9.2.
 
-**Fonctions conservées en 4.9.2 :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md) et [veille LCD/rétroéclairage sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les captures historiques peuvent montrer les anciens menus ; les notices liées décrivent les nouveautés 4.9.1.
+**Fonctions conservées en 4.9.2 :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md) et [veille LCD/rétroéclairage sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). Les notices liées et les parcours illustrés ci-dessous décrivent leur utilisation actuelle.
 
 Mettre en route l’écran, comprendre les mesures et retrouver chaque réglage avec des captures commentées. Les noms V3 des fichiers sont conservés pour les liens existants.
 
 [Guide en PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo de démarrage](RECAP_UTILISATEURS_V3.md) · [Questions fréquentes](FAQ_ECRAN.md).
 
-**Les illustrations sont des captures de l’interface LVGL avec des données simulées, pas des photos prises sur une installation réelle.** Les adresses, numéros, dates, consignes et versions affichés sont des exemples. Utiliser les informations de votre propre installation. Certains écrans de fonctions communes proviennent de versions antérieures ; les légendes signalent les différences utiles.
+**Les illustrations sont des captures de l’interface LVGL avec des données simulées, pas des photos prises sur une installation réelle.** Les adresses, numéros, dates, consignes et versions affichés sont des exemples. Utiliser les informations de votre propre installation. Toutes les captures de ce guide sont rendues à partir du code actif 4.9.2, en 480 × 480 pixels.
 
-Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la préparation 4.8.10 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
+Les menus visibles dépendent de la version installée, du modèle et de la borne choisis. Les fonctions de la 4.9.2 ont été contrôlées en logiciel ; le formatage physique de la carte et un cycle réel de recharge anticipée restent à vérifier. Une consigne relue ne prouve pas un courant réel de charge.
 
-La version 4.9.2 ne demande aucune licence ni activation commerciale. Une version affichée dans une capture ne signifie pas qu'elle est publiée ; les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
+La version 4.9.2 ne demande aucune licence ni activation commerciale. Les fonctions nouvelles restent à confirmer sur les différentes révisions matérielles.
 
 ## Démarrer sans se perdre
 
@@ -71,6 +71,13 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 - [33. Mettre à jour le logiciel de l’écran](#33-mettre-à-jour-le-logiciel-de-lécran)
 - [34. Choisir le bon fichier et retrouver de l’aide](#34-choisir-le-bon-fichier-et-retrouver-de-laide)
 
+- [35. Régler le second créneau de veille](#35-régler-le-second-créneau-de-veille)
+- [36. Piloter une V2C Trydan / Pro](#36-piloter-une-v2c-trydan--pro)
+- [37. Vérifier les mesures et le réseau V2C](#37-vérifier-les-mesures-et-le-réseau-v2c)
+- [38. Suivre une Tesla Gen 3 Wi-Fi](#38-suivre-une-tesla-gen-3-wi-fi)
+- [39. Retrouver une Tesla et lire un état hors ligne](#39-retrouver-une-tesla-et-lire-un-état-hors-ligne)
+- [40. Terminer le démarrage guidé](#40-terminer-le-démarrage-guidé)
+
 <!-- pagebreak -->
 
 ## 1. Se repérer dans les réglages
@@ -84,7 +91,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 2. **Pilotage** : borne, tarifs, batterie et relais. **Réseau / Heure** : Wi-Fi, date et accès Web.
 3. **Réglages > Écran** : thème, horaires et veille. En 4.9.2, le rétroéclairage reste fixe, sans variation. **Système** : mise à jour, sauvegarde, diagnostic et réglages avancés.
 
-**À vérifier :** Sur les anciennes versions, ces accès peuvent encore porter les noms DEYE / SOLARMAN et AFFICHAGE. Les chemins de ce guide suivent la préparation 4.8.10.
+**À vérifier :** Sur les anciennes versions, ces accès peuvent encore porter les noms DEYE / SOLARMAN et AFFICHAGE. Les chemins de ce guide suivent la 4.9.2.
 
 <!-- pagebreak -->
 
@@ -198,13 +205,13 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 **Chemin :** Réglages > Installation > Sources solaires / PV5 à PV8.
 
 ![Accès local par QR code pour configurer les sources supplémentaires.](images/menus/portal-0-light.png)
-![Exemple de six sources affichées ensemble sur le tableau de bord.](images/menus/pv-six-light.png)
+![Avec huit sources configurées, le tableau de bord alterne les lignes affichées.](images/menus/pv-eight-light.png)
 
 1. Connecter le téléphone et l’écran au même réseau. Scanner le QR code ou saisir l’adresse indiquée sur votre écran.
 2. Choisir une installation libre, un nom, la marque et la connexion locale. Les quatre installations correspondent à **PV5, PV6, PV7 et PV8**.
 3. Enregistrer d’abord en **Afficher séparément** et attendre **Lecture OK**. Comparer avec l’application du matériel avant tout ajout au total.
 
-**Pour annuler PV5 en 4.8.12 :** sur sa page Web, décocher **Activer cette source PV** puis attendre la confirmation ; l’arrêt est immédiat. Voir le [pas à pas](DEMARRAGE_SIMPLE.md#7-annuler-une-source-pv5-commencée-par-erreur).
+**Pour annuler PV5 :** sur sa page Web, décocher **Activer cette source PV** puis attendre la confirmation ; l’arrêt est immédiat. Voir le [pas à pas](DEMARRAGE_SIMPLE.md#7-annuler-une-source-pv5-commencée-par-erreur).
 
 **À vérifier :** Choisir **Déjà mesurée par le port GEN** si GEN compte déjà cette production. Le guide [sources et historique](GUIDE_MICRO_SD_SOFAR.md) détaille les profils et leurs limites.
 
@@ -214,8 +221,8 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 **Chemin :** Réglages > Énergie > Production par source, ou tableau de bord > PRODUCTION PV.
 
-![Avec sept ou huit sources, les valeurs du tableau de bord alternent.](images/menus/pv-eight-light.png)
-![Liste des sources : puissance, nom et indication de comptage.](images/menus/pv-details-light.png)
+![Haut de la liste : les voies PV1 à PV4 de l’onduleur.](images/menus/pv-details-light.png)
+![Bas de la liste : PV5 à PV8 et leur indication de comptage.](images/menus/pv-details-bottom-light.png)
 
 1. Ouvrir le détail pour voir toutes les sources au lieu d’attendre leur alternance sur le tableau de bord.
 2. Faire défiler jusqu’en bas. Une source peut être visible sans être ajoutée au total ; lire son indication de comptage.
@@ -245,7 +252,7 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 **Chemin :** Réglages > Énergie > Prévision solaire > Réglages.
 
 ![Activation et paramètres de l’installation solaire.](images/menus/solar-config-light.png)
-![Saisie d’un paramètre avec le clavier de l’écran.](images/menus/solar-keyboard-light.png)
+![Choix de l’exposition 8 et saisie de sa puissance, de son inclinaison et de son orientation.](images/menus/solar-exposure-8-light.png)
 
 1. Renseigner la position, la puissance des panneaux et leur orientation selon l’installation réelle. **Latitude puis longitude**, un nombre décimal par champ ; **8 000 Wc = 8 kWc**.
 2. Répartir les panneaux entre **huit expositions au maximum**, avec puissance, inclinaison et orientation pour chacune ; laisser les groupes inutilisés à **0 kWc**. La position est commune et les prévisions sont additionnées. Voir le [guide de prévision](GUIDE_PREVISION_SOLAIRE.md).
@@ -332,9 +339,9 @@ L’écran doit disposer de l’alimentation prévue par sa notice. Il n’a pas
 
 ## 18. Choisir la borne de recharge
 
-**Chemin :** Réglages > Pilotage > Borne de recharge > Activation / tarifs.
+**Chemin :** Réglages > Pilotage > Borne de recharge.
 
-![Capture historique du choix de borne ; la version 4.9.1 ajoute V2C Trydan / Pro et Tesla Gen 3 Wi-Fi.](images/menus/bornes-liste.png)
+![Choix actuel : Aucune, Deye LoRa, Vetronic WB01, V2C Trydan / Pro ou Tesla Gen 3 Wi-Fi.](images/menus/bornes-liste.png)
 ![Options tarifaires de la recharge de la voiture.](images/menus/options-ve.png)
 
 1. Sélectionner la borne réellement installée. **Aucune** conserve le suivi sans pilotage de recharge par l’écran.
@@ -485,12 +492,13 @@ En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 **Chemin :** Réglages > Réseau / Heure > Wi-Fi / Réseau.
 
 ![Wi-Fi, date et heure, accès à la page Web locale.](images/menus/navigation-group-3-light.png)
+![Formulaire Wi-Fi : réseau, mot de passe et IP de l’écran.](images/menus/wifi-settings-light.png)
 
 1. Dans **WIFI / RÉSEAU**, toucher **SCAN**, choisir le Wi-Fi 2,4 GHz et saisir son mot de passe. **SAUVEGARDER**, puis attendre le redémarrage.
 2. Revenir relever **IP Serveur Web / Écran**. Sur le téléphone connecté au même réseau, ouvrir http:// suivi de cette IP, ou l’accès Web proposé dans le menu.
 3. Utiliser les identifiants habituels de l’écran si une protection est active. Le mot de passe vide d’un réseau déjà enregistré peut conserver celui mémorisé.
 
-**À vérifier :** Si le téléphone annonce « sans Internet » sur un réseau local, conserver la connexion pour ouvrir la page de l’écran. Sans box, suivre le parcours réseau du guide de démarrage. Une illustration du formulaire Wi-Fi n’est pas disponible dans cette série de captures.
+**À vérifier :** Si le téléphone annonce « sans Internet » sur un réseau local, conserver la connexion pour ouvrir la page de l’écran. Sans box, suivre le parcours réseau du guide de démarrage. Le champ sous le nom du réseau sert au mot de passe Wi-Fi ; le laisser vide conserve le mot de passe du même réseau. Ne cocher la remise à zéro des accès Web que si elle est nécessaire.
 
 <!-- pagebreak -->
 
@@ -513,8 +521,8 @@ En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 
 **Chemin :** Réglages > Écran.
 
-![Capture historique du menu d'affichage ; la version 4.9.1 propose Thème / horaires et Veille horaire sans variation de luminosité.](images/menus/navigation-group-4-light.png)
-![Veille à un créneau dans une ancienne version ; la 4.9.1 ajoute un second créneau facultatif.](images/menus/veille-clair.png)
+![Choix du thème et de sa plage horaire, sans variation de luminosité.](images/menus/theme-schedule-light.png)
+![Veille horaire : premier créneau et activation facultative du second.](images/menus/veille-clair.png)
 
 1. En 4.9.2, ouvrir **THÈME / HORAIRES**, choisir clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe, sans PWM ni variation. Les versions antérieures peuvent encore proposer THÈME / LUMINOSITÉ.
 2. Ouvrir **VEILLE HORAIRE** : activer l'option, saisir les heures du premier créneau et la durée de réveil, puis activer le second créneau si nécessaire. Les horaires peuvent traverser minuit. Toucher **ENREGISTRER**.
@@ -557,14 +565,14 @@ En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 
 **Chemin :** Réglages > Système > Mise à jour.
 
-![Recherche de version et progression : données de démonstration.](images/menus/github-ota-light.png)
-![Confirmation avant l’installation OTA.](images/menus/github-ota-confirm-light.png)
+![Page actuelle de mise à jour : version installée 4.9.2, écran à jour.](images/menus/github-ota-light.png)
+![Recherche automatique activée : contrôle périodique, installation toujours manuelle.](images/menus/github-ota-auto-on-light.png)
 
 1. Exporter les réglages. Vérifier le Wi-Fi, l’heure et l’alimentation, puis toucher **VÉRIFIER SUR GITHUB**.
 2. Lire la version réellement proposée. Si elle convient, toucher **INSTALLER** puis confirmer. Un scintillement pendant l’installation est normal.
 3. Attendre le redémarrage sans couper l’alimentation. Vérifier ensuite la version, le logger et les mesures. Une OTA compatible conserve les réglages.
 
-**À vérifier :** Les versions et pourcentages de la capture sont fictifs. Le logiciel de l’écran ne met à jour ni l’onduleur ni le logger. Le lien [téléchargements](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest) reste celui des binaires publics.
+**À vérifier :** La recherche automatique est désactivée par défaut ; l’activer est facultatif. La capture montre une simulation de contrôle, sans téléchargement ni installation réelle. Le logiciel de l’écran ne met à jour ni l’onduleur ni le logger. Le lien [téléchargements](https://github.com/Chasticot/DEYE_LVGL_GUITION/releases/latest) reste celui des binaires publics.
 
 <!-- pagebreak -->
 
@@ -578,3 +586,93 @@ En **4.9.2**, choisir aussi **V2C Trydan / Pro** pour son pilotage local ou **Te
 
 **À vérifier :** Les guides ne constituent pas une annonce de disponibilité d’une version. Pour les détails : [FAQ](FAQ_ECRAN.md), [DL1000B](GUIDE_DL1000B_MODBUS_TCP.md), [prévision](GUIDE_PREVISION_SOLAIRE.md), [sources / microSD](GUIDE_MICRO_SD_SOFAR.md), [correction Tempo 4.8.10](NOTES_4.8.10.md).
 
+
+<!-- pagebreak -->
+
+## 35. Régler le second créneau de veille
+
+**Chemin :** Réglages > Écran > Veille horaire > faire défiler.
+
+![Second créneau activé, de 13:00 à 14:00, et réveil de 60 secondes : exemple.](images/menus/veille-deux-creneaux-clair.png)
+![Saisie d’un horaire au clavier ; fermer le clavier pour contrôler les autres champs.](images/menus/veille-clavier.png)
+
+1. Activer la veille, puis **Activer le créneau 2** uniquement si deux plages sont utiles.
+2. Saisir début et fin de chaque créneau et la durée du réveil au toucher. Les créneaux peuvent traverser minuit.
+3. Fermer le clavier, contrôler les horaires puis **ENREGISTRER**. Le premier toucher en veille sert au réveil ; relâcher avant de commander.
+
+**À vérifier :** Les horaires montrés sont des exemples. Sans heure valide, l’écran reste allumé ; les lectures et le Web continuent pendant la veille.
+
+<!-- pagebreak -->
+
+## 36. Piloter une V2C Trydan / Pro
+
+**Chemin :** Réglages > Pilotage > Borne de recharge > V2C Trydan / Pro.
+
+![Page Charge : mesures reçues, courant proposé et modes disponibles.](images/menus/v2c-charge-light.png)
+![Page Réglages : sélectionner une fonction, lire sa valeur puis préparer une modification.](images/menus/v2c-settings-light.png)
+
+1. Choisir V2C comme borne, enregistrer et laisser redémarrer. Ouvrir **RÉSEAU** pour établir la liaison locale.
+2. Dans **CHARGE**, lire l’état avant de choisir un courant ou un mode. Vérifier ensuite la réponse de la borne.
+3. Dans **RÉGLAGES**, ne changer que les fonctions connues. Les réglages d’installation demandent une confirmation.
+
+**À vérifier :** Une consigne n’est pas une puissance mesurée. Les commandes disponibles dépendent de la réponse et du firmware V2C. Voir la [notice complète](GUIDE_V2C_TRYDAN_BETA.md).
+
+<!-- pagebreak -->
+
+## 37. Vérifier les mesures et le réseau V2C
+
+**Chemin :** Page V2C > Mesures ou Réseau.
+
+![Mesures : session, puissance, courants et tensions ; un tiret signale une donnée absente.](images/menus/v2c-measures-light.png)
+![Réseau : adresse locale, port, lecture de la borne et identification.](images/menus/v2c-network-dark.png)
+
+1. Relier la borne et l’écran au même réseau. Dans **RÉSEAU**, utiliser la recherche ou saisir l’IP de la borne et le port HTTP adapté.
+2. **ENREGISTRER / TESTER**, puis **RELIRE LA BORNE**. Contrôler l’identification et l’état de connexion.
+3. Dans **MESURES**, comparer les valeurs à celles de V2C pendant une vraie charge. En cas d’échec, conserver le diagnostic.
+
+**À vérifier :** Les IP, identifiants, courants et puissances montrés sont simulés. La découverte réseau ne démarre pas une charge.
+
+<!-- pagebreak -->
+
+## 38. Suivre une Tesla Gen 3 Wi-Fi
+
+**Chemin :** Réglages > Pilotage > Borne de recharge > Tesla Gen 3 Wi-Fi.
+
+![Suivi Tesla : état de charge, puissance estimée et informations de session.](images/menus/tesla-suivi-light.png)
+![Connexion : adresse locale, alimentation mono/tri et compteurs de lecture.](images/menus/tesla-connexion-light.png)
+
+1. Sélectionner Tesla, enregistrer et laisser redémarrer. La borne et l’écran doivent être sur le même réseau local.
+2. Dans **CONNEXION**, utiliser la recherche ou saisir l’adresse et choisir l’alimentation réelle. **ENREGISTRER / TESTER**.
+3. Consulter **SUIVI** et **MESURES**, puis comparer avec la borne pendant une charge réelle.
+
+**À vérifier :** Cette intégration est en lecture seule. Commandes, tarifs et horaires restent dans l’application Tesla. Voir la [notice complète](GUIDE_TESLA_GEN3_WIFI.md).
+
+<!-- pagebreak -->
+
+## 39. Retrouver une Tesla et lire un état hors ligne
+
+**Chemin :** Page Tesla > Connexion > faire défiler.
+
+![Plusieurs bornes détectées : choisir l’adresse et l’identité avant vérification.](images/menus/tesla-discovery-choices-light.png)
+![Borne indisponible : les mesures sont masquées au lieu d’afficher des zéros trompeurs.](images/menus/tesla-offline-dark.png)
+
+1. Faire défiler **CONNEXION** pour **RECHERCHER AUTOMATIQUEMENT**. Garder le réseau et la configuration stables pendant le parcours.
+2. Si plusieurs bornes répondent, identifier la bonne, puis **VÉRIFIER / UTILISER CETTE BORNE**. Les identités des captures sont fictives.
+3. En cas de perte de liaison, vérifier Wi-Fi, IP et alimentation avant d’actualiser. **--** signifie indisponible, pas une charge nulle.
+
+**À vérifier :** La découverte ne commande pas la charge. Une réponse HTTP quelconque ne suffit pas à identifier une borne Tesla.
+
+<!-- pagebreak -->
+
+## 40. Terminer le démarrage guidé
+
+**Chemin :** Installation > Démarrage rapide, ou fenêtre de première utilisation.
+
+![Début du parcours : Wi-Fi et logger à configurer, mesures encore absentes.](images/menus/quick-setup-new-light.png)
+![Parcours prêt à terminer après connexion, lectures et comparaison des mesures.](images/menus/quick-setup-ready-light.png)
+
+1. Ouvrir **1. WIFI**, sauvegarder et attendre le retour du parcours. Faire de même avec **2. LOGGER**.
+2. Vérifier la référence dans **MON ONDULEUR**. **VOIR MESURES** permet de comparer PV, batterie, maison et réseau au LCD de l’onduleur.
+3. Cocher la comparaison seulement après l’avoir faite. **TERMINER** devient disponible quand les connexions et lectures requises sont valides.
+
+**À vérifier :** Les captures montrent des états simulés. **PLUS TARD** reporte le parcours ; une sauvegarde réussie ne prouve pas à elle seule que les mesures sont justes.

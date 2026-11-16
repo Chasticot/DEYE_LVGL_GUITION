@@ -2,7 +2,7 @@
 
 **Pour commencer :** [Fiche rapide Wi-Fi + logger](DEMARRAGE_RAPIDE.md) · [Une page à imprimer](pdf/DEMARRAGE_RAPIDE.pdf).
 
-**Édition du 13 novembre 2026.** Pour les débutants, à partir des difficultés rencontrées en assistance. Les chemins suivent les menus récents ; les anciens noms sont indiqués lorsque nécessaire.
+**Édition du 16 novembre 2026 - interface 4.9.2.** Pour les débutants, à partir des difficultés rencontrées en assistance. Les chemins suivent les menus récents ; les anciens noms sont indiqués lorsque nécessaire.
 
 [Version PDF](pdf/DEMARRAGE_SIMPLE.pdf) · [Tous les menus en images](GUIDE_UTILISATEUR_V3.md) · [Questions fréquentes](FAQ_ECRAN.md).
 
@@ -27,8 +27,9 @@ Les captures de Deye Monitor utilisent des données simulées. Les images du log
 
 ## 1. Faire apparaître les premières mesures
 
-**Nouveau démarrage guidé (préparation du firmware, selon version installée) :** une fenêtre propose **1. WIFI** et **2. LOGGER**. Sauvegarder chaque page et attendre le redémarrage : le parcours reprend. **MON ONDULEUR** sert à choisir la référence ; **VOIR MESURES** ouvre le tableau de bord. Revenir par **Installation > Démarrage rapide** pour confirmer la comparaison et terminer. Le bouton attend une connexion Wi-Fi, un vrai numéro enregistré et des lectures récentes du DEYE. **PLUS TARD** reporte la configuration au prochain démarrage. Sur une version sans cette fenêtre, suivre les étapes ci-dessous.
+**Démarrage guidé en 4.9.2 :** une fenêtre propose **1. WIFI** et **2. LOGGER**. Sauvegarder chaque page et attendre le redémarrage : le parcours reprend. **MON ONDULEUR** sert à choisir la référence ; **VOIR MESURES** ouvre le tableau de bord. Revenir par **Installation > Démarrage rapide** pour confirmer la comparaison et terminer. Le bouton attend une connexion Wi-Fi, un vrai numéro enregistré et des lectures récentes du DEYE. **PLUS TARD** reporte la configuration au prochain démarrage. Sur une version sans cette fenêtre, suivre les étapes ci-dessous.
 
+![Début du démarrage guidé 4.9.2 : choisir Wi-Fi puis logger. Valeurs de démonstration.](images/menus/quick-setup-new-light.png)
 ![Connexion au logger : remplacer le numéro d’exemple et enregistrer ses propres informations. Capture d’interface avec données simulées.](images/menus/logger-found-light.png)
 
 1. Sur l’écran, ouvrir **Réglages > Réseau / Heure > Wi-Fi / Réseau**. Toucher **SCAN**, choisir le Wi-Fi de la maison en 2,4 GHz, saisir son mot de passe puis **SAUVEGARDER**. Attendre le redémarrage.
@@ -99,11 +100,12 @@ L’écran utilise un réseau Wi-Fi à la fois. Pour avoir mesures locales et pr
 ## 5. Enregistrer la prévision solaire
 
 ![Exemples de format : deux coordonnées séparées et une puissance convertie en kWc. Remplacer la position d’exemple par celle de ses panneaux.](images/demarrage/saisie-solaire.svg)
+![Formulaire 4.9.2 : position commune et exposition sélectionnée parmi huit.](images/menus/solar-config-light.png)
 
 Ouvrir **Réglages > Énergie > Prévision solaire**, ou **Prévision solaire** sur la page Web de l’écran. Dans les anciennes versions : **Configuration > Prévision solaire**.
 
 1. Depuis une carte, relever la position des panneaux en **degrés décimaux**. Saisir la **latitude dans le premier champ**, la **longitude dans le second**. Garder un éventuel signe moins. Ne pas coller les deux nombres dans la même case, ni une adresse, un lien de carte ou des degrés/minutes/secondes.
-2. Saisir la puissance totale **des panneaux en kWc** : **8 000 Wc = 8 kWc**, donc saisir **8**. Un point ou une virgule peut séparer les décimales ; ne pas ajouter l’unité dans le champ.
+2. Choisir l’exposition à régler dans le sélecteur **1 à 8**, puis saisir la puissance **des panneaux de ce groupe en kWc** : **8 000 Wc = 8 kWc**, donc saisir **8**. Un point ou une virgule peut séparer les décimales ; ne pas ajouter l’unité dans le champ. Répéter pour les autres groupes, avec leurs propres angles ; laisser les groupes inutilisés à **0 kWc**.
 3. Renseigner l’inclinaison et l’orientation : inclinaison de 0 à 90°, orientation nord 0°, est 90°, sud 180°, ouest 270°.
 4. Activer, sauvegarder et lire le message de confirmation. Si le formulaire signale une erreur, corriger les champs avant de recommencer. Après le redémarrage, rouvrir la page pour contrôler les valeurs conservées.
 

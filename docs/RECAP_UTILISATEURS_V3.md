@@ -6,9 +6,9 @@
 
 **Première utilisation ou blocage ?** [Commencer par le parcours débutant illustré](DEMARRAGE_SIMPLE.md) · [PDF pas à pas](pdf/DEMARRAGE_SIMPLE.pdf).
 
-**Édition du 16 novembre 2026 - version 4.9.2.** Les captures de référence historiques restent signalées.
+**Édition du 16 novembre 2026 - version 4.9.2.** Les captures ont été refaites avec l’interface 4.9.2.
 
-**Version 4.9.2 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Bornes et veille :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.2 ne demande aucune licence. Les PDF sont actualisés ; les captures de référence historiques restent signalées.
+**Version 4.9.2 :** les six rubriques des menus 4.8.x sont rétablies sur l’écran et le Web, avec les derniers ajouts. **Bornes et veille :** [V2C Trydan / Pro](GUIDE_V2C_TRYDAN_BETA.md), [Tesla Gen 3 Wi-Fi](GUIDE_TESLA_GEN3_WIFI.md), [veille sur un ou deux créneaux](GUIDE_VEILLE_HORAIRE.md). La 4.9.2 ne demande aucune licence. Les PDF sont actualisés ; les captures correspondent à l’interface 4.9.2.
 
 [Guide illustré complet](GUIDE_UTILISATEUR_V3.md) · [Guide PDF](pdf/GUIDE_UTILISATEUR_V3.pdf) · [Mémo PDF](pdf/RECAP_UTILISATEURS_V3.pdf).
 
@@ -60,7 +60,7 @@ Depuis 4.8.9, les mesures microSD sont regroupées avant écriture, environ tout
 ## 4. Recharge de la voiture et batterie de la maison
 
 ![Pilotage regroupe la borne, les tarifs, le TOU, le relais et l’anticipation batterie.](images/menus/tempo-battery-menu-light.png)
-![Capture historique du choix de borne ; la 4.9.1 ajoute V2C Trydan / Pro et Tesla Gen 3 Wi-Fi.](images/menus/bornes-liste.png)
+![Choix actuel de borne : Deye LoRa, Vetronic WB01, V2C Trydan / Pro ou Tesla Gen 3 Wi-Fi, avec Aucune pour désactiver la fonction.](images/menus/bornes-liste.png)
 
 1. **Pilotage > Borne de recharge > Activation / tarifs** : choisir le matériel, enregistrer et attendre le redémarrage. Pour WB01, renseigner ensuite l’IP de sa passerelle.
 2. Les horaires de **Tarifs / Tempo** sont distincts des six plages **Time of Use** de l’onduleur.

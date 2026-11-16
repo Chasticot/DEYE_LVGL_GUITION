@@ -24,6 +24,20 @@ Le numéro de série est mémorisé avec l'adresse. Après un changement DHCP, l
 
 L'écran ne remplace pas une adresse après une recherche incomplète, une perte Wi-Fi, une mise à jour en cours, un changement de configuration ou une sauvegarde échouée. Les sous-réseaux de plus de 1 022 adresses utilisables demandent une saisie manuelle. Après un échec, les recherches automatiques sont espacées de cinq minutes. La charge n'est jamais démarrée ou interrompue par cette recherche.
 
+## Repères sur l’écran 4.9.2
+
+Captures de l’interface réelle rendues avec des données simulées ; IP, identité et mesures sont des exemples. Elles ne constituent pas un essai sur une borne physique.
+
+![Suivi : état, puissance estimée et session, sans commande de charge.](images/menus/tesla-suivi-light.png)
+
+![Connexion : adresse de la borne, alimentation réelle et test.](images/menus/tesla-connexion-light.png)
+
+![Plusieurs bornes trouvées : choisir puis vérifier l’identité. Ce panneau apparaît après défilement.](images/menus/tesla-discovery-choices-light.png)
+
+![Mesures détaillées : tensions, courants et températures disponibles.](images/menus/tesla-mesures-dark.png)
+
+![Borne hors ligne : les mesures anciennes sont masquées.](images/menus/tesla-offline-dark.png)
+
 ## Données affichées
 
 - État de la borne, véhicule branché et contacteur ouvert/fermé.
