@@ -281,11 +281,11 @@ Les horaires et tarifs doivent être vérifiés dans les réglages. Ils ne prenn
 
 **Menus récents : Réglages > Écran** pour le thème et la veille ; **Réseau / Heure > Date / Heure / Fuseau UTC** pour l’horloge. Les anciens chemins ci-dessous permettent de retrouver ces réglages sur les versions précédentes.
 
-En **4.9.0**, dans **AFFICHAGE > THÈME / HORAIRES**, choisir le thème clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe lorsqu'il est allumé ; sa variation est retirée. Les versions antérieures peuvent encore proposer le menu THÈME / LUMINOSITÉ.
+En **4.9.1**, dans **AFFICHAGE > THÈME / HORAIRES**, choisir le thème clair ou sombre et l'alternance horaire souhaitée. Le rétroéclairage reste fixe lorsqu'il est allumé ; sa variation est retirée. Les versions antérieures peuvent encore proposer le menu THÈME / LUMINOSITÉ.
 
 Dans **AFFICHAGE > VEILLE HORAIRE**, activer la veille et régler un créneau, puis activer le second uniquement si nécessaire. Les deux peuvent traverser minuit. Le LCD et le rétroéclairage s'éteignent ; le tactile reste actif et un toucher confirmé les réveille temporairement selon le délai configuré. Le premier toucher ne commande aucun bouton. Voir le [guide complet de veille](GUIDE_VEILLE_HORAIRE.md).
 
-![Illustration historique de la veille à un créneau ; la version 4.9.0 propose aussi un second créneau facultatif.](images/demarrage/veille-horaire.png)
+![Illustration historique de la veille à un créneau ; la version 4.9.1 propose aussi un second créneau facultatif.](images/demarrage/veille-horaire.png)
 
 **Écran noir à heure fixe ?** Vérifier cette page. L’interrupteur en haut active la veille ; choisir les horaires et la durée du réveil au toucher, puis **ENREGISTRER**. La veille coupe l'affichage et le rétroéclairage, pas les lectures ni la page Web. Sans heure valide, l'écran reste allumé. Les horaires montrés sont des exemples.
 

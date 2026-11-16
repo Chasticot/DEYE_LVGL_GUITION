@@ -1,4 +1,4 @@
-# Veille de l'écran — un ou deux créneaux — 4.9.0
+# Veille de l'écran — un ou deux créneaux — 4.9.1
 
 Pendant les créneaux choisis, l'affichage LCD est désactivé et le rétroéclairage est éteint. **Le tactile reste actif pour réveiller l'écran.** Le rétroéclairage fonctionne uniquement allumé/éteint, à son niveau fixe ; aucun réglage de luminosité ni variation automatique n'est utilisé.
 
@@ -6,7 +6,7 @@ Les lectures de l'onduleur, les bornes, les automatismes et l'accès Web continu
 
 ## Régler les horaires
 
-1. Ouvrir **Affichage → Veille horaire**.
+1. Ouvrir **Réglages → Écran → Veille horaire**.
 2. Activer **Activer la veille**.
 3. Renseigner **Créneau 1 : début** et **fin**, par exemple **23:00 → 07:00**.
 4. Pour un second horaire, activer **Activer le créneau 2**, puis saisir ses heures, par exemple **13:00 → 14:00**. Laisser cette option désactivée pour conserver un seul créneau ; ses heures sont alors masquées sur l'écran.
@@ -15,7 +15,7 @@ Les lectures de l'onduleur, les bornes, les automatismes et l'accès Web continu
 
 Les heures suivent l'heure locale de l'écran. Chaque créneau peut traverser minuit ; son heure de fin doit différer de son heure de début lorsqu'il est actif. Les créneaux peuvent se chevaucher ou se suivre : la veille continue tant qu'au moins l'un des deux s'applique.
 
-Le même paramétrage existe dans la page Web, rubrique **PV / GEN / Tarifs VE / Relais / Veille**. Les réglages sont sauvegardés après redémarrage/OTA et inclus dans l'export/import de configuration. Un ancien réglage ou export à un seul créneau conserve ses horaires ; le deuxième reste désactivé.
+Le même paramétrage existe dans la page Web, rubrique **Écran → Veille et réveil tactile**. Les réglages sont sauvegardés après redémarrage/OTA et inclus dans l'export/import de configuration. Un ancien réglage ou export à un seul créneau conserve ses horaires ; le deuxième reste désactivé.
 
 ## Réveiller l'écran
 
@@ -36,4 +36,4 @@ Le logiciel a été compilé et testé avec des périphériques simulés. La cou
 - Tester un créneau qui traverse minuit, puis deux créneaux distincts et leur sortie.
 - Vérifier le retour en veille après le délai, la conservation des paramètres après redémarrage et l'accès Web pendant l'extinction.
 
-Cette version reste **4.9.0 sans licence**. La version 5 mise de côté n'est pas modifiée.
+Cette version reste **4.9.1 sans licence**. La version 5 mise de côté n'est pas modifiée.

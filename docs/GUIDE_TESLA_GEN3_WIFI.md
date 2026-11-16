@@ -1,4 +1,4 @@
-# Tesla Wall Connector Gen 3 Wi-Fi — écran 4.9.0
+# Tesla Wall Connector Gen 3 Wi-Fi — écran 4.9.1
 
 Cette intégration affiche les données de la borne sur l'écran GUITION et sa page Web, par le réseau local. Elle ne demande ni Home Assistant, ni compte Tesla, ni licence de l'écran pour ces lectures. La borne doit déjà être installée et connectée au réseau Wi-Fi de la maison.
 
@@ -9,9 +9,9 @@ La [veille de l'écran](GUIDE_VEILLE_HORAIRE.md) peut couper le LCD et le rétro
 ## Installation
 
 1. Exporter la configuration de l'écran depuis sa page Web et conserver son précédent fichier OTA.
-2. Installer `DEYE_V3_4.9.0_OTA.bin` depuis **Mise à jour OTA**. Il s'agit du firmware de l'écran ; ne pas l'envoyer à la borne.
-3. Dans **Véhicule électrique → Activation / tarifs**, choisir **Tesla Gen 3 Wi-Fi**, enregistrer et laisser l'écran redémarrer. Un seul système de recharge est sélectionné à la fois ; les réglages des autres bornes restent conservés.
-4. Ouvrir **Véhicule électrique → Tesla Gen 3 : suivi WiFi → Connexion**. Laisser la recherche automatique trouver et enregistrer l'adresse. Choisir l'alimentation **monophasée ou triphasée**, puis toucher **Enregistrer / tester**. L'adresse peut aussi être saisie manuellement. Le choix mono/tri adapte uniquement le calcul de puissance affichée ; il ne change aucun réglage électrique.
+2. Installer `DEYE_V3_4.9.1_OTA.bin` depuis **Mise à jour OTA**. Il s'agit du firmware de l'écran ; ne pas l'envoyer à la borne.
+3. Dans **Réglages → Pilotage → Borne de recharge → Activation / tarifs**, choisir **Tesla Gen 3 Wi-Fi**, enregistrer et laisser l'écran redémarrer. Un seul système de recharge est sélectionné à la fois ; les réglages des autres bornes restent conservés.
+4. Ouvrir **Réglages → Pilotage → Borne de recharge → Tesla Gen 3 : suivi WiFi → Connexion**. Laisser la recherche automatique trouver et enregistrer l'adresse. Choisir l'alimentation **monophasée ou triphasée**, puis toucher **Enregistrer / tester**. L'adresse peut aussi être saisie manuellement. Le choix mono/tri adapte uniquement le calcul de puissance affichée ; il ne change aucun réglage électrique.
 5. Vérifier l'état de la borne, sa version et ses mesures. Une réservation d'adresse dans la box évite que son IP change. Les réseaux invités avec isolation des appareils peuvent empêcher la connexion locale.
 
 Le symbole de voiture du tableau de bord ouvre également la page de la borne. Depuis un téléphone sur le même réseau, ouvrir `http://ADRESSE_DE_L_ECRAN/tesla`. La page de configuration Web propose aussi le choix de borne et un lien vers ce suivi. Les protections Web déjà configurées sur l'écran restent actives.
